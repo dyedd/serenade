@@ -1,0 +1,20 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none;
+}
+html {
+	font-size:10px;
+	--color: #1e90ff;
+    --color-30: rgba(30, 144, 255, 0.3);
+    --color-50: rgba(30, 144, 255, 0.5);
+    --color-80: rgba(30, 144, 255, 0.8);
+    --fg: #a4b0be;
+    --fg-deep: #2f3542;
+    --fg-deeper: #000;
+    --bg: #fff;
+    --box-shadow: 0px 7px 15px 0px #a48fff30;
+	--radius: 1rem;
+	--margin: 2rem;
+}
