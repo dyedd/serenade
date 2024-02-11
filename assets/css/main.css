@@ -18,3 +18,8 @@ html {
 	--radius: 1rem;
 	--margin: 2rem;
 }
+.icon {
+    fill: currentColor;
+    overflow: hidden;
+    margin-right: .2rem;
+ }
