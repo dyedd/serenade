@@ -15,7 +15,7 @@ footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1024px;
+    max-width: 90rem;
     margin: auto;
     font-size: 1.5rem;
     line-height: .75rem

@@ -1,5 +1,5 @@
 <template>
-    <Header />
+    <BlogHeader />
     <main>
         <slot />
     </main>
@@ -10,7 +10,7 @@
 </script>
 <style scoped>
 main {
-    max-width: 1024px;
+    max-width: 90rem;
     margin: auto;
 }
 </style>
