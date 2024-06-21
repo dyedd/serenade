@@ -1,26 +1,22 @@
 <template>
-    <div>
-        <!-- 博客头部 -->
-        <header>
-            <div>
-                <img src="/logo.jpg">
-            </div>
-            <div>
-                <Nav></Nav>
-            </div>
-        </header>
-    </div>
+    <!-- 博客头部 -->
+    <header class="sticky top-0 z-30">
+        <div>
+            <img class="shadow-lg" src="/logo.jpg">
+        </div>
+        <div>
+            <Nav></Nav>
+        </div>
+    </header>
 </template>
   
 <style lang="scss" scoped>
 header {
-    width: 102.4rem;
-    margin: 0 auto;
-    margin-bottom: 2rem;
     display: flex;
     justify-content: space-between;
+    background-color: var(--bg);
     div {
-        padding: 2rem;
+        padding: 1rem;
         display: flex;
         align-items: center;
     }

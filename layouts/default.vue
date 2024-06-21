@@ -10,7 +10,7 @@
 </script>
 <style scoped>
 main {
-    max-width: 90rem;
+    max-width: 60rem;
     margin: auto;
 }
 </style>

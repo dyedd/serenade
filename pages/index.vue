@@ -22,6 +22,7 @@
         </svg>
       </a>
     </div>
+    <div class="hero-text">这个人的网站还在建设中...</div>
     <div class="box">
 
     </div>
@@ -43,15 +44,15 @@ definePageMeta({
 }
 
 .logo img {
-  width: 19.8rem;
+  width: 10rem;
   border-radius: 50%;
 }
 
 .emoji {
   position: absolute;
-  width: 5rem;
-  height: 5rem;
-  line-height: 5rem;
+  width: 4rem;
+  height: 4rem;
+  line-height: 4rem;
   border-radius: 50%;
   bottom: 0;
   right: 0;
@@ -63,13 +64,13 @@ definePageMeta({
 
 
 .right {
-  padding: 2.5rem;
+  padding: .5rem;
 }
 
 h1 {
-  font-size: 5.5rem;
+  font-size: 3rem;
   font-weight: 800;
-  margin: 3rem 0;
+  margin: 1rem 0;
 }
 
 .text-gradient {
@@ -83,7 +84,7 @@ h1 {
 p {
   line-height: 1.6;
   margin: 1rem 0;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
 }
 
 .text {
@@ -95,13 +96,31 @@ p {
 }
 
 .icon-wrapper a {
-  padding: 1rem 1.5rem;
+  padding: .5rem 1rem;
   text-decoration: none;
   border-radius: .6rem;
   display: inline-flex;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   background: rgba(249, 250, 251, 0.6);
   color: #000;
   border-radius: .6rem;
   margin-right: 1rem;
-}</style>
+}
+
+.hero-text {
+  margin-top: 2rem;
+  padding: 15px 20px;
+  background: #f9f0d4;
+  border-radius: 6px;
+  color: #644006;
+  line-height: 1.5;
+  position: relative;
+}
+
+.hero-text::before {
+  content: "✍";
+  font-size: 2.2rem;
+  position: absolute;
+  top: -32px;
+}
+</style>
