@@ -2,10 +2,13 @@
     <nav>
         <ul>
             <li>
-                <NuxtLink to="/">🏠 Home</NuxtLink>
+                <NuxtLink to="/">🏠 首页</NuxtLink>
             </li>
             <li>
-                <NuxtLink to="/blogs">📂 Blogs</NuxtLink>
+                <NuxtLink to="/blogs">📂 文章</NuxtLink>
+            </li>
+            <li>
+                <NuxtLink to="/repository">🧠 专栏</NuxtLink>
             </li>
         </ul>
     </nav>
@@ -13,7 +16,11 @@
   
 <style lang="scss" scoped>
 nav {
-    font-size: 1.6rem;
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 auto;
+    padding: 2rem;
+    font-size: 1.2rem;
 
     ul {
         list-style: none;

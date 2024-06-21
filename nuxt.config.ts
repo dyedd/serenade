@@ -1,7 +1,14 @@
 import { siteConfig } from './site.config'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
+  },
   experimental: {
     watcher: "chokidar",
   },
@@ -24,9 +31,9 @@ export default defineNuxtConfig({
         lang: siteConfig.lang,
       },
       script: [
-        { src: 'iconfont.js', type: "text/javascript" }
+        { src: '/iconfont.js', type: "text/javascript" }
       ]
     }
   },
-  css: ['~/assets/css/main.css']
+  css: ['~/assets/css/style.css', '~/assets/css/main.css']
 })

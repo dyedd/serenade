@@ -1,26 +1,49 @@
 <template>
     <article>
-        <header class="blog-header">
-            <h1 class="blog-title">{{ blog.metaData.title }}</h1>
-            <div class="blog-info">
-                <span class="blog-date">{{ blog.metaData.date }}</span>
-                <span class="carve">·</span>
-                <span class="blog-extra">1000 words</span>
-                <span class="carve">·</span>
-                <span class="blog-extra">3 mins</span>
+        <header class="max-w-prose">
+            <ol class="mb-6 text-sm text-neutral-500 print:hidden dark:text-neutral-400">
+                <li class="inline">
+                    <a class="dark:underline-neutral-600 decoration-neutral-300 hover:underline" href="/"></a><span
+                        class="px-1 text-primary-500">$</span>
+                </li>
+                <li class=" inline">
+                    <a class="dark:underline-neutral-600 decoration-neutral-300 hover:underline"
+                        href="/blogs/">所有文章</a><span class="px-1 text-primary-500">/</span>
+                </li>
+            </ol>
+            <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ blog.metaData.title }}</h1>
+            <div class="mt-8 mb-12 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
+                <div class="flex flex-row flex-wrap items-center">
+                    <time>{{ blog.metaData.date }}</time>
+                    <span class="px-2 text-primary-500">·</span>
+                    <div class="my-1 flex flex-wrap text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                        <a v-for="(tag, index) in blog.metaData.tags" :key="index" :href="'/tags/' + tag"
+                            class="mx-1 my-1 rounded-md border border-neutral-200 px-1 py-[1px] hover:border-primary-300 hover:text-primary-700 dark:border-neutral-600 dark:hover:border-primary-600 dark:hover:text-primary-400">{{
+                tag }}</a>
+                    </div>
+                </div>
+
             </div>
-            <div class="blog-illustration">
-                <img src="https://blog.hesiy.cn/posts/summary-posts/cover.svg" alt="">
+            <div class="prose">
+                <img class="mb-6 -mt-4 rounded-md" loading="lazy" :src="blog.metaData.cover" alt="">
             </div>
         </header>
-        <section class="blog-content">
-            <div class="markdown-body"  v-html="blog.htmlContent"></div>
-            <TableOfContents />
+        <section class="flex flex-col max-w-full mt-0 prose dark:prose-invert lg:flex-row">
+
+            <div class="order-first px-0 lg:order-last lg:max-w-xs lg:ps-8">
+                <div class="toc pe-5 print:hidden lg:sticky lg:top-10">
+                    <div class="-ms-5 py-2 ps-5 ">
+                        <BlogCatalog. :headings="headings" :active-id="activeId" @click="scrollToHeading($event)" />
+                    </div>
+                </div>
+
+            </div>
+            <div class="blog-content min-w-0 min-h-0 max-w-prose grow" v-html="blog.htmlContent"></div>
         </section>
-        
+
     </article>
 </template>
-  
+
 <script setup>
 defineProps({
     blog: {
@@ -28,44 +51,42 @@ defineProps({
         required: true,
     },
 });
+const headings = ref([]);
+const activeId = ref(null);
+
+onMounted(() => {
+    const collectedHeadings = [...document.querySelectorAll('.blog-content h1, .blog-content h2, .blog-content h3, .blog-content h4, .blog-content h5, .blog-content h6')];
+    const headingHierarchy = [];
+    let currentParent = { children: headingHierarchy };
+
+    for (const heading of collectedHeadings) {
+        const level = parseInt(heading.tagName.slice(1));
+        const item = {
+            id: heading.id,
+            level: level,
+            children: []
+        };
+
+        if (level > currentParent.level) {
+            currentParent.children.push(item);
+        } else {
+            while (currentParent.level >= level) {
+                currentParent = currentParent.parent;
+            }
+            currentParent.children.push(item);
+        }
+
+        item.parent = currentParent;
+        currentParent = item;
+    }
+
+    headings.value = headingHierarchy;
+});
+const scrollToHeading = (id) => {
+    activeId.value = id;
+    const element = document.getElementById(id);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+};
 </script>
-
-<style>
-@import url("~/assets/css/markdown.css");
-</style>
-  
-<style scoped>
-article {
-    font-size: 1.6rem;
-}
-.blog-title {
-    font-size: 2.25em;
-    margin-bottom: 0.8rem;
-}
-.blog-info {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1em;
-    margin-top: 2rem;
-}
-.carve {
-    padding: 0 .5rem;
-    color: var(--fg);
-}
-
-.blog-date, .blog-extra {
-    color: var(--fg);
-}
-.blog-illustration {
-    max-width: 65ch;
-}
-.blog-illustration img {
-    border-radius: .375rem;
-    width: 100%;
-}
-.blog-content {
-    margin-top: 1.25rem;
-    display: flex;
-    flex-direction: row;
-}
-</style>

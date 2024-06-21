@@ -1,13 +1,36 @@
 <template>
-  <div class="blog-preview">
-    <div>
-      <img src="https://blog.hesiy.cn/posts/summary-posts/cover.svg" alt="">
+  <article class="mt-6 flex max-w-prose flex-row transition-transform duration-300 hover:scale-[1.02]">
+    <div class="flex-none pe-4 sm:pe-6">
+      <img class="w-24 max-w-[6rem] max-h-[4.5rem] rounded-md sm:max-h-[7.5rem] sm:w-40
+            sm:max-w-[10rem]" loading="lazy" :src="blog.cover" alt="">
     </div>
     <div>
-      <NuxtLink :to="`/blogs/${blog.path}`"><h3 class="title">{{ blog.title }}</h3></NuxtLink>
-      <div class="metadata">{{ blog.date }}<span class="carve">·</span>1000 words<span class="carve">·</span>5 mins</div>
+      <h3 class="flex items-center text-xl font-semibold">
+        <NuxtLink
+          class="text-neutral-800 decoration-primary-500 hover:underline hover:underline-offset-2 dark:text-neutral"
+          :to="`/blogs/${blog.path}`">
+          {{ blog.title }}
+        </NuxtLink>
+      </h3>
+      <div class="text-sm text-neutral-500 dark:text-neutral-400">
+        <div class="flex flex-row flex-wrap items-center">
+          <time>{{ blog.date }}</time>
+          <span class="px-2 text-primary-500">·</span>
+          <ul class="ml-1 flex items-center gap-x-2">
+            <li v-for="(tag, index) in blog.tags" :key="index">
+              <a class="cactus-link inline-block" :aria-label="'View more blogs with the tag ' + tag"
+                :href="'/tags/' + tag">
+                #{{ tag }}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="prose py-1 dark:prose-invert">
+        {{ blog.abstract }}
+      </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup>
@@ -18,44 +41,3 @@ defineProps({
   },
 });
 </script>
-
-<style scoped>
-.blog-preview {
-  max-width: 72rem;
-  display: flex;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  transition: transform 0.2s ease-in-out;
-}
-.blog-preview img {
-  width: 16rem;
-  border-radius: .6rem;
-}
-.blog-preview a {
-  text-decoration: none;
-}
-
-.blog-preview:hover {
-  transform: translateY(-5px);
-}
-
-.title {
-  margin-left: 2rem;
-  font-size: 2rem;
-  color: #333;
-}
-
-.metadata {
-  display: flex;
-  align-items: center;
-  margin: 1rem 0 0 2rem;
-  font-size: 1.4rem;
-  color: var(--fg);
-}
-
-.carve {
-    padding: 0 .5rem;
-    color: var(--fg);
-}
-
-</style>
