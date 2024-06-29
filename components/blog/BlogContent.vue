@@ -12,7 +12,7 @@
                 </li>
             </ol>
             <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ blog.metaData.title }}</h1>
-            <div class="mt-8 mb-12 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
+            <div class="mt-8 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
                 <div class="flex flex-row flex-wrap items-center">
                     <time>{{ blog.metaData.date }}</time>
                     <span class="px-2 text-primary-500">·</span>
@@ -24,7 +24,7 @@
                 </div>
 
             </div>
-            <div class="prose">
+            <div class="mt-12 prose" v-if="blog.metaData.cover">
                 <img class="mb-6 -mt-4 rounded-md" loading="lazy" :src="blog.metaData.cover" alt="">
             </div>
         </header>
