@@ -19,7 +19,7 @@ const renderer = (path) => ({
   image(href, title, text) {
     let imageUrl = href;
     if (!href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('/')) {
-      imageUrl = `/api/assets/${path}/${href}`;
+      imageUrl = `/assets/${path}/${href}`;
     }
     return `<img src="${imageUrl}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
   }
