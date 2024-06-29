@@ -45,12 +45,12 @@
 </template>
 
 <script setup>
-defineProps({
-    blog: {
-        type: Object,
-        required: true,
-    },
-});
+const props = defineProps({
+  blog: {
+    type: Object,
+    required: true,
+  },
+})
 const headings = ref([]);
 const activeId = ref(null);
 
@@ -89,4 +89,7 @@ const scrollToHeading = (id) => {
         element.scrollIntoView({ behavior: 'smooth' });
     }
 };
+useHead({
+  title: props.blog.metaData.title
+})
 </script>
