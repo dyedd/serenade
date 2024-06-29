@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const pageSize = parseInt(query.pageSize) || 10;
 
   const tagName = event.context.params?.path;
-  const files = await fg('content/blogs/*/*.md');
+  const files = await fg('content/posts/*/*.md');
   if (files.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'Article not found' });
   }

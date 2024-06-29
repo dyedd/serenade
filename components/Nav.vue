@@ -5,10 +5,13 @@
                 <NuxtLink to="/">🏠 首页</NuxtLink>
             </li>
             <li>
-                <NuxtLink to="/blogs">📂 文章</NuxtLink>
+                <NuxtLink to="/posts">📂 文章</NuxtLink>
             </li>
             <li>
-                <NuxtLink to="/repository">🧠 专栏</NuxtLink>
+                <NuxtLink to="/column">🧠 专栏</NuxtLink>
+            </li>
+            <li>
+                <NuxtLink to="/moments">📸 朋友</NuxtLink>
             </li>
         </ul>
     </nav>

@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const page = parseInt(query.page) || 1;
   const pageSize = parseInt(query.pageSize) || 10;
 
-  const files = await fg('content/blogs/*/*.md');
+  const files = await fg('content/posts/*/*.md');
   if (files.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'Article not found' });
   }
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     const { data: metaData} = matter(raw);
     const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags;
     return {
-      path: i.match(/content\/blogs\/([^\/]+)\//)?.[1],
+      path: i.match(/content\/posts\/([^\/]+)\//)?.[1],
       title: metaData.title,
       date: dayjs(metaData.date).format('MMMM D, YYYY'),
       cover: metaData.cover,

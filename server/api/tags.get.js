@@ -3,7 +3,7 @@ import path from 'path';
 import matter from 'gray-matter';
 
 export default defineEventHandler(() => {
-  const directoryPath = path.join('content/blogs');
+  const directoryPath = path.join('content/posts');
 
   function getTagsFromMdFile(filePath) {
     const raw = fs.readFileSync(filePath, 'utf-8');

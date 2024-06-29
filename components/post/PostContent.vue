@@ -8,24 +8,24 @@
                 </li>
                 <li class=" inline">
                     <a class="dark:underline-neutral-600 decoration-neutral-300 hover:underline"
-                        href="/blogs/">所有文章</a><span class="px-1 text-primary-500">/</span>
+                        href="/posts/">所有文章</a><span class="px-1 text-primary-500">/</span>
                 </li>
             </ol>
-            <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ blog.metaData.title }}</h1>
+            <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ post.metaData.title }}</h1>
             <div class="mt-8 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
                 <div class="flex flex-row flex-wrap items-center">
-                    <time>{{ blog.metaData.date }}</time>
+                    <time>{{ post.metaData.date }}</time>
                     <span class="px-2 text-primary-500">·</span>
                     <div class="my-1 flex flex-wrap text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-                        <a v-for="(tag, index) in blog.metaData.tags" :key="index" :href="'/tags/' + tag"
+                        <a v-for="(tag, index) in post.metaData.tags" :key="index" :href="'/tags/' + tag"
                             class="mx-1 my-1 rounded-md border border-neutral-200 px-1 py-[1px] hover:border-primary-300 hover:text-primary-700 dark:border-neutral-600 dark:hover:border-primary-600 dark:hover:text-primary-400">{{
                 tag }}</a>
                     </div>
                 </div>
 
             </div>
-            <div class="mt-12 prose" v-if="blog.metaData.cover">
-                <img class="mb-6 -mt-4 rounded-md" loading="lazy" :src="blog.metaData.cover" alt="">
+            <div class="mt-12 prose" v-if="post.metaData.cover">
+                <img class="mb-6 -mt-4 rounded-md" loading="lazy" :src="post.metaData.cover" alt="">
             </div>
         </header>
         <section class="flex flex-col max-w-full mt-0 prose dark:prose-invert lg:flex-row">
@@ -33,12 +33,12 @@
             <div class="order-first px-0 lg:order-last lg:max-w-xs lg:ps-8">
                 <div class="toc pe-5 print:hidden lg:sticky lg:top-10">
                     <div class="-ms-5 py-2 ps-5 ">
-                        <BlogCatalog. :headings="headings" :active-id="activeId" @click="scrollToHeading($event)" />
+                        <postCatalog. :headings="headings" :active-id="activeId" @click="scrollToHeading($event)" />
                     </div>
                 </div>
 
             </div>
-            <div class="blog-content min-w-0 min-h-0 max-w-prose grow" v-html="blog.htmlContent"></div>
+            <div class="post-content min-w-0 min-h-0 max-w-prose grow" v-html="post.htmlContent"></div>
         </section>
 
     </article>
@@ -46,7 +46,7 @@
 
 <script setup>
 const props = defineProps({
-  blog: {
+  post: {
     type: Object,
     required: true,
   },
@@ -55,7 +55,7 @@ const headings = ref([]);
 const activeId = ref(null);
 
 onMounted(() => {
-    const collectedHeadings = [...document.querySelectorAll('.blog-content h1, .blog-content h2, .blog-content h3, .blog-content h4, .blog-content h5, .blog-content h6')];
+    const collectedHeadings = [...document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6')];
     const headingHierarchy = [];
     let currentParent = { children: headingHierarchy };
 
@@ -90,6 +90,6 @@ const scrollToHeading = (id) => {
     }
 };
 useHead({
-  title: props.blog.metaData.title
+  title: props.post.metaData.title
 })
 </script>

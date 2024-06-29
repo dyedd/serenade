@@ -12,13 +12,13 @@
         </ol>
         <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ tagName }}</h1>
     </header>
-    <section v-if="blogsData?.length > 0">
-        <template v-for="blog in blogsData" :key="blog.id">
-            <BlogPreview :blog="blog" />
+    <section v-if="postsData?.length > 0">
+        <template v-for="post in postsData" :key="post.id">
+            <postPreview :post="post" />
         </template>
     </section>
     <section v-else>
-        Loading blogs...
+        Loading posts...
     </section>
     <Pagination :currentPage="currentPage" :totalPages="totalPages" @pageChange="goToPage" />
 </template>
@@ -27,7 +27,7 @@
 definePageMeta({
     layout: "default",
 });
-const blogsData = ref([]);
+const postsData = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(5);
 const totalPages = ref(0);
@@ -37,18 +37,18 @@ const router = useRouter();
 const route = useRoute();
 const tagName = ref(route.params.path);
 
-async function fetchBlogs(page, size) {
+async function fetchposts(page, size) {
     try {
         const { data } = await useFetch(`/api/tags/${route.params.path}?page=${page}&pageSize=${size}`);
         if (data.value) {
-            blogsData.value = data.value.data;
+            postsData.value = data.value.data;
             currentPage.value = data.value.page;
             pageSize.value = data.value.pageSize;
             totalPages.value = data.value.totalPages;
             totalItems.value = data.value.totalItems;
         }
     } catch (error) {
-        console.error('Failed to fetch blogs:', error);
+        console.error('Failed to fetch posts:', error);
     }
 }
 
@@ -57,7 +57,7 @@ watch(
     (newQuery) => {
         const page = parseInt(newQuery.page) || 1;
         const size = parseInt(newQuery.pageSize) || pageSize.value;
-        fetchBlogs(page, size);
+        fetchposts(page, size);
     },
     { immediate: true }
 );
@@ -69,5 +69,5 @@ function goToPage(page) {
         alert('Invalid page number');
     }
 }
-// fetchBlogs(currentPage.value, pageSize.value);
+// fetchposts(currentPage.value, pageSize.value);
 </script>
