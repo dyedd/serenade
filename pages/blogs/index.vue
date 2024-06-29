@@ -6,7 +6,7 @@
     <div class="min-h-0 min-w-0 max-w-prose grow">
       <blockquote>
         <p>你可以通过
-          <a href="/posts/index.xml">RSS</a> 订阅所有文章
+          <a href="/rss">RSS</a> 订阅所有文章
         </p>
       </blockquote>
     </div>
