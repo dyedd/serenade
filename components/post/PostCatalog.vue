@@ -3,8 +3,8 @@
         <template v-for="item in headings" :key="item.id">
             <li :class="{ active: item.id === activeId }">
                 <a :href="`#${item.id}`" @click.prevent="scrollToHeading(item.id)">{{ item.id }}</a>
-                <BlogCatalog v-if="item.children.length > 0" :headings="item.children" :active-id="activeId"
-                    @click="scrollToHeading($event)"></BlogCatalog>
+                <PostCatalog v-if="item.children.length > 0" :headings="item.children" :active-id="activeId"
+                    @click="scrollToHeading($event)"></PostCatalog>
             </li>
         </template>
     </ul>

@@ -7,7 +7,7 @@ import { siteConfig } from '@/site.config'
 
 export default defineEventHandler(async (event) => {
     // 读取所有 Markdown 文件
-    const files = await fg('content/blogs/*/*.md')
+    const files = await fg('content/posts/*/*.md')
     if (files.length === 0) {
         throw createError({ statusCode: 404, statusMessage: 'Article not found' })
     }
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
         const { data: metaData } = matter(raw)
         const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags
         return {
-            path: i.match(/content\/blogs\/([^\/]+)\//)?.[1],
+            path: i.match(/content\/posts\/([^\/]+)\//)?.[1],
             title: metaData.title,
             date: metaData.date,
             formattedDate: dayjs(metaData.date).format('MMMM D, YYYY'),
@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
         feed.item({
             title: post.title,
             description: post.abstract,
-            url: `${event.node.req.headers.host}/blog/${post.path}`,
+            url: `${event.node.req.headers.host}/post/${post.path}`,
             date: dayjs(post.date).toISOString(),
             enclosure: { url: post.cover },
         })

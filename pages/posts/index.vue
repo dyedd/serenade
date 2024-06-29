@@ -11,17 +11,17 @@
       </blockquote>
     </div>
   </section>
-  <section v-if="groupedBlogsData.length > 0">
-    <div v-for="group in groupedBlogsData" :key="group.year">
+  <section v-if="groupedpostsData.length > 0">
+    <div v-for="group in groupedpostsData" :key="group.year">
       <h2 class="mt-12 text-2xl font-bold text-neutral-700 first:mt-8 dark:text-neutral-300">{{ group.year }}</h2>
       <hr class="w-36 border-dotted border-neutral-400">
-      <div v-for="blog in group.blogs" :key="blog.id">
-        <BlogPreview :blog="blog" />
+      <div v-for="post in group.posts" :key="post.id">
+        <PostPreview :post="post" />
       </div>
     </div>
   </section>
   <section v-else>
-    Loading blogs...
+    Loading posts...
   </section>
   <Pagination :currentPage="currentPage" :totalPages="totalPages" @pageChange="goToPage" />
 
@@ -31,8 +31,8 @@
 definePageMeta({
   layout: "default",
 });
-const blogsData = ref([]);
-const groupedBlogsData = ref({});
+const postsData = ref([]);
+const groupedpostsData = ref({});
 const currentPage = ref(1);
 const pageSize = ref(5);
 const totalPages = ref(0);
@@ -42,41 +42,41 @@ const totalItems = ref(0);
 const router = useRouter();
 const route = useRoute();
 
-function groupBlogsByYear() {
+function grouppostsByYear() {
   const groups = {};
-  blogsData.value.forEach(blog => {
-    const year = new Date(blog.date).getFullYear();
+  postsData.value.forEach(post => {
+    const year = new Date(post.date).getFullYear();
     if (!groups[year]) {
       groups[year] = [];
     }
-    groups[year].push(blog);
+    groups[year].push(post);
   });
 
-  // 将 groupedBlogsData 转换为数组并按年份降序排序
+  // 将 groupedpostsData 转换为数组并按年份降序排序
   const sortedGroups = Object.keys(groups).sort((a, b) => b - a).map(year => {
     return {
       year: year,
-      blogs: groups[year]
+      posts: groups[year]
     };
   });
 
-  groupedBlogsData.value = sortedGroups;
+  groupedpostsData.value = sortedGroups;
 }
-console.log(groupedBlogsData)
+console.log(groupedpostsData)
 
-async function fetchBlogs(page, size) {
+async function fetchposts(page, size) {
   try {
-    const { data } = await useFetch(`/api/blogs?page=${page}&pageSize=${size}`);
+    const { data } = await useFetch(`/api/posts?page=${page}&pageSize=${size}`);
     if (data.value) {
-      blogsData.value = data.value.data;
+      postsData.value = data.value.data;
       currentPage.value = data.value.page;
       pageSize.value = data.value.pageSize;
       totalPages.value = data.value.totalPages;
       totalItems.value = data.value.totalItems;
-      groupBlogsByYear();
+      grouppostsByYear();
     }
   } catch (error) {
-    console.error('Failed to fetch blogs:', error);
+    console.error('Failed to fetch posts:', error);
   }
 }
 
@@ -85,7 +85,7 @@ watch(
   (newQuery) => {
     const page = parseInt(newQuery.page) || 1;
     const size = parseInt(newQuery.pageSize) || pageSize.value;
-    fetchBlogs(page, size);
+    fetchposts(page, size);
   },
   { immediate: true }
 );

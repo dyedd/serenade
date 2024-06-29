@@ -31,7 +31,7 @@ const renderer = (path) => ({
 export default defineEventHandler(async (event) => {
   const name = event.context.params?.path;
 
-  const files = await fg('content/blogs/*/*.md');
+  const files = await fg('content/posts/*/*.md');
   const filteredFiles = files.filter(i => i.includes(name));
   if (filteredFiles.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'Article not found' });

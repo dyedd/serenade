@@ -1,5 +1,5 @@
 <template>
-    <BlogHeader />
+    <postHeader />
     <main>
         <slot />
     </main>

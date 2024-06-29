@@ -12,13 +12,13 @@
       <p>「所有文章」加起来有 10 篇，共 12,465 字</p>
     </div>
   </section>
-  <section v-if="blogsData?.length > 0">
-    <template v-for="blog in blogsData" :key="blog.id">
-      <BlogPreview :blog="blog" />
+  <section v-if="postsData?.length > 0">
+    <template v-for="post in postsData" :key="post.id">
+      <postPreview :post="post" />
     </template>
   </section>
   <sectio v-else>
-    Loading blogs...
+    Loading posts...
   </sectio>
 
 </template>
@@ -27,13 +27,13 @@
 definePageMeta({
   layout: "default",
 });
-const blogsData = ref([]);
+const postsData = ref([]);
 try {
-  const { data } = await useFetch('/api/blogs');
+  const { data } = await useFetch('/api/posts');
   console.log(data.value)
-  blogsData.value = data.value;
+  postsData.value = data.value;
 } catch (error) {
-  console.error('Failed to fetch blogs:', error);
+  console.error('Failed to fetch posts:', error);
 }
 </script>
 

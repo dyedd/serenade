@@ -1,8 +1,8 @@
 import fs from 'fs-extra'
 import { resolve } from 'path';
 export default defineEventHandler(async (event) => {
-    const { blogName, imageName } = event.context.params;
-    const imagePath = resolve(`./content/blogs/${blogName}/${imageName}`);
+    const { postName, imageName } = event.context.params;
+    const imagePath = resolve(`./content/posts/${postName}/${imageName}`);
     try {
         const image = await fs.readFile(imagePath);
         const extension = imageName.split('.').pop();
