@@ -1,6 +1,5 @@
 import fs from 'fs-extra'
 import fg from 'fast-glob'
-import path from 'path';
 import matter from 'gray-matter';
 import dayjs from 'dayjs'
 
@@ -17,13 +16,14 @@ export default defineEventHandler(async (event) => {
   const processedFiles = await Promise.all(files.map(async (i) => {
     const raw = await fs.readFile(i, 'utf-8');
     const { data: metaData} = matter(raw);
+    const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags;
     return {
       path: i.match(/content\/blogs\/([^\/]+)\//)?.[1],
       title: metaData.title,
       date: dayjs(metaData.date).format('MMMM D, YYYY'),
       cover: metaData.cover,
       abstract: metaData.abstract,
-      tags: metaData.tags,
+      tags: tags,
     };
   }));
   

@@ -42,6 +42,8 @@ export default defineEventHandler(async (event) => {
   marked.use({ renderer: renderer(name) });
   const htmlContent = marked(content);
   metaData.date = dayjs(metaData.date).format('MMM D, YYYY')
+  const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags;
+  metaData.tags=tags;
   return {
     metaData,
     htmlContent
