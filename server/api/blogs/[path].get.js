@@ -5,7 +5,8 @@ import fg from 'fast-glob'
 import dayjs from 'dayjs'
 // todo： 现在是根据文件名而不是文件夹匹配
 // 图片资源呢？
-const renderer = {
+
+const renderer = (path) => ({
   heading(text, level) {
     return `
       <h${level} class="relative group" id="${text}">
@@ -14,10 +15,22 @@ const renderer = {
           <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" href="#${text}" aria-label="Anchor">#</a>
         </span>
       </h${level}>`;
+  },
+  image(href, title, text) {
+    let imageUrl = href;
+    if (!href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('/')) {
+      imageUrl = `/api/assets/${path}/${href}`;
+    }
+    return `<img src="${imageUrl}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
   }
-};
+});
+
+
+
+
 export default defineEventHandler(async (event) => {
   const name = event.context.params?.path;
+
   const files = await fg('content/blogs/*/*.md');
   const filteredFiles = files.filter(i => i.includes(name));
   if (filteredFiles.length === 0) {
@@ -26,11 +39,12 @@ export default defineEventHandler(async (event) => {
 
   const raw = await fs.readFile(filteredFiles[0], 'utf-8');
   const { data: metaData, content } = matter(raw);
-  marked.use({ renderer });
+  marked.use({ renderer: renderer(name) });
   const htmlContent = marked(content);
   metaData.date = dayjs(metaData.date).format('MMM D, YYYY')
   return {
     metaData,
     htmlContent
   };
+
 });

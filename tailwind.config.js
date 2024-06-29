@@ -7,7 +7,6 @@ module.exports = {
     "./plugins/**/*.{js,ts}",
     "./server/**/*.{js,ts}",
     "./app.vue",
-    "./error.vue",
   ],
   darkMode: "class",
   theme: {

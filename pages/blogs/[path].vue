@@ -9,6 +9,5 @@
   
 <script setup>
 const route = useRoute();
-const { data: blog } = await useFetch(() => `/api/blogs/${route.params.path}`);
+const { data: blog } = await useFetch(`/api/blogs/${route.params.path}`);
 </script>
-  
