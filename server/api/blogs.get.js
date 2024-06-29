@@ -15,11 +15,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Article not found' });
   }
   const processedFiles = await Promise.all(files.map(async (i) => {
-    const name = path.basename(i);
     const raw = await fs.readFile(i, 'utf-8');
     const { data: metaData} = matter(raw);
     return {
-      path: name.replace('.md', ''),
+      path: i.match(/content\/blogs\/([^\/]+)\//)?.[1],
       title: metaData.title,
       date: dayjs(metaData.date).format('MMMM D, YYYY'),
       cover: metaData.cover,
