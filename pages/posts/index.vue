@@ -62,7 +62,6 @@ function grouppostsByYear() {
 
   groupedpostsData.value = sortedGroups;
 }
-console.log(groupedpostsData)
 
 async function fetchposts(page, size) {
   try {
