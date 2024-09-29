@@ -1,6 +1,10 @@
 import Parser from 'rss-parser'
 import { siteConfig } from '@/site.config'
 
+// todo：有些站点请求太慢了，看看能不能让友链先显示，然后再异步加载
+
+
+
 export default defineEventHandler(async (event) => {
     const parser = new Parser({
         headers: {

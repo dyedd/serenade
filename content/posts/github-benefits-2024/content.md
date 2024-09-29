@@ -1,7 +1,7 @@
 ---
 title: Github Benefits 学生认证/学生包 新版申请指南
 date: 2024-04-10 15:06:00
-cover: 
+cover: http://localhost:3032/assets/github-benefits-2024/891267941.png
 abstract: Github Benefits 2024最新申请指南
 tags: 技术折腾
 ---
