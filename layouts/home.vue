@@ -7,9 +7,13 @@
 </template>
 
 <style scoped>
+nav {
+    width: 60rem;
+}
 main {
     display: flex;
-    margin: auto;
+    margin: 0 auto;
+    width: 60rem;
     padding: 1.5rem;
 }
 </style>

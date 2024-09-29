@@ -1,24 +1,22 @@
 <template>
   <header>
-    <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">欢迎来到我的博客 🎉</h1>
+    <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">欢迎来到我的知识库 🎉</h1>
   </header>
   <section class="mt-0 prose flex max-w-full flex-col dark:prose-invert lg:flex-row">
     <div class="min-h-0 min-w-0 max-w-prose grow">
       <blockquote>
-        <p>你可以通过
-          <a href="/posts/index.xml">RSS</a> 订阅所有文章
-        </p>
+        <p>死记不如烂笔头</p>
       </blockquote>
-      <p>「所有文章」加起来有 10 篇，共 12,465 字</p>
     </div>
   </section>
-  <section v-if="postsData?.length > 0">
-    <template v-for="post in postsData" :key="post.id">
-      <postPreview :post="post" />
-    </template>
+  <section class="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-6 gap-4" v-if="items?.length > 0">
+    <ColumnsCard v-for="item in items" :key="item.id" :id="item.id" :title="item.title" :type="item.type" :image="item.image" :description="item.description">
+    </ColumnsCard>
   </section>
   <sectio v-else>
-    Loading posts...
+    <div><span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block animate-flash"></span><span
+        class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block animate-flash [animation-delay:0.2s]"></span><span
+        class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block animate-flash [animation-delay:0.4s]"></span></div>
   </sectio>
 
 </template>
@@ -27,17 +25,13 @@
 definePageMeta({
   layout: "default",
 });
-const postsData = ref([]);
+const items = ref([]);
 try {
-  const { data } = await useFetch('/api/posts');
-  console.log(data.value)
-  postsData.value = data.value;
+  const { data } = await useFetch('/api/columns');
+  items.value = data.value;
 } catch (error) {
-  console.error('Failed to fetch posts:', error);
+  console.error('Failed to fetch colums:', error);
 }
 </script>
 
-<style lang="scss" scoped>
-
-
-</style>
+<style lang="scss" scoped></style>

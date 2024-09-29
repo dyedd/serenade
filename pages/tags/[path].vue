@@ -1,7 +1,7 @@
 <template>
     <header>
         <ol class="text-sm text-neutral-500 print:hidden dark:text-neutral-400">
-            <li class="hidden inline">
+            <li class="hidden">
                 <a class="dark:underline-neutral-600 decoration-neutral-300 hover:underline" href="/"></a><span
                     class="px-1 text-primary-500">/</span>
             </li>

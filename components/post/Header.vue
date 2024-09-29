@@ -12,6 +12,8 @@
   
 <style lang="scss" scoped>
 header {
+    width: 60rem;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     background-color: var(--bg);
