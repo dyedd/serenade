@@ -1,5 +1,5 @@
 ---
-title: 深度学习和神经网络8
+title: 深度学习和神经网络 333
 date: 2023-03-25
 cover: https://imgsrc.baidu.com/forum/pic/item/ae51f3deb48f8c54ebc23e137c292df5e0fe7ffd.jpg
 abstract: 深度学习教程
