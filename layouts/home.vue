@@ -6,7 +6,7 @@
     <Footer />
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 nav {
     width: 60rem;
 }
@@ -15,5 +15,13 @@ main {
     margin: 0 auto;
     width: 60rem;
     padding: 1.5rem;
+}
+
+@media screen and (max-width: 768px) {
+    nav,
+    main {
+        width: 100%;
+        padding: 1rem;
+    }
 }
 </style>
