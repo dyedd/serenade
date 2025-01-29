@@ -11,7 +11,7 @@
       </blockquote>
     </div>
   </section>
-  <section v-if="groupedpostsData.length > 0">
+  <section v-if="!loading && groupedpostsData.length > 0">
     <div v-for="group in groupedpostsData" :key="group.year">
       <h2 class="mt-12 text-2xl font-bold text-neutral-700 first:mt-8 dark:text-neutral-300">{{ group.year }}</h2>
       <hr class="w-36 border-dotted border-neutral-400">
@@ -20,10 +20,14 @@
       </div>
     </div>
   </section>
-  <section v-else>
-    Loading posts...
+  <section v-else class="flex justify-center items-center p-4">
+    <div>
+      <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
+      <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
+      <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
+    </div>
   </section>
-  <Pagination :currentPage="currentPage" :totalPages="totalPages" @pageChange="goToPage" />
+  <Pagination  v-if="!loading && totalPages > 1" :currentPage="currentPage" :totalPages="totalPages" @pageChange="goToPage" />
 
 </template>
 
@@ -31,6 +35,7 @@
 definePageMeta({
   layout: "default",
 });
+const loading = ref(true);
 const postsData = ref([]);
 const groupedpostsData = ref({});
 const currentPage = ref(1);
@@ -64,6 +69,7 @@ function grouppostsByYear() {
 }
 
 async function fetchposts(page, size) {
+  loading.value = true;
   try {
     const { data } = await useFetch(`/api/posts?page=${page}&pageSize=${size}`);
     if (data.value) {
@@ -76,6 +82,8 @@ async function fetchposts(page, size) {
     }
   } catch (error) {
     console.error('Failed to fetch posts:', error);
+  } finally {
+    loading.value = false;
   }
 }
 

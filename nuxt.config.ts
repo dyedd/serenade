@@ -4,7 +4,7 @@ import { siteConfig } from './site.config'
 export default defineNuxtConfig({
   devtools: { enabled: true },
   experimental: {
-    watcher: "chokidar",
+    watcher: "parcel",
   },
   app: {
     rootId: 'nuxt-root',
