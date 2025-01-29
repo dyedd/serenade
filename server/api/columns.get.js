@@ -1,11 +1,42 @@
-export default defineEventHandler(() => {
-    const items = [
-        { id: 1, title: '玄学智障', description: '这里分享我们招的AI与并行计算内容', type: '企业公开', image: 'https://s3-imfile.feishucdn.com/static-resource/v1/v2_5580d23d-b9d3-4b46-b0b7-5a618507ac1g~?image_size=noop&cut_type=&quality=&format=image&sticker_format=.webp' },
-        { id: 2, title: 'PAC 2024', description: 'winograd在kunpeng920上优化', type: '企业公开', image: 'https://s3-imfile.feishucdn.com/static-resource/v1/v2_cd7a8a2a-e632-40cf-b255-a67024740cbg~?image_size=noop&cut_type=&quality=&format=image&sticker_format=.webp' },
-        { id: 3, title: '科研攻略', description: '打算这里放一些常用操作和环境配置攻略', type: '企业公开', image: 'https://s3-imfile.feishucdn.com/static-resource/v1/v2_02c06978-1a74-413a-a94c-961397ed116g~?image_size=noop&cut_type=&quality=&format=image&sticker_format=.webp' },
-        { id: 4, title: '光和基金', description: 'distrifusion复现', type: '互联网公开', image: 'https://s1-imfile.feishucdn.com/static-resource/v1/v2_4e7bedd6-d90c-41ca-88b5-eb6334d247dg~?image_size=noop&cut_type=&quality=&format=image&sticker_format=.webp' },
-        // 添加更多项目
-    ];
+import fs from 'fs-extra'
+import fg from 'fast-glob'
+import matter from 'gray-matter';
+import dayjs from 'dayjs'
 
-    return [...items];
+
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event);
+  const page = parseInt(query.page) || 1;
+  const pageSize = parseInt(query.pageSize) || 10;
+
+  const files = await fg('content/columns/*/README.md');
+  if (files.length === 0) {
+    throw createError({ statusCode: 404, statusMessage: 'Article not found' });
+  }
+  const processedFiles = await Promise.all(files.map(async (i) => {
+    const raw = await fs.readFile(i, 'utf-8');
+    const { data: metaData} = matter(raw);
+    return {
+      path: i.match(/content\/columns\/([^\/]+)\//)?.[1],
+      title: metaData.title,
+      date: dayjs(metaData.date).format('MMMM D, YYYY'),
+      image: metaData.image,
+      description: metaData.description,
+      type: metaData.type,
+    };
+  }));
+  
+  processedFiles.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const paginatedFiles = processedFiles.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.ceil(processedFiles.length / pageSize);
+
+  return {
+    page,
+    pageSize,
+    totalPages,
+    totalItems: processedFiles.length,
+    data: paginatedFiles,
+  };
 });
+
