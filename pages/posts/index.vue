@@ -1,21 +1,33 @@
 <template>
   <header>
-    <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">文章 🎉</h1>
+    <h1
+      class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral"
+    >
+      文章 🎉
+    </h1>
   </header>
-  <section class="mt-0 prose flex max-w-full flex-col dark:prose-invert lg:flex-row">
+  <section
+    class="mt-0 md:mt-4 prose flex max-w-full flex-col dark:prose-invert lg:flex-row"
+  >
     <div class="min-h-0 min-w-0 max-w-prose grow">
-      <blockquote>
-        <p>你可以通过
-          <a href="/rss">RSS</a> 订阅所有文章
-        </p>
+      <blockquote class="text-sm md:text-base">
+        <p>你可以通过 <a href="/rss">RSS</a> 订阅所有文章</p>
       </blockquote>
     </div>
   </section>
   <section v-if="!loading && groupedpostsData.length > 0">
     <div v-for="group in groupedpostsData" :key="group.year">
-      <h2 class="mt-12 text-2xl font-bold text-neutral-700 first:mt-8 dark:text-neutral-300">{{ group.year }}</h2>
-      <hr class="w-36 border-dotted border-neutral-400">
-      <div v-for="post in group.posts" :key="post.id">
+      <h2
+        class="mt-8 md:mt-12 text-xl md:text-2xl font-bold text-neutral-700 first:mt-6 md:first:mt-8 dark:text-neutral-300"
+      >
+        {{ group.year }}
+      </h2>
+      <hr class="w-24 md:w-36 border-dotted border-neutral-400" />
+      <div
+        class="space-y-4 md:space-y-6"
+        v-for="post in group.posts"
+        :key="post.id"
+      >
         <PostPreview :post="post" />
       </div>
     </div>
@@ -27,8 +39,12 @@
       <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
     </div>
   </section>
-  <Pagination  v-if="!loading && totalPages > 1" :currentPage="currentPage" :totalPages="totalPages" @pageChange="goToPage" />
-
+  <Pagination
+    v-if="!loading && totalPages > 1"
+    :currentPage="currentPage"
+    :totalPages="totalPages"
+    @pageChange="goToPage"
+  />
 </template>
 
 <script setup>
@@ -43,13 +59,12 @@ const pageSize = ref(5);
 const totalPages = ref(0);
 const totalItems = ref(0);
 
-
 const router = useRouter();
 const route = useRoute();
 
 function grouppostsByYear() {
   const groups = {};
-  postsData.value.forEach(post => {
+  postsData.value.forEach((post) => {
     const year = new Date(post.date).getFullYear();
     if (!groups[year]) {
       groups[year] = [];
@@ -58,12 +73,14 @@ function grouppostsByYear() {
   });
 
   // 将 groupedpostsData 转换为数组并按年份降序排序
-  const sortedGroups = Object.keys(groups).sort((a, b) => b - a).map(year => {
-    return {
-      year: year,
-      posts: groups[year]
-    };
-  });
+  const sortedGroups = Object.keys(groups)
+    .sort((a, b) => b - a)
+    .map((year) => {
+      return {
+        year: year,
+        posts: groups[year],
+      };
+    });
 
   groupedpostsData.value = sortedGroups;
 }
@@ -81,7 +98,7 @@ async function fetchposts(page, size) {
       grouppostsByYear();
     }
   } catch (error) {
-    console.error('Failed to fetch posts:', error);
+    console.error("Failed to fetch posts:", error);
   } finally {
     loading.value = false;
   }
@@ -101,10 +118,9 @@ function goToPage(page) {
   if (page >= 1 && page <= totalPages.value) {
     router.push({ query: { ...route.query, page } });
   } else {
-    alert('Invalid page number');
+    alert("Invalid page number");
   }
 }
-
 </script>
 
 <style lang="scss" scoped></style>
