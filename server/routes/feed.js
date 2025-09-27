@@ -32,11 +32,10 @@ export default defineEventHandler(async (event) => {
     processedFiles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     const posts = processedFiles.slice(0, 10)
 
-
     const feed = new RSS({
         title: siteConfig.title,
-        feed_url: `${event.node.req.headers.host}/rss`,
-        site_url: `${event.node.req.headers.host}`,
+        feed_url: `https://${event.node.req.headers.host}/rss`,
+        site_url: `https://${event.node.req.headers.host}`,
     })
 
 
@@ -44,7 +43,7 @@ export default defineEventHandler(async (event) => {
         feed.item({
             title: post.title,
             description: post.abstract,
-            url: `${event.node.req.headers.host}/post/${post.path}`,
+            url: `https://${event.node.req.headers.host}/post/${post.path}`,
             date: dayjs(post.date).toISOString(),
             enclosure: { url: post.cover },
         })

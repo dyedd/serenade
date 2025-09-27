@@ -11,7 +11,7 @@
   >
     <div class="min-h-0 min-w-0 max-w-prose grow">
       <blockquote class="text-sm md:text-base">
-        <p>你可以通过 <a href="/rss">RSS</a> 订阅所有文章</p>
+        <p>你可以通过 <a href="/feed">RSS</a> 订阅所有文章</p>
       </blockquote>
     </div>
   </section>

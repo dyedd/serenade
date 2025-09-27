@@ -27,7 +27,8 @@ export default defineNuxtConfig({
         lang: siteConfig.lang,
       },
       script: [
-        { src: '/iconfont.js', type: "text/javascript" }
+        { src: '/iconfont.js', type: "text/javascript" },
+        { src: 'https://hm.baidu.com/hm.js?a42bb662e1d8e0210358ee50d5b4f2d1', type: "text/javascript" },
       ]
     }
   },
