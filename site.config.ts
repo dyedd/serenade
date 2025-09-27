@@ -158,6 +158,12 @@ export const siteConfig = {
             "url": "https://yang000.cn",
             "rss": "",
             "logo": "https://iiiimage.oss-cn-beijing.aliyuncs.com/202311051049249.ico"
+        },
+        {
+            "name": "奕奕Blog",
+            "url": "https://www.eebk.com/",
+            "rss": "https://www.eebk.com/feeds/posts/default?alt=rss",
+            "logo": "https://img.eebk.com/blog/logo4.webp"
         }
     ]
 }

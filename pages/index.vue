@@ -17,8 +17,10 @@
     <div class="right">
       <h1>Hello, I'm <span class="text-gradient">染念</span>👋</h1>
       <p>
-        A <span class="text">Full Stack</span> Developer ,also A
-        <span class="text">Postgraduate</span> Student
+        <span class="text">AI infra</span>研究生，目前研究<span
+          style="text-decoration: wavy underline"
+          >分布式训练与推理</span
+        >以及<span class="text">扩散模型在短临降水领域</span>的应用
       </p>
       <p>🐍巳巳如意,生生不息</p>
       <p>🌈🌈🌈</p>
@@ -39,7 +41,7 @@
         我将在这里分享我的<span class="text">编程</span>和<span class="text"
           >人工智能</span
         >知识。如果你对这些主题感兴趣，那么恭喜你找到宝藏了。接下来你可以查看内容或订阅
-        <a class="text" href="/rss">RSS</a>。
+        <a class="text" href="/feed">RSS</a>。
       </div>
       <div class="my_status">
         <div class="status-item">
