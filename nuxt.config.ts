@@ -21,7 +21,7 @@ export default defineNuxtConfig({
         { 'http-equiv': 'X-UA-Compatible', 'content': 'IE=edge' },
       ],
       noscript: [
-        { children: 'JavaScript is required' },
+        { textContent: 'JavaScript is required' },
       ],
       htmlAttrs: {
         lang: siteConfig.lang,
@@ -33,5 +33,5 @@ export default defineNuxtConfig({
     }
   },
   css: ['~/assets/css/main.css'],
-  modules: ['@nuxtjs/tailwindcss'],
+  modules: ['@nuxtjs/tailwindcss']
 })

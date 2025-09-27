@@ -1,13 +1,12 @@
 ---
 title: 深度学习和神经网络
 date: 2024-03-25
-cover: https://imgsrc.baidu.com/forum/pic/item/ae51f3deb48f8c54ebc23e137c292df5e0fe7ffd.jpg
+cover: images.jpg
 abstract: 深度学习教程
 tags:
- - ai
- - test
+  - ai
+  - test
 ---
-
 
 ## 介绍
 
@@ -38,7 +37,9 @@ pip install torch torchvision
 ```
 
 ### 构建网络模型
+
 以下是一个简单的神经网络模型，用于分类任务：
+
 ```python
 import torch
 import torch.nn as nn
@@ -65,6 +66,7 @@ model = SimpleNeuralNetwork()
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 ```
+
 ### 训练模型
 
 ```python
@@ -83,5 +85,7 @@ for epoch in range(100):  # 迭代100次
     print(f'Epoch [{epoch+1}/100], Loss: {loss.item():.4f}')
 
 ```
+
 ### 结论
+
 通过本教程，你应该对深度学习和神经网络有了基本的了解，并学会了如何使用 PyTorch 来构建和训练一个简单的神经网络模型。深度学习是一个广泛且活跃的研究领域，有许多资源可以帮助你深入学习。
