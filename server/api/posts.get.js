@@ -1,8 +1,8 @@
-import fs from 'fs-extra'
-import fg from 'fast-glob'
+import dayjs from 'dayjs';
+import fg from 'fast-glob';
+import fs from 'fs-extra';
 import matter from 'gray-matter';
-import dayjs from 'dayjs'
-
+import { parseAsset } from '../utils.js';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -15,18 +15,19 @@ export default defineEventHandler(async (event) => {
   }
   const processedFiles = await Promise.all(files.map(async (i) => {
     const raw = await fs.readFile(i, 'utf-8');
-    const { data: metaData} = matter(raw);
+    const { data: metaData } = matter(raw);
     const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags;
+    const path = i.match(/content\/posts\/([^\/]+)\//)?.[1];
     return {
-      path: i.match(/content\/posts\/([^\/]+)\//)?.[1],
+      path: path,
       title: metaData.title,
       date: dayjs(metaData.date).format('MMMM D, YYYY'),
-      cover: metaData.cover,
+      cover: metaData.cover ? parseAsset(path, metaData.cover) : '',
       abstract: metaData.abstract,
       tags: tags,
     };
   }));
-  
+
   processedFiles.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const paginatedFiles = processedFiles.slice((page - 1) * pageSize, page * pageSize);
