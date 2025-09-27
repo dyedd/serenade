@@ -1,14 +1,21 @@
 <template>
-  <article class="mt-6 flex max-w-prose flex-row transition-transform duration-300 hover:scale-[1.02]">
-    <div class="flex-none pe-4 sm:pe-6">
-      <img class="w-24 max-w-[6rem] max-h-[4.5rem] rounded-md sm:max-h-[7.5rem] sm:w-40
-            sm:max-w-[10rem]" loading="lazy" :src="post.cover" alt="">
+  <article
+    class="mt-6 flex max-w-prose flex-row transition-transform duration-300 hover:scale-[1.02]"
+  >
+    <div class="flex-none pe-4 sm:pe-6" v-if="post.cover">
+      <img
+        class="w-24 max-w-[6rem] max-h-[4.5rem] rounded-md sm:max-h-[7.5rem] sm:w-40 sm:max-w-[10rem]"
+        loading="lazy"
+        :src="post.cover"
+        alt=""
+      />
     </div>
     <div>
       <h3 class="flex items-center text-xl font-semibold">
         <NuxtLink
           class="text-neutral-800 decoration-primary-500 hover:underline hover:underline-offset-2 dark:text-neutral"
-          :to="`/posts/${post.path}`">
+          :to="`/posts/${post.path}`"
+        >
           {{ post.title }}
         </NuxtLink>
       </h3>
@@ -18,8 +25,11 @@
           <span class="px-2 text-primary-500">·</span>
           <ul class="ml-1 flex items-center gap-x-2">
             <li v-for="(tag, index) in post.tags" :key="index">
-              <a class="cactus-link inline-block" :aria-label="'View more posts with the tag ' + tag"
-                :href="'/tags/' + tag">
+              <a
+                class="cactus-link inline-block"
+                :aria-label="'View more posts with the tag ' + tag"
+                :href="'/tags/' + tag"
+              >
                 #{{ tag }}
               </a>
             </li>
