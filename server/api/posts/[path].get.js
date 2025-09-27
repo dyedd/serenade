@@ -1,13 +1,13 @@
-import fs from 'fs-extra'
+import dayjs from 'dayjs';
+import fg from 'fast-glob';
+import fs from 'fs-extra';
 import matter from 'gray-matter';
 import { marked } from 'marked';
-import fg from 'fast-glob'
-import dayjs from 'dayjs'
-// todo： 现在是根据文件名而不是文件夹匹配
-// 图片资源呢？
+import { parseAsset } from '../../utils.js';
 
 const renderer = (path) => ({
-  heading(text, level) {
+  heading(token) {
+    const { text, depth: level } = token;
     return `
       <h${level} class="relative group" id="${text}">
         ${text}
@@ -16,11 +16,14 @@ const renderer = (path) => ({
         </span>
       </h${level}>`;
   },
-  image(href, title, text) {
-    let imageUrl = href;
-    if (!href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('/')) {
-      imageUrl = `/assets/${path}/${href}`;
+  image(token) {
+    const { href, title = '', text = '' } = token;
+
+    if (!href) {
+      return `<img alt="${text}"${title ? ` title="${title}"` : ''}>`;
     }
+
+    let imageUrl = parseAsset(path, href.trim());
     return `<img src="${imageUrl}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
   }
 });
@@ -39,14 +42,16 @@ export default defineEventHandler(async (event) => {
 
   const raw = await fs.readFile(filteredFiles[0], 'utf-8');
   const { data: metaData, content } = matter(raw);
+
   marked.use({ renderer: renderer(name) });
   const htmlContent = marked(content);
-  metaData.date = dayjs(metaData.date).format('MMM D, YYYY')
-  const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags;
-  metaData.tags=tags;
-  return {
-    metaData,
-    htmlContent
-  };
 
+  if (metaData.cover) {
+    metaData.cover = parseAsset(name, metaData.cover);
+  }
+  metaData.date = dayjs(metaData.date).format('MMM D, YYYY');
+  const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags;
+  metaData.tags = tags;
+
+  return { metaData, htmlContent };
 });
