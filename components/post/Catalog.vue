@@ -1,31 +1,38 @@
 <template>
-    <ul>
-        <template v-for="item in headings" :key="item.id">
-            <li :class="{ active: item.id === activeId }">
-                <a :href="`#${item.id}`" @click.prevent="scrollToHeading(item.id)">{{ item.id }}</a>
-                <PostCatalog v-if="item.children.length > 0" :headings="item.children" :active-id="activeId"
-                    @click="scrollToHeading($event)"></PostCatalog>
-            </li>
-        </template>
-    </ul>
+  <ul>
+    <template v-for="item in headings" :key="item.id">
+      <li :class="{ active: item.id === activeId }">
+        <a :href="`#${item.id}`" @click.prevent="scrollToHeading(item.id)">{{
+          item.id
+        }}</a>
+        <PostCatalog
+          v-if="item.children.length > 0"
+          :headings="item.children"
+          :active-id="activeId"
+          @click="scrollToHeading($event)"
+        ></PostCatalog>
+      </li>
+    </template>
+  </ul>
 </template>
 
 <script setup>
 const props = defineProps({
-    headings: {
-        type: Array,
-        required: true
-    },
-    activeId: {
-        type: Number,
-        required: true
-    }
+  headings: {
+    type: Array,
+    required: true,
+  },
+  activeId: {
+    type: Number,
+    default: 0,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['click']);
+const emit = defineEmits(["click"]);
 
 const scrollToHeading = (id) => {
-    emit('click', id);
+  emit("click", id);
 };
 </script>
 <style lang="scss" scoped>
@@ -39,7 +46,7 @@ const scrollToHeading = (id) => {
   }
 
   li {
-    &.active>a {
+    &.active > a {
       color: rgba(var(--color-neutral), 1);
       text-decoration: none;
       background-color: rgba(var(--color-primary-600), 1);
@@ -63,5 +70,4 @@ const scrollToHeading = (id) => {
     }
   }
 }
-
 </style>
