@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
 
     const feed = new RSS({
         title: siteConfig.title,
-        feed_url: `https://${event.node.req.headers.host}/rss`,
+        feed_url: `https://${event.node.req.headers.host}/feed`,
         site_url: `https://${event.node.req.headers.host}`,
     })
 
