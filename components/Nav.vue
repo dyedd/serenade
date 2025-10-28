@@ -109,6 +109,8 @@ nav {
 
       li {
         margin: 0;
+        display: block;
+        align-items: initial;
 
         a {
           padding: 0.5rem 1rem;
@@ -190,18 +192,28 @@ nav {
       }
 
       .dropdown-menu {
-        left: 0;
-        transform: none;
+        left: 50%;
+        transform: translateX(-50%);
         margin-top: 0.3rem;
+        min-width: 140px;
+
+        li {
+          display: block;
+
+          a {
+            display: block;
+            text-align: center;
+          }
+        }
 
         &:hover,
         .dropdown:hover & {
-          transform: translateY(0);
+          transform: translateX(-50%) translateY(0);
         }
       }
 
       &:hover .dropdown-menu {
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
       }
     }
   }
