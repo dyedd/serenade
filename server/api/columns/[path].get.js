@@ -5,12 +5,15 @@ import fg from 'fast-glob';
 import dayjs from 'dayjs';
 
 const renderer = (path) => ({
-  heading(text, level) {
+  heading(token) {
+    const text = token.text;
+    const level = token.depth;
+    const id = text.replace(/\s+/g, '-').toLowerCase();
     return `
-      <h${level} class="relative group" id="${text}">
+      <h${level} class="relative group" id="${id}">
         ${text}
         <span class="absolute top-0 w-6 transition-opacity opacity-0 -start-6 not-prose group-hover:opacity-100">
-          <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" href="#${text}" aria-label="Anchor">#</a>
+          <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" href="#${id}" aria-label="Anchor">#</a>
         </span>
       </h${level}>`;
   },
