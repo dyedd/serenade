@@ -57,7 +57,9 @@ export default defineEventHandler(async (event) => {
 
   marked.use({ renderer: renderer(path) });
   marked.use(markedKatex({
-    throwOnError: false
+    throwOnError: false,
+    nonStandard: true,
+    output: 'mathml'
   }));
   const htmlContent = marked(chapterContent);
 

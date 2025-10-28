@@ -63,7 +63,9 @@ export default defineEventHandler(async (event) => {
 
   marked.use({ renderer: renderer(name) });
   marked.use(markedKatex({
-    throwOnError: false
+    throwOnError: false,
+    nonStandard: true,
+    output: 'mathml'
   }));
   const readmeHtml = marked(readmeMarkdown);
 
