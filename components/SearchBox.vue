@@ -1,6 +1,6 @@
 <template>
   <div class="search-container">
-    <div class="search-box" :class="{ 'expanded': isExpanded }">
+    <div class="search-box" :class="{ expanded: isExpanded }">
       <input
         ref="searchInput"
         v-model="searchKeyword"
@@ -19,12 +19,7 @@
       >
         <span class="icon">🔍</span>
       </button>
-      <button
-        v-else
-        class="clear-btn"
-        @click="handleClear"
-        title="清除"
-      >
+      <button v-else class="clear-btn" @click="handleClear" title="清除">
         ✕
       </button>
     </div>
@@ -39,9 +34,7 @@ const searchKeyword = ref("");
 const searchInput = ref(null);
 
 function toggleSearch() {
-  console.log('toggleSearch called');
   isExpanded.value = true;
-  console.log('isExpanded:', isExpanded.value);
   nextTick(() => {
     searchInput.value?.focus();
   });

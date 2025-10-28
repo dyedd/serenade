@@ -6,7 +6,7 @@ import { parseAsset } from '../../utils.js';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const keyword = query.keyword?.toLowerCase() || '';
+  const keyword = query.keyword?.trim().toLowerCase() || '';
   const page = parseInt(query.page) || 1;
   const pageSize = parseInt(query.pageSize) || 10;
 
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     // 搜索标题、摘要、标签和内容
     const titleMatch = metaData.title?.toLowerCase().includes(keyword);
     const abstractMatch = metaData.abstract?.toLowerCase().includes(keyword);
-    const tagsMatch = tags?.some(tag => tag.toLowerCase().includes(keyword));
+    const tagsMatch = tags?.some(tag => tag && typeof tag === 'string' && tag.toLowerCase().includes(keyword));
     const contentMatch = content.toLowerCase().includes(keyword);
 
     if (titleMatch || abstractMatch || tagsMatch || contentMatch) {

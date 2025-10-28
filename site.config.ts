@@ -5,7 +5,7 @@ export const siteConfig = {
     keywords: "染念,染念的笔记,染念の笔记,染念的博客,博客,blog",
     lang: 'zh-CN',
     startTime: '2017-02-11', // 添加建站时间
-    moments: [
+    friend: [
         {
             name: '云烟成雨',
             url: 'https://shiyu.dev/',
