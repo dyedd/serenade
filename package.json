@@ -23,7 +23,9 @@
     "dayjs": "latest",
     "fast-glob": "latest",
     "gray-matter": "latest",
+    "katex": "^0.16.25",
     "marked": "latest",
+    "marked-katex-extension": "^5.1.5",
     "rss": "latest",
     "rss-parser": "latest"
   }

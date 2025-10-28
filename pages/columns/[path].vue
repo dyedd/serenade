@@ -62,8 +62,22 @@ onMounted(async () => {
   chapters.value = data.chapters;
 });
 
-function setCurrentChapter(index) {
+async function setCurrentChapter(index) {
   currentChapterIndex.value = index;
+
+  // 如果章节已经有内容，直接使用缓存
+  if (chapters.value[index].htmlContent) {
+    currentChapter.value = chapters.value[index];
+    return;
+  }
+
+  // 否则按需加载章节内容
+  const fileName = chapters.value[index].fileName;
+  const response = await fetch(`/api/columns/${route.params.path}/${fileName}`);
+  const chapterData = await response.json();
+
+  // 缓存章节内容
+  chapters.value[index] = { ...chapters.value[index], ...chapterData };
   currentChapter.value = chapters.value[index];
 }
 

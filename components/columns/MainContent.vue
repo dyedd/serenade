@@ -10,20 +10,28 @@
 
       <!-- 主内容 -->
       <article class="markdown-body">
-        <div v-html="!currentChapter ? readmeHtml : currentChapter.htmlContent"></div>
+        <div
+          v-html="!currentChapter ? readmeHtml : currentChapter.htmlContent"
+        ></div>
       </article>
 
       <!-- 上一篇/下一篇导航 -->
       <nav v-if="prevChapter || nextChapter" class="page-nav">
         <div class="nav-prev" v-if="prevChapter">
           <div class="nav-label">上一篇</div>
-          <a @click.prevent="$emit('selectChapter', prevChapter.index)" class="nav-link">
+          <a
+            @click.prevent="$emit('selectChapter', prevChapter.index)"
+            class="nav-link"
+          >
             {{ prevChapter.title }}
           </a>
         </div>
         <div class="nav-next" v-if="nextChapter">
           <div class="nav-label">下一篇</div>
-          <a @click.prevent="$emit('selectChapter', nextChapter.index)" class="nav-link">
+          <a
+            @click.prevent="$emit('selectChapter', nextChapter.index)"
+            class="nav-link"
+          >
             {{ nextChapter.title }}
           </a>
         </div>
@@ -47,19 +55,19 @@ const props = defineProps({
   nextChapter: Object,
 });
 
-defineEmits(['selectChapter']);
+defineEmits(["selectChapter"]);
 </script>
 
 <style lang="scss" scoped>
 .main-container {
   flex: 1;
   display: flex;
-  overflow: hidden;
+  overflow-y: auto;
+  padding-right: 240px;
 }
 
 .content-main {
   flex: 1;
-  overflow-y: auto;
   padding: 2rem 3rem;
   max-width: 900px;
 }
@@ -94,7 +102,7 @@ defineEmits(['selectChapter']);
     position: relative;
 
     &::before {
-      content: '#';
+      content: "#";
       position: absolute;
       left: -1.5rem;
       color: var(--color);
@@ -136,7 +144,7 @@ defineEmits(['selectChapter']);
     border-radius: 4px;
     font-size: 0.9em;
     color: rgb(var(--color-secondary-700));
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: "Consolas", "Monaco", monospace;
   }
 
   :deep(pre) {
@@ -168,7 +176,8 @@ defineEmits(['selectChapter']);
     }
   }
 
-  :deep(ul), :deep(ol) {
+  :deep(ul),
+  :deep(ol) {
     padding-left: 1.5rem;
     margin: 1rem 0;
 
@@ -184,7 +193,8 @@ defineEmits(['selectChapter']);
     margin: 1.5rem 0;
     font-size: 0.9375rem;
 
-    th, td {
+    th,
+    td {
       border: 1px solid rgba(var(--color-neutral-200), 0.8);
       padding: 0.75rem;
       text-align: left;
@@ -207,6 +217,17 @@ defineEmits(['selectChapter']);
     border-radius: 8px;
     margin: 1.5rem 0;
   }
+
+  // KaTeX 公式样式
+  :deep(.katex-display) {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  :deep(.katex) {
+    font-size: 1.1em;
+  }
 }
 
 // 页面导航
@@ -219,7 +240,8 @@ defineEmits(['selectChapter']);
   border-top: 1px solid rgba(var(--color-neutral-200), 0.6);
 }
 
-.nav-prev, .nav-next {
+.nav-prev,
+.nav-next {
   padding: 1.25rem;
   border-radius: 12px;
   background: rgba(var(--color-neutral-50), 0.5);
@@ -265,7 +287,9 @@ defineEmits(['selectChapter']);
 // 深色模式
 :global(.dark) {
   .markdown-body {
-    :deep(h1), :deep(h2), :deep(h3) {
+    :deep(h1),
+    :deep(h2),
+    :deep(h3) {
       border-color: rgba(var(--color-neutral-700), 0.6);
     }
 
@@ -284,7 +308,8 @@ defineEmits(['selectChapter']);
     }
 
     :deep(table) {
-      th, td {
+      th,
+      td {
         border-color: rgba(var(--color-neutral-700), 0.6);
       }
 
@@ -302,7 +327,8 @@ defineEmits(['selectChapter']);
     border-top-color: rgba(var(--color-neutral-700), 0.6);
   }
 
-  .nav-prev, .nav-next {
+  .nav-prev,
+  .nav-next {
     background: rgba(var(--color-neutral-800), 0.4);
     border-color: rgba(var(--color-neutral-700), 0.6);
 
@@ -314,6 +340,10 @@ defineEmits(['selectChapter']);
 
 // 响应式
 @media (max-width: 1024px) {
+  .main-container {
+    padding-right: 0; // 移除 TOC 空间，因为 TOC 在此断点隐藏
+  }
+
   .content-main {
     padding: 1.5rem 2rem;
   }

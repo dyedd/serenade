@@ -54,30 +54,43 @@ function parseHeadings(content) {
   }));
 }
 
+let scrollContainer = null;
+
 // 滚动到指定标题
 function scrollToHeading(id) {
+  activeId.value = id;
   const element = document.getElementById(id);
   if (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    activeId.value = id;
   }
 }
 
 // 监听滚动，高亮当前标题
 function updateActiveHeading() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !scrollContainer) return;
 
   const headingElements = headings.value.map(h => document.getElementById(h.id)).filter(Boolean);
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  if (headingElements.length === 0) return;
 
+  const scrollTop = scrollContainer.scrollTop;
+
+  // 从后向前遍历，找到第一个在滚动位置以上的标题
   for (let i = headingElements.length - 1; i >= 0; i--) {
     const element = headingElements[i];
-    if (element && element.offsetTop - 100 <= scrollTop) {
-      activeId.value = element.id;
-      return;
+    if (element) {
+      // 获取元素相对于文档的位置
+      const rect = element.getBoundingClientRect();
+      const containerRect = scrollContainer.getBoundingClientRect();
+
+      // 元素顶部相对于容器顶部的位置
+      if (rect.top - containerRect.top <= 120) {
+        activeId.value = element.id;
+        return;
+      }
     }
   }
 
+  // 如果没有找到，默认高亮第一个
   if (headingElements.length > 0) {
     activeId.value = headingElements[0].id;
   }
@@ -85,19 +98,34 @@ function updateActiveHeading() {
 
 onMounted(() => {
   parseHeadings(props.content);
-  window.addEventListener('scroll', updateActiveHeading);
-  updateActiveHeading();
+
+  // 查找滚动容器（.main-container）
+  nextTick(() => {
+    scrollContainer = document.querySelector('.main-container');
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', updateActiveHeading);
+      updateActiveHeading();
+    }
+  });
 });
 
 onUnmounted(() => {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('scroll', updateActiveHeading);
+  if (scrollContainer) {
+    scrollContainer.removeEventListener('scroll', updateActiveHeading);
   }
 });
 
 watch(() => props.content, (newContent) => {
   parseHeadings(newContent);
   nextTick(() => {
+    // 确保滚动容器已找到
+    if (!scrollContainer) {
+      scrollContainer = document.querySelector('.main-container');
+      if (scrollContainer) {
+        scrollContainer.addEventListener('scroll', updateActiveHeading);
+      }
+    }
     updateActiveHeading();
   });
 });
@@ -107,12 +135,14 @@ watch(() => props.content, (newContent) => {
 .toc-container {
   width: 240px;
   padding: 2rem 1.5rem;
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  position: fixed;
+  right: 0;
+  top: 80px;
+  bottom: 0;
   overflow-y: auto;
   border-left: 1px solid rgba(var(--color-neutral-200), 0.6);
-  flex-shrink: 0;
+  background: var(--bg);
+  z-index: 10;
 }
 
 .toc-header {
