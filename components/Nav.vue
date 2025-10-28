@@ -21,6 +21,9 @@
           </li>
         </ul>
       </li>
+      <li class="dark-mode-item">
+        <DarkModeToggle />
+      </li>
     </ul>
   </nav>
 </template>
@@ -44,6 +47,8 @@ nav {
 
   li {
     margin: 0 1rem;
+    display: flex;
+    align-items: center;
 
     a {
       text-decoration: none;
@@ -59,6 +64,10 @@ nav {
       &.router-link-active {
         color: var(--color);
       }
+    }
+
+    &.dark-mode-item {
+      margin: 0 0.5rem;
     }
   }
 
@@ -127,6 +136,28 @@ nav {
 
 // 深色模式支持
 :global(.dark) nav {
+  color: var(--text-color);
+
+  li a {
+    color: var(--text-color);
+
+    &:hover {
+      color: var(--color);
+    }
+
+    &.router-link-active {
+      color: var(--color);
+    }
+  }
+
+  .dropdown-trigger {
+    color: var(--text-color);
+
+    &:hover {
+      color: var(--color);
+    }
+  }
+
   .dropdown-menu {
     background: var(--bg-color, #1a1a1a);
     border-color: rgba(255, 255, 255, 0.1);
@@ -136,6 +167,7 @@ nav {
 
 @media screen and (max-width: 768px) {
   nav {
+    width: 100%;
     padding: 1rem;
     justify-content: center;
 
