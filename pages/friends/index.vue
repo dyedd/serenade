@@ -3,7 +3,11 @@
     <h1
       class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral"
     >
-      友链 🤝
+      友链
+      <span v-if="!loading && sites.length > 0" class="total-count">{{
+        sites.length
+      }}</span>
+      🤝
     </h1>
   </header>
 
@@ -104,4 +108,31 @@ try {
 }
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+// 友链总数样式
+.total-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--color-primary-600));
+  background: rgba(var(--color-primary-500), 0.1);
+  border-radius: 8px;
+  vertical-align: middle;
+}
+
+:global(.dark) .total-count {
+  color: rgb(var(--color-primary-400));
+  background: rgba(var(--color-primary-500), 0.15);
+}
+
+@media screen and (max-width: 768px) {
+  .total-count {
+    font-size: 1rem;
+    padding: 0.2rem 0.6rem;
+    margin-left: 0.5rem;
+  }
+}
+</style>

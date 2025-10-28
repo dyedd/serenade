@@ -25,8 +25,17 @@ export default defineEventHandler(async (event) => {
       type: metaData.type,
     };
   }));
-  
+
   processedFiles.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // 统计所有专栏的章节总数
+  let totalDocs = 0;
+  for (const file of files) {
+    const columnPath = file.replace('/README.md', '');
+    const chapterFiles = await fg(`${columnPath}/*.md`);
+    // 减去 readme.md 本身
+    totalDocs += chapterFiles.length - 1;
+  }
 
   const paginatedFiles = processedFiles.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.ceil(processedFiles.length / pageSize);
@@ -36,6 +45,7 @@ export default defineEventHandler(async (event) => {
     pageSize,
     totalPages,
     totalItems: processedFiles.length,
+    totalDocs,
     data: paginatedFiles,
   };
 });
