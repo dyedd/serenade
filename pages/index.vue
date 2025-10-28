@@ -99,11 +99,17 @@ definePageMeta({
       right: 0;
       text-align: center;
       font-size: 2rem;
-      background-color: #fff;
+      background-color: var(--bg);
       box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.04),
         0 0.2rem 0.6rem rgba(0, 0, 0, 0.04), 0 0 0.1rem rgba(0, 0, 0, 0.04);
     }
   }
+}
+
+:global(.dark) .left .logo .emoji {
+  background-color: var(--bg);
+  box-shadow: 0 1rem 2rem rgba(255, 255, 255, 0.08),
+    0 0.2rem 0.6rem rgba(255, 255, 255, 0.06), 0 0 0.1rem rgba(255, 255, 255, 0.04);
 }
 
 .location-info {
@@ -153,7 +159,7 @@ definePageMeta({
 }
 
 .icon-wrapper {
-  color: #000;
+  color: var(--text-color);
 
   a {
     padding: 0.5rem 1rem;
@@ -164,7 +170,13 @@ definePageMeta({
     background: rgba(249, 250, 251, 0.6);
     color: #000;
     margin-right: 1rem;
+    transition: background 0.3s ease, color 0.3s ease;
   }
+}
+
+:global(.dark) .icon-wrapper a {
+  background: rgba(51, 65, 85, 0.6);
+  color: var(--text-color);
 }
 
 .hero-text {
@@ -182,6 +194,11 @@ definePageMeta({
     position: absolute;
     top: -32px;
   }
+}
+
+:global(.dark) .hero-text {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
 }
 
 .my_status {

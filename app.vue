@@ -5,3 +5,11 @@
     </NuxtLayout>
   </div>
 </template>
+
+<script setup>
+const { loadDarkModePreference } = useDarkMode()
+
+onMounted(() => {
+  loadDarkModePreference()
+})
+</script>

@@ -39,30 +39,17 @@ header {
 @media screen and (max-width: 768px) {
   header {
     width: 100%;
-    flex-direction: column;
-    align-items: center;
+    justify-content: center;
+    padding: 0;
 
-    div {
-      padding: 0.5rem;
+    div:first-child {
+      display: none;
     }
 
-    img {
-      width: 3rem;
-      height: 3rem;
-    }
-  }
-}
-
-@media screen and (max-width: 480px) {
-  header {
-    div {
+    div:last-child {
+      padding: 0;
       width: 100%;
       justify-content: center;
-    }
-
-    img {
-      width: 2.5rem;
-      height: 2.5rem;
     }
   }
 }
