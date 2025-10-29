@@ -2,9 +2,18 @@ import { siteConfig } from './site.config'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  compatibilityDate: '2025-10-29',
   devtools: { enabled: true },
   experimental: {
     watcher: "parcel",
+    asyncContext: true,
+    renderJsonPayloads: true,
+    payloadExtraction: true,
+    viewTransition: true,
+  },
+  routeRules: {
+    '/': { prerender: true },
+    '/api/**': { cache: { maxAge: 3600 } },
   },
   app: {
     rootId: 'nuxt-root',
@@ -35,6 +44,16 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   modules: ['@nuxtjs/tailwindcss'],
   vite: {
+    build: {
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['vue', 'nuxt'],
+          }
+        }
+      }
+    },
     css: {
       preprocessorOptions: {
         scss: {
@@ -43,5 +62,12 @@ export default defineNuxtConfig({
         }
       }
     }
-  }
+  },
+  nitro: {
+    compressPublicAssets: true,
+    minify: true,
+    prerender: {
+      crawlLinks: true
+    }
+  },
 })
