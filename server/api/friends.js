@@ -1,4 +1,5 @@
-import { siteConfig } from '@/site.config';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 import Parser from 'rss-parser';
 
 // Fisher-Yates 洗牌算法
@@ -10,25 +11,21 @@ function shuffle(array) {
     return array;
 }
 
-// 内存缓存与过期时间
-let cacheData = { baseResults: [], articleMap: {} }
-let lastCacheTime = 0
-const CACHE_DURATION = 10 * 60 * 1000
+// 读取友联数据文件
+async function loadFriendsData() {
+    const dataPath = join(process.cwd(), 'content', 'friends.json')
+    const fileContent = await fs.readFile(dataPath, 'utf-8')
+    return JSON.parse(fileContent)
+}
 
 export default defineEventHandler(async (event) => {
-    const now = Date.now()
-    const isCacheValid = now - lastCacheTime < CACHE_DURATION
     const query = getQuery(event)
     const urlQuery = query.url
 
     // 无 url 参数：返回基础信息
     if (!urlQuery) {
-        // 若缓存有效则直接返回
-        if (isCacheValid && cacheData.baseResults?.length) {
-            return { results: cacheData.baseResults }
-        }
-
-        const baseInfo = siteConfig.friend.map(moment => ({
+        const friendsData = await loadFriendsData()
+        const baseInfo = friendsData.map(moment => ({
             siteName: moment.name,
             siteUrl: moment.url,
             siteLogo: moment.logo,
@@ -37,17 +34,12 @@ export default defineEventHandler(async (event) => {
             hasRSS: !!moment.rss
         }))
 
-        cacheData.baseResults = shuffle(baseInfo)
-        lastCacheTime = now
-        return { results: cacheData.baseResults }
+        return { results: shuffle(baseInfo) }
     }
 
-    // 有 url 参数：请求指定站点
-    if (isCacheValid && cacheData.articleMap[urlQuery]) {
-        return { results: [cacheData.articleMap[urlQuery]] }
-    }
-
-    const target = siteConfig.friend.find(m => m.url === urlQuery)
+    // 有 url 参数
+    const friendsData = await loadFriendsData()
+    const target = friendsData.find(m => m.url === urlQuery)
 
     // 如果站点不存在
     if (!target) {
@@ -96,8 +88,6 @@ export default defineEventHandler(async (event) => {
                 hasRSS: true,
                 isEmpty: true
             }
-            cacheData.articleMap[urlQuery] = siteData
-            lastCacheTime = now
             return { results: [siteData] }
         }
 
@@ -119,8 +109,6 @@ export default defineEventHandler(async (event) => {
             hasRSS: true
         }
 
-        cacheData.articleMap[urlQuery] = siteData
-        lastCacheTime = now
         return {
             results: [siteData]
         }
