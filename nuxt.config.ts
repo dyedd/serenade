@@ -46,13 +46,6 @@ export default defineNuxtConfig({
   vite: {
     build: {
       cssMinify: true,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['vue', 'nuxt'],
-          }
-        }
-      }
     },
     css: {
       preprocessorOptions: {
@@ -66,8 +59,5 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
-    prerender: {
-      crawlLinks: true
-    }
   },
 })
