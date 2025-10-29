@@ -16,11 +16,12 @@ export default defineEventHandler(async (event) => {
   const processedFiles = await Promise.all(files.map(async (i) => {
     const raw = await fs.readFile(i, 'utf-8');
     const { data: metaData} = matter(raw);
+    const columnPath = i.match(/content\/columns\/([^\/]+)\//)?.[1];
     return {
-      path: i.match(/content\/columns\/([^\/]+)\//)?.[1],
+      path: columnPath,
       title: metaData.title,
       date: dayjs(metaData.date).format('MMMM D, YYYY'),
-      image: metaData.image,
+      image: metaData.image ? `/api/assets/columns/${columnPath}/${metaData.image}` : null,
       description: metaData.description,
       type: metaData.type,
     };
