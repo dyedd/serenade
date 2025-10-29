@@ -1,7 +1,7 @@
-import fs from 'fs-extra'
-import fg from 'fast-glob'
+import dayjs from 'dayjs';
+import fg from 'fast-glob';
+import fs from 'fs-extra';
 import matter from 'gray-matter';
-import dayjs from 'dayjs'
 
 
 export default defineEventHandler(async (event) => {
@@ -15,13 +15,13 @@ export default defineEventHandler(async (event) => {
   }
   const processedFiles = await Promise.all(files.map(async (i) => {
     const raw = await fs.readFile(i, 'utf-8');
-    const { data: metaData} = matter(raw);
+    const { data: metaData } = matter(raw);
     const columnPath = i.match(/content\/columns\/([^\/]+)\//)?.[1];
     return {
       path: columnPath,
       title: metaData.title,
       date: dayjs(metaData.date).format('MMMM D, YYYY'),
-      image: metaData.image ? `/api/assets/columns/${columnPath}/${metaData.image}` : null,
+      image: metaData.image ? `/assets/columns/${columnPath}/${metaData.image}` : null,
       description: metaData.description,
       type: metaData.type,
     };
