@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   },
   routeRules: {
     '/': { prerender: true },
-    '/api/**': { cache: { maxAge: 3600 } },
+    '/api/friends': { cache: { maxAge: 60 } },
   },
   app: {
     rootId: 'nuxt-root',
