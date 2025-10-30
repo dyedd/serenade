@@ -1,11 +1,10 @@
 <template>
-  <!-- 博客头部 -->
   <header class="sticky top-0 z-30">
-    <div>
-      <img class="shadow-lg" src="/logo.jpg" />
+    <div class="logo-section">
+      <img class="logo" src="/logo.jpg" alt="logo" />
     </div>
-    <div>
-      <Nav></Nav>
+    <div class="nav-section">
+      <Nav />
     </div>
   </header>
 </template>
@@ -24,7 +23,7 @@ header {
     align-items: center;
   }
 
-  img {
+  .logo {
     width: 4rem;
     height: 4rem;
     border-radius: 1.5rem;
@@ -42,14 +41,12 @@ header {
     justify-content: center;
     padding: 0;
 
-    div:first-child {
+    .logo-section {
       display: none;
     }
 
-    div:last-child {
+    .nav-section {
       padding: 0;
-      width: 100%;
-      justify-content: center;
     }
   }
 }

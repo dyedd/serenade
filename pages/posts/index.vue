@@ -341,9 +341,7 @@ watch(
 
 function goToPage(page) {
   if (page >= 1 && page <= totalPages.value) {
-    router.push({ query: { ...route.query, page } });
-  } else {
-    alert("Invalid page number");
+    router.push({ query: { ...route.query, page } })
   }
 }
 </script>

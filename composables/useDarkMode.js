@@ -1,35 +1,31 @@
 export const useDarkMode = () => {
   const isDark = useState('darkMode', () => false)
 
-  const toggleDarkMode = () => {
-    isDark.value = !isDark.value
-    updateDarkClass()
-    saveDarkModePreference()
-  }
-
-  const setDarkMode = (value) => {
-    isDark.value = value
-    updateDarkClass()
-    saveDarkModePreference()
-  }
-
-  const updateDarkClass = () => {
+  const updateDomClass = () => {
     if (process.client) {
-      if (isDark.value) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+      document.documentElement.classList.toggle('dark', isDark.value)
     }
   }
 
-  const saveDarkModePreference = () => {
+  const savePreference = () => {
     if (process.client) {
       localStorage.setItem('darkMode', isDark.value ? 'dark' : 'light')
     }
   }
 
-  const loadDarkModePreference = () => {
+  const toggle = () => {
+    isDark.value = !isDark.value
+    updateDomClass()
+    savePreference()
+  }
+
+  const set = (value) => {
+    isDark.value = value
+    updateDomClass()
+    savePreference()
+  }
+
+  const load = () => {
     if (process.client) {
       const saved = localStorage.getItem('darkMode')
       if (saved) {
@@ -38,14 +34,14 @@ export const useDarkMode = () => {
         // 默认跟随系统
         isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
       }
-      updateDarkClass()
+      updateDomClass()
     }
   }
 
   return {
-    isDark,
-    toggleDarkMode,
-    setDarkMode,
-    loadDarkModePreference
+    isDark: readonly(isDark),
+    toggle,
+    set,
+    load
   }
 }
