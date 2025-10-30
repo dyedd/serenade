@@ -27,46 +27,46 @@
 </template>
 
 <script setup>
-const emit = defineEmits(["search", "clear"]);
+const emit = defineEmits(['search', 'clear'])
 
-const isExpanded = ref(false);
-const searchKeyword = ref("");
-const searchInput = ref(null);
+const isExpanded = ref(false)
+const searchKeyword = ref('')
+const searchInput = ref(null)
 
-function toggleSearch() {
-  isExpanded.value = true;
+const toggleSearch = () => {
+  isExpanded.value = true
   nextTick(() => {
-    searchInput.value?.focus();
-  });
+    searchInput.value?.focus()
+  })
 }
 
-function handleSearch() {
+const handleSearch = () => {
   if (searchKeyword.value.trim()) {
-    emit("search", searchKeyword.value.trim());
+    emit('search', searchKeyword.value.trim())
   }
 }
 
-function handleClear() {
-  searchKeyword.value = "";
-  emit("clear");
+const handleClear = () => {
+  searchKeyword.value = ''
+  emit('clear')
   nextTick(() => {
-    searchInput.value?.focus();
-  });
+    searchInput.value?.focus()
+  })
 }
 
-function handleEscape() {
+const handleEscape = () => {
   if (!searchKeyword.value) {
-    isExpanded.value = false;
+    isExpanded.value = false
   }
 }
 
-function handleBlur() {
+const handleBlur = () => {
   // 延迟关闭，让其他按钮点击有时间处理
   setTimeout(() => {
     if (!searchKeyword.value) {
-      isExpanded.value = false;
+      isExpanded.value = false
     }
-  }, 200);
+  }, 200)
 }
 </script>
 

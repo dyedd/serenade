@@ -39,29 +39,17 @@ defineProps({
     type: Object,
     required: true,
   },
-});
+})
 
-const defaultAvatar = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIyMCIgcj0iMTAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTE4IDQ0QzE4IDM2IDI1IDMwIDMyIDMwQzM5IDMwIDQ2IDM2IDQ2IDQ0SDE4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=";
+const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIyMCIgcj0iMTAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTE4IDQ0QzE4IDM2IDI1IDMwIDMyIDMwQzM5IDMwIDQ2IDM2IDQ2IDQ0SDE4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4='
 
 const handleImageError = (event) => {
-  // 设置默认头像 - 无背景版本，适配圆角边框
-  event.target.src = defaultAvatar;
-};
+  event.target.src = defaultAvatar
+}
 
 const handleImageLoad = (event) => {
-  // 图片加载成功，移除error监听
-  event.target.onerror = null;
-};
-
-const getDomain = (url) => {
-  if (!url) return "";
-  try {
-    const domain = new URL(url).hostname;
-    return domain.startsWith("www.") ? domain.slice(4) : domain;
-  } catch (e) {
-    return url;
-  }
-};
+  event.target.onerror = null
+}
 </script>
 
 <style lang="scss" scoped>
@@ -107,7 +95,6 @@ const getDomain = (url) => {
   @apply relative p-5;
 }
 
-// 头像部分
 .avatar-section {
   @apply relative flex justify-center mb-4;
 }
@@ -132,7 +119,6 @@ const getDomain = (url) => {
   filter: blur(8px);
 }
 
-// 信息部分
 .info-section {
   @apply text-center;
 }
@@ -154,7 +140,6 @@ const getDomain = (url) => {
   line-height: 1.5;
 }
 
-// 深色模式
 :global(.dark) {
   .friend-card {
     background: rgba(var(--color-neutral-900), 0.6);
@@ -187,7 +172,6 @@ const getDomain = (url) => {
   }
 }
 
-// 响应式设计
 @media (max-width: 768px) {
   .card-content {
     @apply p-4;

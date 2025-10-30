@@ -1,48 +1,47 @@
-import fs from 'fs-extra';
-import matter from 'gray-matter';
-import fg from 'fast-glob';
-import dayjs from 'dayjs';
-import path from 'path';
+import fg from 'fast-glob'
+import { formatDate, paginate, processMarkdownFiles } from '../../utils.js'
 
 export default defineEventHandler(async (event) => {
-  const query = getQuery(event);
-  const page = parseInt(query.page) || 1;
-  const pageSize = parseInt(query.pageSize) || 10;
+  const query = getQuery(event)
+  const page = parseInt(query.page) || 1
+  const pageSize = parseInt(query.pageSize) || 10
 
-  const tagName = event.context.params?.path;
-  const files = await fg('content/posts/*/*.md');
+  const tagName = event.context.params?.path
+  const files = await fg('content/posts/*/*.md')
   if (files.length === 0) {
-    throw createError({ statusCode: 404, statusMessage: 'Article not found' });
+    throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
 
-  const matchedFiles = [];
-  for (const file of files) {
-    const raw = await fs.readFile(file, 'utf-8');
-    const { data: metaData } = matter(raw);
+  const matchedFiles = await processMarkdownFiles(files, ({ file, metaData }) => {
+    // 查找包含指定标签的文章
     if (metaData.tags && metaData.tags.includes(tagName)) {
-      matchedFiles.push({
-        path: path.basename(file),
+      return {
+        path: file.split('/').pop(),
         title: metaData.title,
-        date: dayjs(metaData.date).format('MMMM D, YYYY'),
+        date: formatDate(metaData.date),
         cover: metaData.cover,
         abstract: metaData.abstract,
-      });
+      }
     }
+    return null
+  })
+
+  // 过滤掉 null 值（不包含该标签的文章）
+  const filteredFiles = matchedFiles.filter(file => file !== null)
+  if (filteredFiles.length === 0) {
+    throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
 
-  if (matchedFiles.length === 0) {
-    throw createError({ statusCode: 404, statusMessage: 'No articles found for this tag' });
-  }
-  matchedFiles.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // 按日期降序排序（最新的在前面）
+  filteredFiles.sort((a, b) => new Date(b.date) - new Date(a.date))
 
-  const paginatedFiles = matchedFiles.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.ceil(matchedFiles.length / pageSize);
+  const { data, totalPages, totalItems } = paginate(filteredFiles, page, pageSize)
 
   return {
     page,
     pageSize,
     totalPages,
-    totalItems: matchedFiles.length,
-    data: paginatedFiles,
-  };
-});
+    totalItems,
+    data,
+  }
+})

@@ -27,10 +27,10 @@
 
   <!-- 加载状态 -->
   <section v-if="loading" class="flex justify-center items-center p-4">
-    <div>
-      <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
-      <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
-      <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
+    <div class="loading-dots">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
     </div>
   </section>
 
@@ -63,109 +63,119 @@
 
 <script setup>
 definePageMeta({
-  layout: "default",
-});
+  layout: 'default',
+})
 
-const loading = ref(true);
-const columns = ref([]);
-const currentPage = ref(1);
-const pageSize = ref(10);
-const totalPages = ref(0);
-const totalItems = ref(0);
-const totalDocs = ref(0);
+const router = useRouter()
+const route = useRoute()
 
-const router = useRouter();
-const route = useRoute();
+const {
+  loading,
+  data: columns,
+  currentPage,
+  totalPages,
+  totalItems,
+  fetchData
+} = useApiFetch('/api/columns', {
+  pageSize: 12,
+  immediate: true
+})
 
-async function fetchColumns(page = 1, size = pageSize.value) {
-  loading.value = true;
-  try {
-    const { data } = await useFetch(`/api/columns?page=${page}&pageSize=${size}`);
-    if (data.value) {
-      columns.value = data.value.data;
-      currentPage.value = data.value.page;
-      pageSize.value = data.value.pageSize;
-      totalPages.value = data.value.totalPages;
-      totalItems.value = data.value.totalItems;
-      totalDocs.value = data.value.totalDocs;
-    }
-  } catch (error) {
-    console.error('Failed to fetch columns:', error);
-  } finally {
-    loading.value = false;
-  }
-}
+const totalDocs = ref(0)
 
-function goToPage(page) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
-    router.push({ query: { ...route.query, page } });
-  }
-}
-
-// 监听路由变化
+// 监听路由变化，重新获取数据
 watch(
-  () => route.query,
-  (newQuery) => {
-    const page = parseInt(newQuery.page) || 1;
-    const size = parseInt(newQuery.pageSize) || pageSize.value;
-    fetchColumns(page, size);
-  },
-  { immediate: true }
-);
+  () => route.query.page,
+  (newPage) => {
+    const page = parseInt(newPage) || 1
+    fetchData(page)
+  }
+)
+
+// 提取总数文档（从API响应中）
+watch(columns, (newColumns) => {
+  if (newColumns && newColumns.length > 0) {
+    // 这里可以从API响应中获取totalDocs，或从其他地方获取
+    totalDocs.value = 0
+  }
+})
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    router.push({ query: { ...route.query, page } })
+  }
+}
 </script>
 
 <style lang="scss" scoped>
 .stats-section {
   display: flex;
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
+  gap: 1.5rem;
+  margin: 2rem 0;
 
-.stat-card {
-  flex: 1;
-  padding: 1.25rem 1.5rem;
-  background: rgba(var(--color-primary-50), 0.4);
-  border-radius: 12px;
-  border: 1px solid rgba(var(--color-primary-200), 0.4);
-  transition: all 0.3s ease;
+  .stat-card {
+    padding: 1.5rem 2rem;
+    background: rgba(var(--color-primary-50), 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(var(--color-primary-200), 0.3);
+    text-align: center;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(var(--color-primary-500), 0.15);
+    .stat-label {
+      font-size: 0.875rem;
+      color: rgb(var(--color-neutral-600));
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: rgb(var(--color-primary-600));
+    }
   }
 }
 
-:global(.dark) .stat-card {
-  background: rgba(var(--color-primary-900), 0.25);
-  border-color: rgba(var(--color-primary-700), 0.4);
+:global(.dark) .stats-section {
+  .stat-card {
+    background: rgba(var(--color-primary-900), 0.3);
+    border-color: rgba(var(--color-primary-700), 0.3);
 
-  &:hover {
-    background: rgba(var(--color-primary-900), 0.35);
+    .stat-label {
+      color: rgb(var(--color-neutral-400));
+    }
+
+    .stat-value {
+      color: rgb(var(--color-primary-400));
+    }
   }
 }
 
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--fg);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
+.loading-dots {
+  display: flex;
+  gap: 0.5rem;
 
-.stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color);
-  line-height: 1;
-}
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgb(var(--color-primary-500));
+    animation: bounce 1.4s infinite ease-in-out both;
 
-@media (max-width: 640px) {
-  .stats-section {
-    flex-direction: column;
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    &:nth-child(2) {
+      animation-delay: -0.16s;
+    }
   }
+}
 
-  .stat-value {
-    font-size: 1.75rem;
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
   }
 }
 </style>

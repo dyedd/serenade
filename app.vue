@@ -7,9 +7,9 @@
 </template>
 
 <script setup>
-const { loadDarkModePreference } = useDarkMode()
+const { load } = useDarkMode()
 
 onMounted(() => {
-  loadDarkModePreference()
+  load()
 })
 </script>

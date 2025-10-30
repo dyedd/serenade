@@ -1,12 +1,11 @@
 <template>
-  <postHeader />
+  <PostHeader />
   <main>
     <slot />
   </main>
   <Footer />
 </template>
 
-<script setup></script>
 <style lang="scss" scoped>
 main {
   max-width: 60rem;
