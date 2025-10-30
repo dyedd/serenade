@@ -4,9 +4,12 @@
       <p class="text-sm text-neutral-500 dark:text-neutral-400">
         @{{ currentYear }} 染念🤔
       </p>
-      <p class="text-sm text-neutral-500 dark:text-neutral-400">
-        Powered by serenade
-      </p>
+      <a
+        class="text-sm text-neutral-500 dark:text-neutral-400"
+        href="https://github.com/dyedd/serenade"
+        target="_blank"
+        >Powered by serenade</a
+      >
       <p class="text-sm text-neutral-500 dark:text-neutral-400">
         本站已运行 {{ runningDays }} 天
       </p>
