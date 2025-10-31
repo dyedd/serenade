@@ -18,7 +18,6 @@
         :key="index"
         :href="`#${heading.id}`"
         :class="['toc-link', `toc-level-${heading.level}`, { active: activeId === heading.id }]"
-        @click.prevent="scrollToHeading(heading.id)"
       >
         {{ heading.text }}
       </a>
@@ -47,86 +46,94 @@ function parseHeadings(content) {
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(content, 'text/html');
-  headings.value = Array.from(doc.querySelectorAll('h2, h3, h4')).map((heading) => ({
+  const parsedHeadings = Array.from(doc.querySelectorAll('h2, h3, h4')).map((heading) => ({
     id: heading.id || heading.textContent.replace(/\s+/g, '-').toLowerCase(),
     text: heading.textContent,
     level: parseInt(heading.tagName[1]),
   }));
-}
 
-let scrollContainer = null;
+  headings.value = parsedHeadings;
 
-// 滚动到指定标题
-function scrollToHeading(id) {
-  activeId.value = id;
-  const element = document.getElementById(id);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  // 为DOM中的标题添加ID
+  nextTick(() => {
+    const mainContent = document.querySelector('.main-container .markdown-body');
+    if (mainContent) {
+      parsedHeadings.forEach((heading) => {
+        // 根据文本内容查找对应的标题元素
+        const headingElements = mainContent.querySelectorAll(`h${heading.level}`);
+        for (const el of headingElements) {
+          if (el.textContent.trim() === heading.text.trim()) {
+            if (!el.id) {
+              el.id = heading.id;
+            }
+            break;
+          }
+        }
+      });
+    }
+  });
 }
 
 // 监听滚动，高亮当前标题
 function updateActiveHeading() {
-  if (typeof window === 'undefined' || !scrollContainer) return;
+  if (typeof window === 'undefined') return;
 
   const headingElements = headings.value.map(h => document.getElementById(h.id)).filter(Boolean);
   if (headingElements.length === 0) return;
 
-  const scrollTop = scrollContainer.scrollTop;
+  // 获取页面滚动的位置
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const windowHeight = window.innerHeight;
 
-  // 从后向前遍历，找到第一个在滚动位置以上的标题
-  for (let i = headingElements.length - 1; i >= 0; i--) {
-    const element = headingElements[i];
+  // 找到在视窗内的标题
+  let currentActiveId = headingElements[0].id;
+
+  for (const element of headingElements) {
     if (element) {
-      // 获取元素相对于文档的位置
       const rect = element.getBoundingClientRect();
-      const containerRect = scrollContainer.getBoundingClientRect();
-
-      // 元素顶部相对于容器顶部的位置
-      if (rect.top - containerRect.top <= 120) {
-        activeId.value = element.id;
-        return;
+      // 检查标题是否在视窗内（允许一定的偏移）
+      if (rect.top <= windowHeight * 0.3) {
+        currentActiveId = element.id;
       }
     }
   }
 
-  // 如果没有找到，默认高亮第一个
-  if (headingElements.length > 0) {
-    activeId.value = headingElements[0].id;
+  // 如果滚动到了页面底部，直接选中最后一个标题
+  const documentHeight = document.documentElement.scrollHeight;
+  const maxScrollTop = documentHeight - windowHeight;
+
+  if (scrollTop >= maxScrollTop - 50) {
+    currentActiveId = headingElements[headingElements.length - 1].id;
   }
+
+  activeId.value = currentActiveId;
 }
 
 onMounted(() => {
   parseHeadings(props.content);
 
-  // 查找滚动容器（.main-container）
+  // 监听窗口滚动
   nextTick(() => {
-    scrollContainer = document.querySelector('.main-container');
-
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', updateActiveHeading);
-      updateActiveHeading();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', updateActiveHeading);
+      // 延迟一点时间再更新，确保标题ID已经添加
+      setTimeout(updateActiveHeading, 100);
     }
   });
 });
 
 onUnmounted(() => {
-  if (scrollContainer) {
-    scrollContainer.removeEventListener('scroll', updateActiveHeading);
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('scroll', updateActiveHeading);
   }
 });
 
 watch(() => props.content, (newContent) => {
   parseHeadings(newContent);
+  // 内容变化后，重新设置滚动监听
   nextTick(() => {
-    // 确保滚动容器已找到
-    if (!scrollContainer) {
-      scrollContainer = document.querySelector('.main-container');
-      if (scrollContainer) {
-        scrollContainer.addEventListener('scroll', updateActiveHeading);
-      }
-    }
-    updateActiveHeading();
+    // 延迟更新active状态，确保标题ID已经添加
+    setTimeout(updateActiveHeading, 100);
   });
 });
 </script>

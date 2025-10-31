@@ -101,15 +101,6 @@ defineEmits(["selectChapter"]);
     color: var(--text-color);
     position: relative;
 
-    &::before {
-      content: "#";
-      position: absolute;
-      left: -1.5rem;
-      color: var(--color);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
     &:hover::before {
       opacity: 1;
     }
