@@ -33,8 +33,8 @@ export const createRenderer = (path, assetType = 'posts') => {
       return `
       <h${level} class="relative group" id="${id}">
         ${text}
-        <span class="absolute top-0 w-6 transition-opacity opacity-0 -start-6 not-prose group-hover:opacity-100">
-          <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" href="#${id}" aria-label="Anchor">#</a>
+        <span class="absolute top-0 w-6 transition-opacity opacity-0 -start-10 not-prose group-hover:opacity-100">
+          <a class="group-hover:text-neutral-400 dark:group-hover:text-neutral-500" href="#${id}" aria-label="Anchor">#</a>
         </span>
       </h${level}>`
     },

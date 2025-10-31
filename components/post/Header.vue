@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-30">
+  <header class="top-0 z-30">
     <div class="logo-section">
       <img class="logo" src="/logo.jpg" alt="logo" />
     </div>
@@ -38,6 +38,10 @@ header {
 @media screen and (max-width: 768px) {
   header {
     width: 100%;
+    max-width: 100%;
+    position: relative;
+    left: 0;
+    right: 0;
     justify-content: center;
     padding: 0;
 
@@ -46,7 +50,13 @@ header {
     }
 
     .nav-section {
-      padding: 0;
+      width: 100%;
+      padding: 0.75rem 0;
+
+      nav {
+        width: 100%;
+        padding: 0 1rem;
+      }
     }
   }
 }
