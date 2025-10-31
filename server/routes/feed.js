@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     feed.item({
       title: post.title,
       description: post.abstract,
-      url: `https://${event.node.req.headers.host}/post/${post.path}`,
+      url: `https://${event.node.req.headers.host}/posts/${post.path}`,
       date: dayjs(post.date).toISOString(),
       enclosure: { url: post.cover },
     })

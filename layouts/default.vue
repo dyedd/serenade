@@ -4,6 +4,7 @@
     <slot />
   </main>
   <Footer />
+  <BackToTop />
 </template>
 
 <style lang="scss" scoped>
@@ -15,7 +16,7 @@ main {
 
 @media screen and (max-width: 768px) {
   main {
-    padding: 0 1rem;
+    padding: 1rem 1rem 2rem 1rem;
   }
 }
 </style>
