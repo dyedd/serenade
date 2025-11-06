@@ -1,6 +1,6 @@
 <template>
   <button
-    @click="toggleDarkMode"
+    @click="toggle"
     class="dark-mode-toggle"
     :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
     aria-label="切换深色/浅色模式"
@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-const { isDark, toggleDarkMode } = useDarkMode()
+const { isDark, toggle } = useDarkMode()
 </script>
 
 <style scoped>
