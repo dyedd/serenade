@@ -1,10 +1,9 @@
-import { siteConfig } from '@/site.config'
 import dayjs from 'dayjs'
 import fg from 'fast-glob'
 import fs from 'fs-extra'
 import matter from 'gray-matter'
 import RSS from 'rss'
-import crypto from 'crypto'
+import { siteConfig } from '../../site.config'
 
 export default defineEventHandler(async (event) => {
   const files = await fg('content/posts/*/*.md')

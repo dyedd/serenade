@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import { siteConfig } from "@/site.config";
+import { siteConfig } from "../../site.config";
 
 const runningDays = ref(0);
 const currentYear = ref(new Date().getFullYear());

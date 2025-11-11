@@ -200,6 +200,7 @@ onUnmounted(() => {
 .prose
   :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)):hover {
   background-color: transparent !important;
+  color: var(--color) !important;
 }
 
 html {
