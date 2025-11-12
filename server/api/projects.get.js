@@ -4,7 +4,7 @@ import { join } from 'path'
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const page = parseInt(query.page) || 1
-  const pageSize = parseInt(query.pageSize) || 10
+  const pageSize = parseInt(query.pageSize) || 3
 
   try {
     const dataPath = join(process.cwd(), 'content', 'projects.json')
