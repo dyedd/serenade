@@ -34,13 +34,15 @@
     --color-secondary-900: 22, 78, 99;
     --color-secondary-950: 8, 51, 69
 }
+
 @font-face {
     font-family: 'LXGWWenKai';
     src: url('~/assets/fonts/LXGWWenKaiGBScreen.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
-  }
+}
+
 html {
     --color: #1e90ff;
     --color-30: rgba(30, 144, 255, 0.3);
@@ -68,6 +70,7 @@ html.dark {
     --bg: #0f172a;
     --bg-color: #0f172a;
     --text-color: #e2e8f0;
+    --text-color-2: #748094;
     --box-shadow: 0px 7px 15px 0px rgba(59, 130, 246, 0.2);
 }
 
@@ -76,6 +79,7 @@ html.dark {
     overflow: hidden;
     margin-right: .2rem;
 }
+
 body {
     margin: 0 auto;
     position: relative;
