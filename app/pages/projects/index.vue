@@ -17,11 +17,13 @@
     <div class="min-h-0 min-w-0 max-w-prose grow">
       <blockquote class="text-sm md:text-base">
         <p>
-          这里是我的折腾项目。你可以
-          <a href="https://github.com/dyedd" target="_blank" rel="noopener"
+          这里是我的折腾项目。还有些没有整理的项目，可以<a
+            href="https://github.com/dyedd"
+            target="_blank"
+            rel="noopener"
             >访问我的 GitHub</a
           >
-          查看更多或关注我。
+          查看/关注。
         </p>
       </blockquote>
     </div>
@@ -43,140 +45,8 @@
     </button>
   </div>
 
-  <!-- GitHub 项目列表 -->
-  <section v-if="activeTab === 'github'" class="projects-section">
-    <div v-if="loading.github" class="loading-grid">
-      <div v-for="n in 6" :key="n" class="skeleton-card"></div>
-    </div>
-
-    <div v-else-if="error.github" class="error-container">
-      <div class="error-icon">
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="15" y1="9" x2="9" y2="15" />
-          <line x1="9" y1="9" x2="15" y2="15" />
-        </svg>
-      </div>
-      <h3 class="error-title">加载失败</h3>
-      <p class="error-description">{{ error.github }}</p>
-      <button @click="loadGithubProjects()" class="retry-button">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <polyline points="1 4 1 10 7 10" />
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-        </svg>
-        重试
-      </button>
-    </div>
-
-    <div v-else class="github-projects-grid">
-      <div
-        v-for="project in githubProjects"
-        :key="project.id"
-        class="github-project-card"
-        @click="goToProject(project.url)"
-      >
-        <div class="repo-header">
-          <svg
-            class="repo-icon"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
-            />
-          </svg>
-          <span class="repo-name">{{ project.name }}</span>
-        </div>
-        <p class="repo-description">{{ project.description || "暂无描述" }}</p>
-        <div class="repo-meta">
-          <span v-if="project.language" class="repo-language">
-            <span
-              class="language-dot"
-              :style="{ backgroundColor: project.languageColor }"
-            ></span>
-            {{ project.language }}
-          </span>
-          <span class="repo-stats">
-            <svg class="stat-icon" viewBox="0 0 16 16">
-              <path
-                d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
-              />
-            </svg>
-            {{ project.stars }}
-          </span>
-          <span class="repo-stats">
-            <svg class="stat-icon" viewBox="0 0 16 16">
-              <path
-                d="M5 3.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 .75.75v2.5a.75.75 0 0 1-.75.75h-2.5A.75.75 0 0 1 5 5.75v-2.5ZM3.5 9.5a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 .75.75v6.5a.75.75 0 0 1-.75.75h-6.5a.75.75 0 0 1-.75-.75v-6.5Z"
-              />
-            </svg>
-            {{ project.forks }}
-          </span>
-          <span v-if="project.updatedAt" class="repo-updated">
-            {{ formatDate(project.updatedAt) }}
-          </span>
-        </div>
-        <div v-if="project.customTechStack" class="repo-topics">
-          <span
-            v-for="tech in project.customTechStack"
-            :key="tech"
-            class="topic-tag"
-            >{{ tech }}</span
-          >
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="!loading.github && !error.github && githubProjects.length > 0"
-      class="load-more-container"
-    >
-      <button
-        v-if="hasMore.github"
-        @click="loadMoreGithub"
-        :disabled="loadingMore.github"
-        class="load-more-button"
-      >
-        <svg
-          v-if="loadingMore.github"
-          class="loading-spinner"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-        {{ loadingMore.github ? "加载中..." : "加载更多" }}
-      </button>
-      <p v-else class="end-message">已显示所有项目</p>
-    </div>
-  </section>
-
   <!-- 分类项目列表 -->
-  <section v-else-if="activeTab !== 'all'" class="projects-section">
+  <section v-if="activeTab !== 'all'" class="projects-section">
     <div v-if="loading.categories[activeTab]" class="loading-grid">
       <div v-for="n in 6" :key="n" class="skeleton-card"></div>
     </div>
@@ -320,75 +190,11 @@
     </div>
 
     <div v-else class="all-projects-container">
-      <!-- GitHub 项目 -->
-      <div v-if="githubProjects.length > 0" class="projects-group">
-        <h2 class="group-title">
-          <span class="group-icon">🟠</span>
-          GitHub
-        </h2>
-        <div class="github-projects-grid compact">
-          <div
-            v-for="project in githubProjects"
-            :key="project.id"
-            class="github-project-card compact"
-            @click="goToProject(project.url)"
-          >
-            <div class="repo-header">
-              <svg
-                class="repo-icon"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
-                />
-              </svg>
-              <span class="repo-name">{{ project.name }}</span>
-            </div>
-            <p class="repo-description">{{ project.description }}</p>
-            <div class="repo-meta">
-              <span v-if="project.language" class="repo-language">
-                <span
-                  class="language-dot"
-                  :style="{ backgroundColor: project.languageColor }"
-                ></span>
-                {{ project.language }}
-              </span>
-              <span class="repo-stats">
-                <svg class="stat-icon" viewBox="0 0 16 16">
-                  <path
-                    d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
-                  />
-                </svg>
-                {{ project.stars }}
-              </span>
-              <span v-if="project.updatedAt" class="repo-updated">
-                {{ formatDate(project.updatedAt) }}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div v-if="hasMore.github" class="load-more-container">
-          <button
-            @click="loadMoreGithub"
-            :disabled="loadingMore.github"
-            class="load-more-button small"
-          >
-            {{ loadingMore.github ? "加载中..." : "查看更多 GitHub 项目" }}
-          </button>
-        </div>
-      </div>
-
       <!-- 分类项目 -->
-      <div v-if="allCategoryProjects.length > 0" class="projects-group">
-        <h2 class="group-title">
-          <span class="group-icon">📦</span>
-          分类项目
-        </h2>
+      <div v-if="shuffledDisplayProjects.length > 0" class="projects-group">
         <div class="category-projects-grid">
           <div
-            v-for="(project, index) in allCategoryProjects"
+            v-for="(project, index) in shuffledDisplayProjects"
             :key="`all-${index}`"
             class="category-project-card"
             @click="goToProject(project.link)"
@@ -414,8 +220,20 @@
                   >{{ tech }}</span
                 >
               </div>
+              <div v-if="project.date" class="project-date">
+                {{ formatDate(project.date) }}
+              </div>
             </div>
           </div>
+        </div>
+        <div v-if="hasMore.all" class="load-more-container">
+          <button
+            @click="loadMoreAllCategory"
+            :disabled="loadingMore.all"
+            class="load-more-button small"
+          >
+            {{ loadingMore.all ? "加载中..." : "查看更多分类项目" }}
+          </button>
         </div>
       </div>
     </div>
@@ -428,30 +246,29 @@ definePageMeta({
 });
 
 const activeTab = ref("all");
-const githubProjects = ref([]);
 const allCategoryProjects = ref([]);
+const shuffledDisplayProjects = ref([]);
 const currentCategoryProjects = ref([]);
 const loading = ref({
-  github: false,
   all: false,
   categories: {},
 });
 const loadingMore = ref({
-  github: false,
   categories: {},
+  all: false,
 });
 const error = ref({
-  github: null,
   all: null,
   categories: {},
 });
 const hasMore = ref({
-  github: true,
   categories: {},
+  all: true,
 });
 
-const githubPage = ref(1);
+const totalCategoryCount = ref(0);
 const categoryPages = ref({});
+const allCategoryPage = ref(1);
 const categories = ref([]);
 
 const tabs = computed(() => {
@@ -459,14 +276,8 @@ const tabs = computed(() => {
     {
       key: "all",
       label: "全部",
-      icon: "📂",
-      count: githubProjects.value.length + allCategoryProjects.value.length,
-    },
-    {
-      key: "github",
-      label: "GitHub",
-      icon: "🟠",
-      count: githubProjects.value.length,
+      icon: "📦",
+      count: totalCategoryCount.value,
     },
   ];
 
@@ -483,8 +294,18 @@ const tabs = computed(() => {
 });
 
 const totalCount = computed(() => {
-  return githubProjects.value.length + allCategoryProjects.value.length;
+  return totalCategoryCount.value;
 });
+
+// 洗牌函数（Fisher-Yates算法）
+function shuffleProjects(projects) {
+  const shuffled = [...projects];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 async function loadCategories() {
   try {
@@ -496,62 +317,13 @@ async function loadCategories() {
   }
 }
 
-async function loadGithubProjects() {
-  loading.value.github = true;
-  error.value.github = null;
-  githubPage.value = 1;
-
-  try {
-    const data = await $fetch("/api/projects/github", {
-      params: {
-        username: "dyedd",
-        limit: 10,
-        page: githubPage.value,
-      },
-    });
-    githubProjects.value = data.data;
-    hasMore.value.github = data.data.length === 10;
-  } catch (err) {
-    error.value.github = err.message || "加载失败";
-    console.error("加载 GitHub 项目失败:", err);
-  } finally {
-    loading.value.github = false;
-  }
-}
-
-async function loadMoreGithub() {
-  if (loadingMore.value.github || !hasMore.value.github) return;
-
-  loadingMore.value.github = true;
-  githubPage.value++;
-
-  try {
-    const data = await $fetch("/api/projects/github", {
-      params: {
-        username: "dyedd",
-        limit: 10,
-        page: githubPage.value,
-      },
-    });
-
-    if (data.data.length > 0) {
-      githubProjects.value.push(...data.data);
-      hasMore.value.github = data.data.length === 10;
-    } else {
-      hasMore.value.github = false;
-    }
-  } catch (err) {
-    console.error("加载更多 GitHub 项目失败:", err);
-    githubPage.value--;
-  } finally {
-    loadingMore.value.github = false;
-  }
-}
-
 async function loadCategoryProjects(category) {
   loading.value.categories[category] = true;
   error.value.categories[category] = null;
   categoryPages.value[category] = 1;
+
+  // 清空当前显示的数据
+  currentCategoryProjects.value = [];
 
   try {
     const data = await $fetch("/api/projects/categories", {
@@ -563,6 +335,11 @@ async function loadCategoryProjects(category) {
     });
 
     currentCategoryProjects.value = data.data.projects;
+    // 更新categories中的count
+    const categoryIndex = categories.value.findIndex(cat => cat.key === category);
+    if (categoryIndex !== -1) {
+      categories.value[categoryIndex].count = data.total;
+    }
     hasMore.value.categories[category] = data.hasMore;
   } catch (err) {
     error.value.categories[category] = err.message || "加载失败";
@@ -609,14 +386,56 @@ async function loadAllCategoryProjects() {
   try {
     const data = await $fetch("/api/projects", {
       params: {
-        page: 1,
-        pageSize: 100,
+        page: allCategoryPage.value,
+        pageSize: 3,
       },
     });
 
-    allCategoryProjects.value = data.data.projects || [];
+    if (allCategoryPage.value === 1) {
+      allCategoryProjects.value = data.data.projects || [];
+      totalCategoryCount.value = data.total;
+      // 初始化时洗牌
+      shuffledDisplayProjects.value = shuffleProjects(allCategoryProjects.value);
+    } else {
+      // 追加新项目到末尾，不洗牌
+      allCategoryProjects.value.push(...data.data.projects);
+      const newProjects = data.data.projects || [];
+      shuffledDisplayProjects.value.push(...newProjects);
+    }
+    hasMore.value.all = data.hasMore;
   } catch (err) {
     console.error("加载所有分类项目失败:", err);
+  }
+}
+
+async function loadMoreAllCategory() {
+  if (loadingMore.value.all || !hasMore.value.all) return;
+
+  loadingMore.value.all = true;
+  allCategoryPage.value++;
+
+  try {
+    const data = await $fetch("/api/projects", {
+      params: {
+        page: allCategoryPage.value,
+        pageSize: 3,
+      },
+    });
+
+    if (data.data.projects.length > 0) {
+      allCategoryProjects.value.push(...data.data.projects);
+      // 追加新项目到末尾，不洗牌
+      const newProjects = data.data.projects || [];
+      shuffledDisplayProjects.value.push(...newProjects);
+      hasMore.value.all = data.hasMore;
+    } else {
+      hasMore.value.all = false;
+    }
+  } catch (err) {
+    console.error("加载更多分类项目失败:", err);
+    allCategoryPage.value--;
+  } finally {
+    loadingMore.value.all = false;
   }
 }
 
@@ -625,7 +444,7 @@ async function loadAll() {
   error.value.all = null;
 
   try {
-    await Promise.all([loadGithubProjects(), loadAllCategoryProjects()]);
+    await loadAllCategoryProjects();
   } finally {
     loading.value.all = false;
   }
@@ -636,24 +455,22 @@ function switchTab(tab) {
 
   activeTab.value = tab;
 
-  if (tab === "github") {
-    if (githubProjects.value.length === 0 && !loading.value.github) {
-      loadGithubProjects();
-    }
-  } else if (tab === "all") {
-    if (
-      (githubProjects.value.length === 0 ||
-        allCategoryProjects.value.length === 0) &&
-      !loading.value.all
-    ) {
+  if (tab === "all") {
+    // 重置分页状态
+    allCategoryPage.value = 1;
+    hasMore.value.all = true;
+    allCategoryProjects.value = [];
+    shuffledDisplayProjects.value = [];
+    totalCategoryCount.value = 0;
+    if (!loading.value.all) {
       loadAll();
     }
   } else {
-    // 分类项目
-    if (
-      currentCategoryProjects.value.length === 0 &&
-      !loading.value.categories[tab]
-    ) {
+    // 分类项目 - 每次切换tab都重新加载数据
+    const isLoading = !!loading.value.categories[tab];
+
+    // 切换tab时直接加载数据
+    if (!isLoading) {
       loadCategoryProjects(tab);
     }
   }
@@ -667,16 +484,11 @@ function goToProject(url) {
 
 function formatDate(dateString) {
   const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now - date);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return "今天";
-  if (diffDays === 1) return "昨天";
-  if (diffDays < 7) return `${diffDays} 天前`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} 周前`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)} 个月前`;
-  return `${Math.floor(diffDays / 365)} 年前`;
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 const defaultImage =
@@ -913,126 +725,6 @@ onMounted(async () => {
   }
 }
 
-// GitHub 项目样式
-.github-projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1rem;
-
-  &.compact {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-}
-
-.github-project-card {
-  display: block;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(59, 130, 246, 0.3);
-  }
-
-  &.compact {
-    padding: 0.75rem;
-  }
-}
-
-.repo-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.repo-icon {
-  width: 16px;
-  height: 16px;
-  color: rgb(59, 130, 246);
-  flex-shrink: 0;
-}
-
-.repo-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: rgb(59, 130, 246);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.repo-description {
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: rgb(var(--color-neutral-600));
-  margin: 0 0 0.75rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.repo-meta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  font-size: 0.75rem;
-  color: rgb(var(--color-neutral-500));
-}
-
-.repo-language {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-.language-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.repo-stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.stat-icon {
-  width: 14px;
-  height: 14px;
-  fill: currentColor;
-}
-
-.repo-updated {
-  margin-left: auto;
-}
-
-.repo-topics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-top: 0.75rem;
-}
-
-.topic-tag {
-  padding: 0.1875rem 0.5rem;
-  background: rgba(99, 102, 241, 0.1);
-  color: rgb(99, 102, 241);
-  border-radius: 12px;
-  font-size: 0.6875rem;
-  font-weight: 500;
-}
-
 // 分类项目样式
 .category-projects-grid {
   display: grid;
@@ -1119,6 +811,20 @@ onMounted(async () => {
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+.project-date {
+  font-size: 0.75rem;
+  color: rgb(var(--color-neutral-500));
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.project-date::before {
+  content: "📅";
 }
 
 .project-stats {
@@ -1225,29 +931,6 @@ onMounted(async () => {
 
 // 深色模式
 :global(.dark) {
-  .github-project-card {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.08);
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(96, 165, 250, 0.4);
-    }
-  }
-
-  .repo-name {
-    color: rgb(96, 165, 250);
-  }
-
-  .repo-description {
-    color: rgb(var(--color-neutral-400));
-  }
-
-  .repo-topics .topic-tag {
-    background: rgba(129, 140, 248, 0.15);
-    color: rgb(129, 140, 248);
-  }
-
   .category-project-card {
     background: rgba(255, 255, 255, 0.03);
     border-color: rgba(255, 255, 255, 0.08);
@@ -1269,6 +952,11 @@ onMounted(async () => {
   .tech-tag {
     background: rgba(129, 140, 248, 0.15);
     color: rgb(129, 140, 248);
+  }
+
+  .project-date {
+    color: rgb(var(--color-neutral-400));
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   .project-stats {
@@ -1329,10 +1017,6 @@ onMounted(async () => {
   .tab-button {
     padding: 0.5rem 0.875rem;
     font-size: 0.8125rem;
-  }
-
-  .github-project-card {
-    padding: 0.75rem;
   }
 
   .project-cover {
