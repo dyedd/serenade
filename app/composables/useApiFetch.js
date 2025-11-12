@@ -14,6 +14,7 @@ export const useApiFetch = (url, options = {}) => {
   const currentPage = ref(page)
   const totalPages = ref(0)
   const totalItems = ref(0)
+  const response = ref(null)  // 存储完整响应
 
   const fetchData = async (pageNum = currentPage.value, size = pageSize) => {
     loading.value = true
@@ -27,6 +28,7 @@ export const useApiFetch = (url, options = {}) => {
         }
       })
 
+      response.value = result
       data.value = result.data
       currentPage.value = result.page
       totalPages.value = result.totalPages
@@ -55,6 +57,7 @@ export const useApiFetch = (url, options = {}) => {
     currentPage: readonly(currentPage),
     totalPages: readonly(totalPages),
     totalItems: readonly(totalItems),
-    fetchData
+    fetchData,
+    response: readonly(response)  // 返回完整响应
   }
 }

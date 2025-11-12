@@ -134,12 +134,6 @@ const { data: postsData } = await useFetch("/api/posts", {
 const latestPosts = computed(() => postsData.value?.data || []);
 </script>
 
-<style lang="scss">
-main {
-  padding: 0 !important;
-}
-</style>
-
 <style lang="scss" scoped>
 .home-container {
   display: flex;
@@ -315,7 +309,7 @@ main {
 
   &:hover {
     background: rgba(249, 250, 251, 0.9);
-    border-color: rgba(var(--color, #6366f1), 0.3);
+    border-color: var(--color-30);
     transform: translateY(-1px);
   }
 
@@ -330,7 +324,7 @@ main {
 
   &:hover {
     background: rgba(51, 65, 85, 0.7);
-    border-color: rgba(var(--color, #6366f1), 0.5);
+    border-color: var(--color-30);
   }
 }
 

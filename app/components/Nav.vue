@@ -10,6 +10,9 @@
       <li>
         <NuxtLink to="/columns">🧠 专栏</NuxtLink>
       </li>
+      <li>
+        <NuxtLink to="/projects">🚀 项目</NuxtLink>
+      </li>
       <li class="dropdown">
         <span class="dropdown-trigger">📸 朋友</span>
         <ul class="dropdown-menu">

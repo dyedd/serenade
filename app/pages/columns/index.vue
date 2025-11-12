@@ -75,7 +75,8 @@ const {
   currentPage,
   totalPages,
   totalItems,
-  fetchData
+  fetchData,
+  response
 } = useApiFetch('/api/columns', {
   pageSize: 12,
   immediate: true
@@ -92,11 +93,10 @@ watch(
   }
 )
 
-// 提取总数文档（从API响应中）
-watch(columns, (newColumns) => {
-  if (newColumns && newColumns.length > 0) {
-    // 这里可以从API响应中获取totalDocs，或从其他地方获取
-    totalDocs.value = 0
+// 从API响应中获取totalDocs
+watch(response, (newResponse) => {
+  if (newResponse && newResponse.totalDocs !== undefined) {
+    totalDocs.value = newResponse.totalDocs
   }
 })
 
