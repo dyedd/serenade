@@ -1,7 +1,7 @@
 <template>
   <NuxtLink :to="`/columns/${id}`" class="column-card">
     <!-- 背景图片 -->
-    <img :src="image" :alt="title" class="card-bg-image" @error="handleImageError" />
+    <img :src="image" :alt="title" class="card-bg-image" loading="lazy" @error="handleImageError" />
 
     <!-- 渐变叠加层 -->
     <div class="card-overlay"></div>

@@ -46,11 +46,19 @@
           <svg class="icon" aria-hidden="true" width="2rem" height="2rem">
             <use xlink:href="#icon-github"></use>
           </svg>
-          <span>Github</span>
         </a>
         <a href="mailto:1176996982@qq.com" target="_blank" class="social-link">
           <svg class="icon" aria-hidden="true" width="2rem" height="2rem">
-            <use xlink:href="#icon-email"></use>
+            <use xlink:href="#icon-youxiang"></use>
+          </svg>
+        </a>
+        <a
+          href="https://qm.qq.com/cgi-bin/qm/qr?k=nLIdzy8UC9VkZ0g2EwnoN1rwnxaYvFx0&jump_from=webapi&authKey=mq2RvfcTQxEgImX+XZv0tBeobeHX+wTaAxOXq7pEKdsUD+a2Hi7mIOBGEj2ZtSDJ"
+          target="_blank"
+          class="social-link"
+        >
+          <svg class="icon" aria-hidden="true" width="2rem" height="2rem">
+            <use xlink:href="#icon-QQ"></use>
           </svg>
         </a>
       </div>
@@ -295,17 +303,19 @@ const latestPosts = computed(() => postsData.value?.data || []);
 }
 
 .social-link {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   text-decoration: none;
   border-radius: 0.5rem;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   font-size: 1.3rem;
   background: rgba(249, 250, 251, 0.6);
   color: #000;
   transition: all 0.3s ease;
   border: 1px solid transparent;
+  min-height: 3rem;
 
   &:hover {
     background: rgba(249, 250, 251, 0.9);

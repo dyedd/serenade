@@ -80,6 +80,7 @@
               :src="article.siteLogo"
               :alt="article.siteName"
               class="source-avatar"
+              loading="lazy"
               @error="handleImageError"
             />
             <div class="source-info">

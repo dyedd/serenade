@@ -95,6 +95,7 @@
           <img
             :src="project.cover"
             :alt="project.name"
+            loading="lazy"
             @error="handleImageError"
           />
         </div>
@@ -203,6 +204,7 @@
               <img
                 :src="project.cover"
                 :alt="project.name"
+                loading="lazy"
                 @error="handleImageError"
               />
             </div>

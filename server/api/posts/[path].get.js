@@ -1,7 +1,7 @@
 import fg from 'fast-glob'
 import fs from 'fs-extra'
 import matter from 'gray-matter'
-import { formatDate, parseAsset, parseMarkdown } from '../../utils.js'
+import { formatDate, parseAsset, parseMarkdown, calculateReadingTime } from '../../utils.js'
 
 export default defineEventHandler(async (event) => {
   const name = event.context.params?.path
@@ -25,6 +25,8 @@ export default defineEventHandler(async (event) => {
   metaData.date = formatDate(metaData.date)
   const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags
   metaData.tags = tags
+  const readingTime = calculateReadingTime(content)
+  metaData.readingTime = readingTime.text
 
   return { metaData, htmlContent }
 })

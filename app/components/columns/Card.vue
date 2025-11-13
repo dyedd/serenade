@@ -1,6 +1,6 @@
 <template>
   <NuxtLink :to="`/columns/${id}`" class="column-card">
-    <img :src="image" :alt="title" class="card-bg-image" @error="handleImageError" />
+    <img :src="image" :alt="title" class="card-bg-image" loading="lazy" @error="handleImageError" />
     <div class="card-overlay"></div>
     <span class="card-badge" :class="badgeClass">{{ type }}</span>
     <div class="card-content">

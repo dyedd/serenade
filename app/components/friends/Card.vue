@@ -15,6 +15,7 @@
               :src="site.siteLogo"
               :alt="site.siteName"
               class="avatar"
+              loading="lazy"
               @error="handleImageError"
               @load="handleImageLoad"
             />

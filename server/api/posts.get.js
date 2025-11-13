@@ -1,5 +1,5 @@
 import fg from 'fast-glob'
-import { processMarkdownFiles, formatDate, parseAsset, paginate } from '../utils.js'
+import { processMarkdownFiles, formatDate, parseAsset, paginate, calculateReadingTime } from '../utils.js'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -11,9 +11,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
 
-  const processedFiles = await processMarkdownFiles(files, ({ file, metaData }) => {
+  const processedFiles = await processMarkdownFiles(files, ({ file, metaData, content }) => {
     // 提取文章路径：content/posts/[文章名]/
     const path = file.match(/content\/posts\/([^\/]+)\//)?.[1]
+    const readingTime = calculateReadingTime(content)
     return {
       path,
       title: metaData.title,
@@ -21,6 +22,7 @@ export default defineEventHandler(async (event) => {
       cover: metaData.cover ? parseAsset(path, metaData.cover) : '',
       abstract: metaData.abstract,
       tags: typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags,
+      readingTime: readingTime.text,
     }
   })
 

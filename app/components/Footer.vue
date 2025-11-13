@@ -39,7 +39,17 @@
         target="_blank"
       >
         <svg class="icon" aria-hidden="true" width="2.2rem" height="2.2rem">
-          <use xlink:href="#icon-email"></use>
+          <use xlink:href="#icon-youxiang"></use>
+        </svg>
+      </a>
+      <a
+        class="inline-block p-2 sm:hover:text-link"
+        href="https://qm.qq.com/cgi-bin/qm/qr?k=nLIdzy8UC9VkZ0g2EwnoN1rwnxaYvFx0&jump_from=webapi&authKey=mq2RvfcTQxEgImX+XZv0tBeobeHX+wTaAxOXq7pEKdsUD+a2Hi7mIOBGEj2ZtSDJ"
+        target="_blank"
+        title="加入交流群：972781001"
+      >
+        <svg class="icon" aria-hidden="true" width="2.2rem" height="2.2rem">
+          <use xlink:href="#icon-QQ"></use>
         </svg>
       </a>
     </div>
