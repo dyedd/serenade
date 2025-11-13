@@ -96,6 +96,7 @@
           :src="article.siteLogo"
           :alt="article.siteName"
           class="w-10 h-10 rounded-full object-cover"
+          loading="lazy"
           @error="handleImageError"
         />
         <div class="flex-1">

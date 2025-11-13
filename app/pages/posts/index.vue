@@ -107,50 +107,60 @@
       </button>
     </div>
   </section>
-  <section v-else-if="!loading && groupedpostsData.length > 0">
-    <div v-if="searchMode" class="search-results-header">
-      <div class="results-badge">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        找到 <strong>{{ totalItems }}</strong> 篇相关文章
+  <section
+    v-else-if="!loading && groupedpostsData.length > 0"
+    class="flex flex-col lg:flex-row gap-8 lg:gap-12"
+  >
+    <div class="flex-1 min-w-0">
+      <div v-if="searchMode" class="search-results-header">
+        <div class="results-badge">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          找到 <strong>{{ totalItems }}</strong> 篇相关文章
+        </div>
+        <button @click="handleClear" class="clear-search-btn">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          清除搜索
+        </button>
       </div>
-      <button @click="handleClear" class="clear-search-btn">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+      <div v-for="group in groupedpostsData" :key="group.year">
+        <h2
+          class="mt-8 md:mt-12 text-xl md:text-2xl font-bold text-neutral-700 first:mt-6 md:first:mt-8 dark:text-neutral-300"
         >
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-        清除搜索
-      </button>
+          {{ group.year }}
+        </h2>
+        <hr class="w-24 md:w-36 border-dotted border-neutral-400" />
+        <div
+          class="space-y-4 md:space-y-6"
+          v-for="post in group.posts"
+          :key="post.id"
+        >
+          <PostPreview :post="post" />
+        </div>
+      </div>
     </div>
-    <div v-for="group in groupedpostsData" :key="group.year">
-      <h2
-        class="mt-8 md:mt-12 text-xl md:text-2xl font-bold text-neutral-700 first:mt-6 md:first:mt-8 dark:text-neutral-300"
-      >
-        {{ group.year }}
-      </h2>
-      <hr class="w-24 md:w-36 border-dotted border-neutral-400" />
-      <div
-        class="space-y-4 md:space-y-6"
-        v-for="post in group.posts"
-        :key="post.id"
-      >
-        <PostPreview :post="post" />
-      </div>
+
+    <!-- 右侧标签云 - 只在非搜索模式下显示 -->
+    <div v-if="!searchMode" class="w-full lg:w-64 xl:w-72 flex-shrink-0">
+      <TagCloud />
     </div>
   </section>
   <section v-else class="loading-container">

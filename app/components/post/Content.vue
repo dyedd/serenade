@@ -19,9 +19,11 @@
       <div
         class="mt-8 text-base text-neutral-500 dark:text-neutral-400 print:hidden"
       >
-        <div class="flex flex-row flex-wrap items-center">
+        <div class="flex flex-row flex-wrap items-center gap-x-2">
           <time>{{ post.metaData.date }}</time>
           <span class="px-2 text-primary-500">·</span>
+          <span v-if="post.metaData.readingTime">{{ post.metaData.readingTime }}</span>
+          <span v-if="post.metaData.readingTime" class="px-2 text-primary-500">·</span>
           <div
             class="my-1 flex flex-wrap text-xs leading-relaxed text-neutral-500 dark:text-neutral-400"
           >

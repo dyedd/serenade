@@ -18,9 +18,11 @@
         </NuxtLink>
       </h3>
       <div class="text-sm text-neutral-500 dark:text-neutral-400">
-        <div class="flex flex-row flex-wrap items-center">
+        <div class="flex flex-row flex-wrap items-center gap-x-2">
           <time>{{ post.date }}</time>
           <span class="px-2 text-primary-500">·</span>
+          <span v-if="post.readingTime">{{ post.readingTime }}</span>
+          <span v-if="post.readingTime" class="px-2 text-primary-500">·</span>
           <ul class="ml-1 flex items-center gap-x-2">
             <li v-for="(tag, index) in post.tags" :key="index">
               <NuxtLink
