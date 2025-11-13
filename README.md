@@ -150,7 +150,7 @@ npm run generate
 
 在 `content/posts/` 目录下创建 Markdown 文件：
 
-````yaml
+```yaml
 ---
 title: 文章标题
 date: 2024-01-01
@@ -165,17 +165,14 @@ cover: /images/posts/cover.jpg  # 可选：封面图
 
 ## 代码高亮
 
-```javascript
-const message = "Hello, Serenade!";
-console.log(message);
-````
+`const message = "Hello, Serenade!";`
 
 - 第一项
 - 第二项
   - 子项
   - 子项
 
-````
+```
 
 #### 2️⃣ 专栏文章
 
@@ -184,13 +181,12 @@ console.log(message);
 ```yaml
 ---
 title: 第1章：初探门径
-order: 1  # 文章顺序
+order: 1 # 文章顺序
 ---
-
 # 第1章内容
 
 系列文章的第一章内容...
-````
+```
 
 #### 3️⃣ 数学公式支持
 
