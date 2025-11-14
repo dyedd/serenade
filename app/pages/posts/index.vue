@@ -193,6 +193,7 @@
 definePageMeta({
   layout: "default",
 });
+
 const loading = ref(true);
 const postsData = ref([]);
 const groupedpostsData = ref({});

@@ -25,7 +25,7 @@ definePageMeta({
 });
 
 const columnMeta = ref({});
-const readmeHtml = ref('');
+const readmeHtml = ref("");
 const chapters = ref([]);
 const currentChapter = ref(null);
 const currentChapterIndex = ref(null);
@@ -42,16 +42,32 @@ const prevChapter = computed(() => {
 
 const nextChapter = computed(() => {
   if (currentChapterIndex.value === null) {
-    return chapters.value.length > 0 ? {
-      title: chapters.value[0]?.metaData?.title,
-      index: 0,
-    } : null;
+    return chapters.value.length > 0
+      ? {
+          title: chapters.value[0]?.metaData?.title,
+          index: 0,
+        }
+      : null;
   }
   if (currentChapterIndex.value >= chapters.value.length - 1) return null;
   return {
     title: chapters.value[currentChapterIndex.value + 1]?.metaData?.title,
     index: currentChapterIndex.value + 1,
   };
+});
+
+watchEffect(() => {
+  if (columnMeta.value?.title) {
+    useHead({
+      title: columnMeta.value.title,
+      meta: [
+        {
+          name: "description",
+          content: columnMeta.value.description || columnMeta.value.title,
+        },
+      ],
+    });
+  }
 });
 
 onMounted(async () => {
