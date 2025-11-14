@@ -1,6 +1,7 @@
 import { siteConfig } from '../../site.config'
+import redirectsData from '../middleware/redirects.json'
 
-export default defineNuxtRouteMiddleware((to, _from) => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
     useHead({
         title: siteConfig.title,
         titleTemplate: (titleChunk) => {
@@ -11,4 +12,12 @@ export default defineNuxtRouteMiddleware((to, _from) => {
             return title
         },
     })
+
+    const redirectMap = redirectsData as Record<string, string>
+    const currentPath = to.path.slice(1)
+
+    if (currentPath in redirectMap) {
+        const newPath = redirectMap[currentPath]
+        return navigateTo(`/posts/${newPath}`, { redirectCode: 301 })
+    }
 })
