@@ -35,6 +35,7 @@
 definePageMeta({
   layout: "default",
 });
+
 const tagsData = ref([]);
 
 try {

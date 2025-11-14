@@ -37,6 +37,20 @@ const route = useRoute()
 const router = useRouter()
 const tagName = ref(route.params.path)
 
+watchEffect(() => {
+  if (tagName.value) {
+    useHead({
+      title: `标签: ${tagName.value}`,
+      meta: [
+        {
+          name: 'description',
+          content: `标签 ${tagName.value} 下的所有文章`
+        }
+      ]
+    });
+  }
+});
+
 const {
   loading,
   data: postsData,
