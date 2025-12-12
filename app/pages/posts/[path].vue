@@ -1,6 +1,7 @@
 <template>
   <div v-if="post">
     <PostContent :post="post"></PostContent>
+    <PostNavigation :prevPost="post.prevPost" :nextPost="post.nextPost" />
   </div>
   <div v-else>Loading...</div>
 </template>
