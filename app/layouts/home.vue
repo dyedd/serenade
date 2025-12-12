@@ -16,7 +16,7 @@ main {
   margin: 0 auto;
   width: 100%;
   max-width: 60rem;
-  padding: 1.5rem;
+  padding-top: 1.5rem;
   box-sizing: border-box;
 }
 

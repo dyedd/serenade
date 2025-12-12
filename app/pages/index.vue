@@ -117,14 +117,6 @@
             />
           </div>
         </div>
-        <div class="wakatime-stats">
-          <h3 class="section-title">编程时间</h3>
-          <img
-            src="https://github-readme-stats.vercel.app/api/wakatime?username=@dyedd&custom_title=编程时间&langs_count=6"
-            alt="Wakatime Stats"
-            class="wakatime-image"
-          />
-        </div>
       </div>
     </main>
   </div>
@@ -137,6 +129,10 @@ definePageMeta({
 // 获取最新博文
 const { data: postsData } = await useFetch("/api/posts", {
   query: { page: 1, pageSize: 5 },
+  // 使用 key 来确保每次都能获取到数据，同时禁用预渲染缓存
+  key: "home-latest-posts",
+  server: true,
+  lazy: false,
 });
 
 const latestPosts = computed(() => postsData.value?.data || []);
@@ -147,8 +143,9 @@ const latestPosts = computed(() => postsData.value?.data || []);
   display: flex;
   gap: 2rem;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -363,16 +360,13 @@ const latestPosts = computed(() => postsData.value?.data || []);
   color: #fbbf24;
 }
 
-// 技术栈和编程时间
+// 技术栈
 .tech-section {
-  display: flex;
-  gap: 2rem;
   margin-bottom: 2rem;
 }
 
-.tech-stack,
-.wakatime-stats {
-  flex: 1;
+.tech-stack {
+  width: 100%;
 }
 
 .section-title {
@@ -399,13 +393,6 @@ const latestPosts = computed(() => postsData.value?.data || []);
 
 .tech-badges img:hover {
   transform: translateY(-2px);
-}
-
-.wakatime-stats .wakatime-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
 }
 
 // GitHub 贡献热力图
