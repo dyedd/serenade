@@ -28,5 +28,43 @@ export default defineEventHandler(async (event) => {
   const readingTime = calculateReadingTime(content)
   metaData.readingTime = readingTime.text
 
-  return { metaData, htmlContent }
+  // 获取所有文章并按日期排序，用于查找上一篇和下一篇
+  const allPosts = []
+  for (const file of files) {
+    const postRaw = await fs.readFile(file, 'utf-8')
+    const { data: postMeta } = matter(postRaw)
+    const postPath = file.match(/content\/posts\/([^\/]+)\//)?.[1]
+
+    if (postPath && postMeta.date) {
+      allPosts.push({
+        path: postPath,
+        title: postMeta.title,
+        date: new Date(postMeta.date)
+      })
+    }
+  }
+
+  // 按日期降序排序
+  allPosts.sort((a, b) => b.date - a.date)
+
+  // 查找当前文章的索引
+  const currentIndex = allPosts.findIndex(post => post.path === name)
+
+  // 获取上一篇和下一篇
+  const prevPost = currentIndex > 0 ? {
+    path: allPosts[currentIndex - 1].path,
+    title: allPosts[currentIndex - 1].title
+  } : null
+
+  const nextPost = currentIndex < allPosts.length - 1 ? {
+    path: allPosts[currentIndex + 1].path,
+    title: allPosts[currentIndex + 1].title
+  } : null
+
+  return {
+    metaData,
+    htmlContent,
+    prevPost,
+    nextPost
+  }
 })
