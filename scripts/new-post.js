@@ -1,69 +1,172 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { generateUrlWithAI } from './ai-helper.js';
+import {
+  createInterface,
+  question,
+  confirmQuestion,
+  isSafeUrl
+} from './prompt-helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const args = process.argv.slice(2);
-if (args.length === 0) {
-  console.error('❌ 错误：请提供文章标题');
-  console.log('用法: node scripts/new-post.js "文章标题"');
-  process.exit(1);
-}
-
-const title = args[0];
-
-const now = new Date();
-const date = now.getFullYear() + '-' +
-  String(now.getMonth() + 1).padStart(2, '0') + '-' +
-  String(now.getDate()).padStart(2, '0') + ' ' +
-  String(now.getHours()).padStart(2, '0') + ':' +
-  String(now.getMinutes()).padStart(2, '0') + ':' +
-  String(now.getSeconds()).padStart(2, '0');
-
 const postsDir = path.join(__dirname, '..', 'content', 'posts');
 
-const suggestedDirName = title
-  .toLowerCase()
-  .replace(/[^a-z0-9\s-]/g, '')
-  .replace(/\s+/g, '-')
-  .replace(/-+/g, '-')
-  .replace(/^-+|-+$/g, '')
-  .trim();
+async function main() {
+  const rl = createInterface();
 
-const isValidDirName = suggestedDirName &&
-  suggestedDirName.length > 0 &&
-  !suggestedDirName.match(/^[-\s]+$/) &&
-  !suggestedDirName.match(/^\d+$/) &&
-  !fs.existsSync(path.join(postsDir, suggestedDirName));
+  try {
+    let title;
 
-let finalDirName;
+    if (args.length > 0) {
+      title = args[0];
+      console.log(`📝 文章标题: ${title}`);
+    } else {
+      title = await question(rl, '📝 请输入文章标题: ');
 
-if (isValidDirName) {
-  finalDirName = suggestedDirName;
-} else {
-  let counter = 1;
-  let autoDirName;
-  do {
-    autoDirName = `new-posts-${counter}`;
-    counter++;
-  } while (fs.existsSync(path.join(postsDir, autoDirName)));
-  finalDirName = autoDirName;
+      if (!title) {
+        console.error('❌ 错误：文章标题不能为空');
+        rl.close();
+        process.exit(1);
+      }
+    }
 
-  if (suggestedDirName) {
-    console.log('⚠️  建议的文件夹名无效或已存在:', suggestedDirName);
-  }
-  console.log(`📁 将使用默认名称: ${finalDirName}`);
-  console.log('');
-}
+    let finalUrl = null;
+    let customUrl = await question(rl, '🔗 请输入自定义URL路径（直接回车跳过）: ');
 
-const newPostDir = path.join(postsDir, finalDirName);
-const readmePath = path.join(newPostDir, 'README.md');
+    if (customUrl) {
+      const safeCheck = isSafeUrl(customUrl);
 
-fs.mkdirSync(newPostDir, { recursive: true });
+      if (!safeCheck.valid) {
+        console.error(`❌ 错误：${safeCheck.reason}`);
+        rl.close();
+        process.exit(1);
+      }
 
-const readmeContent = `---
+      if (fs.existsSync(path.join(postsDir, customUrl))) {
+        console.error(`❌ 错误：URL路径 "${customUrl}" 已存在`);
+        rl.close();
+        process.exit(1);
+      }
+
+      finalUrl = customUrl;
+      console.log(`✅ 使用自定义URL: ${finalUrl}`);
+    }
+
+    if (!finalUrl) {
+      const useAI = await confirmQuestion(rl, '🤖 是否使用AI生成URL路径？');
+
+      if (useAI) {
+        console.log('🤖 正在使用AI生成URL路径...');
+        const aiUrl = await generateUrlWithAI(title, 'posts');
+
+        if (aiUrl) {
+          console.log(`✨ AI建议的URL: ${aiUrl}`);
+
+          const acceptAI = await confirmQuestion(rl, '是否使用此URL？');
+
+          if (acceptAI) {
+            if (fs.existsSync(path.join(postsDir, aiUrl))) {
+              console.log(`⚠️  URL路径 "${aiUrl}" 已存在`);
+              const manualUrl = await question(rl, '请手动输入URL路径: ');
+              const safeCheck = isSafeUrl(manualUrl);
+
+              if (!safeCheck.valid) {
+                console.error(`❌ ${safeCheck.reason}`);
+                rl.close();
+                process.exit(1);
+              }
+
+              if (fs.existsSync(path.join(postsDir, manualUrl))) {
+                console.error('❌ URL路径已存在');
+                rl.close();
+                process.exit(1);
+              }
+
+              finalUrl = manualUrl;
+            } else {
+              finalUrl = aiUrl;
+            }
+          } else {
+            const manualUrl = await question(rl, '请手动输入URL路径: ');
+            const safeCheck = isSafeUrl(manualUrl);
+
+            if (!safeCheck.valid) {
+              console.error(`❌ ${safeCheck.reason}`);
+              rl.close();
+              process.exit(1);
+            }
+
+            if (fs.existsSync(path.join(postsDir, manualUrl))) {
+              console.error('❌ URL路径已存在');
+              rl.close();
+              process.exit(1);
+            }
+
+            finalUrl = manualUrl;
+          }
+        } else {
+          console.log('⚠️  AI生成失败');
+          const manualUrl = await question(rl, '请手动输入URL路径: ');
+          const safeCheck = isSafeUrl(manualUrl);
+
+          if (!safeCheck.valid) {
+            console.error(`❌ ${safeCheck.reason}`);
+            rl.close();
+            process.exit(1);
+          }
+
+          if (fs.existsSync(path.join(postsDir, manualUrl))) {
+            console.error('❌ URL路径已存在');
+            rl.close();
+            process.exit(1);
+          }
+
+          finalUrl = manualUrl;
+        }
+      } else {
+        const manualUrl = await question(rl, '请手动输入URL路径: ');
+        const safeCheck = isSafeUrl(manualUrl);
+
+        if (!safeCheck.valid) {
+          console.error(`❌ ${safeCheck.reason}`);
+          rl.close();
+          process.exit(1);
+        }
+
+        if (fs.existsSync(path.join(postsDir, manualUrl))) {
+          console.error('❌ URL路径已存在');
+          rl.close();
+          process.exit(1);
+        }
+
+        finalUrl = manualUrl;
+      }
+    }
+
+    if (!finalUrl) {
+      console.error('❌ 错误：未能确定有效的URL路径');
+      rl.close();
+      process.exit(1);
+    }
+
+    const now = new Date();
+    const date = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0') + ' ' +
+      String(now.getHours()).padStart(2, '0') + ':' +
+      String(now.getMinutes()).padStart(2, '0') + ':' +
+      String(now.getSeconds()).padStart(2, '0');
+
+    const newPostDir = path.join(postsDir, finalUrl);
+    const readmePath = path.join(newPostDir, 'README.md');
+
+    fs.mkdirSync(newPostDir, { recursive: true });
+
+    const readmeContent = `---
 title: ${title}
 date: ${date}
 tags: []
@@ -91,11 +194,24 @@ console.log('Hello, World!');
 ![图片描述](图片URL)
 `;
 
-fs.writeFileSync(readmePath, readmeContent, 'utf8');
+    fs.writeFileSync(readmePath, readmeContent, 'utf8');
 
-console.log('✅ 文章创建成功！');
-console.log(`📁 路径: ${readmePath}`);
-console.log(`📝 标题: ${title}`);
-console.log(`📅 日期: ${date}`);
-console.log('');
-console.log('现在你可以开始编辑文章内容了！');
+    console.log('');
+    console.log('✅ 文章创建成功！');
+    console.log(`📁 路径: ${readmePath}`);
+    console.log(`📝 标题: ${title}`);
+    console.log(`🔗 URL: ${finalUrl}`);
+    console.log(`📅 日期: ${date}`);
+    console.log('');
+    console.log('现在你可以开始编辑文章内容了！');
+
+    rl.close();
+  } catch (error) {
+    console.error('❌ 发生错误:', error.message);
+    rl.close();
+    process.exit(1);
+  }
+}
+
+main();
+
