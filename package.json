@@ -8,8 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "articleinstall": "nuxt prepare",
-    "new:post": "node scripts/new-post.js",
-    "new:column": "node scripts/new-column.js"
+    "new:post": "node --env-file-if-exists=.env scripts/new-post.js",
+    "new:column": "node --env-file-if-exists=.env scripts/new-column.js"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
