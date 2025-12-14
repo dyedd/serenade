@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { generateUrlWithAI } from './ai-helper.js';
+import { generateUrlWithAI, generateImageWithAI } from './ai-helper.js';
 import {
   createInterface,
   question,
@@ -82,7 +82,7 @@ async function main() {
 
       if (useAI) {
         console.log('🤖 正在使用AI生成URL路径...');
-        const aiUrl = await generateUrlWithAI(title, 'columns');
+        const aiUrl = await generateUrlWithAI(title);
 
         if (aiUrl) {
           console.log(`✨ AI建议的URL: ${aiUrl}`);
@@ -195,6 +195,25 @@ image: "cover.png"
     console.log(`📝 标题: ${title}`);
     console.log(`🔗 URL: ${finalUrl}`);
     console.log(`📄 描述: ${description}`);
+
+    const hasImageAPI = process.env.IMAGE_API_KEY;
+    if (hasImageAPI) {
+      console.log('');
+      const generateImage = await confirmQuestion(rl, '🎨 是否生成AI配图？');
+
+      if (generateImage) {
+        console.log('🎨 正在生成配图...');
+        const imagePath = path.join(newColumnDir, 'cover.png');
+        const result = await generateImageWithAI(title, imagePath);
+
+        if (result) {
+          console.log(`✅ 配图已生成: ${imagePath}`);
+        } else {
+          console.log('⚠️  配图生成失败，请手动添加');
+        }
+      }
+    }
+
     console.log('');
     console.log('现在你可以开始向这个专栏中添加文章了！');
 

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { generateUrlWithAI } from './ai-helper.js';
+import { generateUrlWithAI, generateImageWithAI } from './ai-helper.js';
 import {
   createInterface,
   question,
@@ -61,7 +61,7 @@ async function main() {
 
       if (useAI) {
         console.log('🤖 正在使用AI生成URL路径...');
-        const aiUrl = await generateUrlWithAI(title, 'posts');
+        const aiUrl = await generateUrlWithAI(title);
 
         if (aiUrl) {
           console.log(`✨ AI建议的URL: ${aiUrl}`);
@@ -153,14 +153,6 @@ async function main() {
       process.exit(1);
     }
 
-    const now = new Date();
-    const date = now.getFullYear() + '-' +
-      String(now.getMonth() + 1).padStart(2, '0') + '-' +
-      String(now.getDate()).padStart(2, '0') + ' ' +
-      String(now.getHours()).padStart(2, '0') + ':' +
-      String(now.getMinutes()).padStart(2, '0') + ':' +
-      String(now.getSeconds()).padStart(2, '0');
-
     const newPostDir = path.join(postsDir, finalUrl);
     const readmePath = path.join(newPostDir, 'README.md');
 
@@ -168,7 +160,6 @@ async function main() {
 
     const readmeContent = `---
 title: ${title}
-date: ${date}
 tags: []
 ---
 
@@ -201,7 +192,25 @@ console.log('Hello, World!');
     console.log(`📁 路径: ${readmePath}`);
     console.log(`📝 标题: ${title}`);
     console.log(`🔗 URL: ${finalUrl}`);
-    console.log(`📅 日期: ${date}`);
+
+    const hasImageAPI = process.env.IMAGE_API_KEY;
+    if (hasImageAPI) {
+      console.log('');
+      const generateImage = await confirmQuestion(rl, '🎨 是否生成AI配图？');
+
+      if (generateImage) {
+        console.log('🎨 正在生成配图...');
+        const imagePath = path.join(newPostDir, 'cover.png');
+        const result = await generateImageWithAI(title, imagePath);
+
+        if (result) {
+          console.log(`✅ 配图已生成: ${imagePath}`);
+        } else {
+          console.log('⚠️  配图生成失败，请手动添加');
+        }
+      }
+    }
+
     console.log('');
     console.log('现在你可以开始编辑文章内容了！');
 

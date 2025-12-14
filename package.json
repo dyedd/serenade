@@ -9,7 +9,8 @@
     "preview": "nuxt preview",
     "articleinstall": "nuxt prepare",
     "new:post": "node --env-file-if-exists=.env scripts/new-post.js",
-    "new:column": "node --env-file-if-exists=.env scripts/new-column.js"
+    "new:column": "node --env-file-if-exists=.env scripts/new-column.js",
+    "sync": "node --env-file-if-exists=.env scripts/sync.js"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
