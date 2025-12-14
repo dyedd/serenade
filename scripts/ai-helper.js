@@ -2,10 +2,14 @@ const API_KEY = process.env.OPENAI_API_KEY;
 const BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
 const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
+const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
+const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
+const IMAGE_MODEL = process.env.IMAGE_MODEL || 'Doubao-Seedream-4.5';
+
 /**
  * 调用AI生成URL路径
  */
-async function generateUrlWithAI(title, type = 'posts') {
+async function generateUrlWithAI(title) {
   if (!API_KEY) {
     console.error('❌ 错误：未找到API密钥');
     console.log('请在项目根目录创建 .env 文件，并配置 OPENAI_API_KEY');
@@ -13,9 +17,7 @@ async function generateUrlWithAI(title, type = 'posts') {
     return null;
   }
 
-  const typeText = type === 'posts' ? '文章' : '专栏';
-
-  const prompt = `你是一个URL生成助手。基于以下博客${typeText}的URL命名规律，为新标题生成一个合适的URL路径。
+  const prompt = `你是一个URL生成助手。基于以下博客内容的URL命名规律，为新标题生成一个合适的URL路径。
 
 ## URL命名规律总结
 
@@ -105,5 +107,103 @@ async function generateUrlWithAI(title, type = 'posts') {
   }
 }
 
-export { generateUrlWithAI };
+/**
+ * 生成配图
+ */
+async function generateImageWithAI(title, targetPath) {
+  if (!IMAGE_API_KEY) {
+    return null;
+  }
+
+  try {
+    // 先用 OpenAI 生成图片描述
+    let imagePrompt;
+
+    if (API_KEY) {
+      console.log('🤔 分析标题，生成配图描述...');
+      const response = await fetch(`${BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: '你是一个图片描述生成专家。根据博客文章标题，生成适合作为配图的详细描述。描述要具体、视觉化，符合技术博客风格。'
+            },
+            {
+              role: 'user',
+              content: `请为标题"${title}"生成一个配图的详细描述。要求：
+1. 提取标题中的关键技术词汇和主题
+2. 描述要具体、有画面感
+3. 风格：现代、简约、专业
+4. 色彩：柔和、舒适
+5. 只返回图片描述本身，不要解释
+
+示例：
+标题："Vue3响应式原理深入解析"
+描述：A modern tech illustration showing Vue.js logo with flowing reactive data streams, abstract nodes connecting in a network pattern, soft gradient background in green and blue tones, minimalist style, clean composition
+
+现在请为"${title}"生成描述：`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 200
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        imagePrompt = data.choices[0].message.content.trim();
+        console.log(`📝 配图描述: ${imagePrompt}`);
+      } else {
+        imagePrompt = `Blog cover image for "${title}", modern minimalist style, soft colors, tech-themed`;
+      }
+    } else {
+      imagePrompt = `Blog cover image for "${title}", modern minimalist style, soft colors, tech-themed`;
+    }
+
+    console.log('🎨 开始生成图片...');
+    const response = await fetch(`${IMAGE_BASE_URL}/images/generations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${IMAGE_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: IMAGE_MODEL,
+        prompt: imagePrompt,
+        n: 1,
+        size: '1024x1024'
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`API请求失败: ${error.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const imageUrl = data.data[0].url;
+
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error('下载图片失败');
+    }
+
+    const buffer = await imageResponse.arrayBuffer();
+    const fs = await import('fs');
+    fs.writeFileSync(targetPath, Buffer.from(buffer));
+
+    return true;
+  } catch (error) {
+    console.error('❌ AI生成配图失败:', error.message);
+    return null;
+  }
+}
+
+export { generateImageWithAI, generateUrlWithAI };
 
