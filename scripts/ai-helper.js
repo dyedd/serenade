@@ -1,9 +1,9 @@
 const API_KEY = process.env.OPENAI_API_KEY;
-const BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+const BASE_URL = process.env.OPENAI_BASE_URL || 'https://aiping.cn/api/v1';
 const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
 const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
-const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
+const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL || 'https://aiping.cn/api/v1';
 const IMAGE_MODEL = process.env.IMAGE_MODEL || 'Doubao-Seedream-4.5';
 
 /**
@@ -87,8 +87,6 @@ async function generateUrlWithAI(title) {
             content: prompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 100
       })
     });
 
@@ -150,8 +148,6 @@ async function generateImageWithAI(title, targetPath) {
 现在请为"${title}"生成描述：`
             }
           ],
-          temperature: 0.7,
-          max_tokens: 200
         })
       });
 
@@ -167,7 +163,7 @@ async function generateImageWithAI(title, targetPath) {
     }
 
     console.log('🎨 开始生成图片...');
-    const response = await fetch(`${IMAGE_BASE_URL}/images/generations`, {
+    const response = await fetch(`${IMAGE_BASE_URL}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -175,15 +171,15 @@ async function generateImageWithAI(title, targetPath) {
       },
       body: JSON.stringify({
         model: IMAGE_MODEL,
-        prompt: imagePrompt,
-        n: 1,
-        size: '1024x1024'
+        input: {
+          prompt: imagePrompt,
+        },
       })
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(`API请求失败: ${error.error?.message || response.statusText}`);
+      throw new Error(`图片生成API请求失败: ${error.error?.message || response.statusText}`);
     }
 
     const data = await response.json();
