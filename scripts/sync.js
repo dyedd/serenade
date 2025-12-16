@@ -36,6 +36,65 @@ function checkConfig() {
   }
 }
 
+function getExistingColumns() {
+  const columnsDir = path.join(projectRoot, 'content', 'columns');
+
+  if (!fs.existsSync(columnsDir)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(columnsDir)
+    .filter(name => {
+      const fullPath = path.join(columnsDir, name);
+      return fs.statSync(fullPath).isDirectory();
+    });
+}
+
+async function selectColumn(rl) {
+  const columns = getExistingColumns();
+
+  if (columns.length === 0) {
+    console.error('❌ 错误：没有找到任何专栏');
+    return null;
+  }
+
+  console.log('\n📚 可用的专栏：');
+  columns.forEach((col, index) => {
+    const readmePath = path.join(projectRoot, 'content', 'columns', col, 'README.md');
+    let title = col;
+
+    if (fs.existsSync(readmePath)) {
+      const content = fs.readFileSync(readmePath, 'utf8');
+      const titleMatch = content.match(/^title:\s*(.+)$/m);
+      if (titleMatch) {
+        title = titleMatch[1];
+      }
+    }
+
+    console.log(`  ${index + 1}. ${title} (${col})`);
+  });
+
+  const answer = await question(rl, '\n请选择专栏（输入序号或专栏路径）: ');
+
+  if (!answer) {
+    return null;
+  }
+
+  const index = parseInt(answer) - 1;
+
+  if (!isNaN(index) && index >= 0 && index < columns.length) {
+    return columns[index];
+  }
+
+  if (columns.includes(answer)) {
+    return answer;
+  }
+
+  console.error('❌ 错误：无效的选择');
+  return null;
+}
+
 function getCurrentTimestamp() {
   const now = new Date();
   const year = now.getFullYear();
@@ -397,9 +456,9 @@ async function main() {
       }
       syncPost(urlName);
     } else if (choice === '5') {
-      const urlName = await question(rl, '请输入专栏URL名称: ');
+      const urlName = await selectColumn(rl);
       if (!urlName) {
-        console.error('❌ 错误：URL名称不能为空');
+        console.error('❌ 错误：未选择专栏');
         rl.close();
         process.exit(1);
       }
