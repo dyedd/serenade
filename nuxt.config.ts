@@ -2,10 +2,11 @@ import { siteConfig } from './site.config'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-10-29',
-  devtools: { enabled: true },
+  compatibilityDate: '2025-12-17',
+  devtools: {
+    enabled: true
+  },
   experimental: {
-    watcher: "parcel",
     asyncContext: true,
     renderJsonPayloads: true,
     payloadExtraction: true,
@@ -13,7 +14,7 @@ export default defineNuxtConfig({
   },
   routeRules: {
     '/': { prerender: true },
-    '/api/friends': { cache: { maxAge: 60 } },
+    '/api/friends': { cache: { maxAge: 60,swr: true } },
   },
   app: {
     rootId: 'nuxt-root',
@@ -46,18 +47,13 @@ export default defineNuxtConfig({
   vite: {
     build: {
       cssMinify: true,
-    },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          // Prevent empty styles from breaking
-          silenceDeprecations: ['legacy-js-api']
-        }
-      }
+      sourcemap: false,
     }
   },
   nitro: {
+    preset: 'node-server',
     compressPublicAssets: true,
     minify: true,
+    sourceMap: false,
   },
 })
