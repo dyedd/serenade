@@ -1,0 +1,18 @@
+services:
+  serenade:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+    image: serenade:local
+    container_name: serenade
+    restart: unless-stopped
+    ports:
+      - "${SERENADE_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+    volumes:
+      - ./content:/app/content

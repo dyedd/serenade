@@ -1,59 +1,61 @@
-import { siteConfig } from './site.config'
+import { siteConfig } from "./site.config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-12-17',
+  compatibilityDate: "2025-12-17",
   devtools: {
-    enabled: true
+    enabled: true,
   },
   experimental: {
     asyncContext: true,
-    renderJsonPayloads: true,
     payloadExtraction: true,
-    viewTransition: true,
   },
   routeRules: {
-    '/': { prerender: true },
-    '/api/friends': { cache: { maxAge: 60,swr: true } },
+    "/": { prerender: true },
+    "/feed": {
+      swr: 600,
+    },
+    "/api/friends": {
+      swr: 60,
+    },
+    "/_nuxt/**": {
+      headers: {
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    },
   },
   app: {
-    rootId: 'nuxt-root',
+    rootId: "nuxt-root",
     head: {
       title: siteConfig.title,
       meta: [
-        { name: 'description', content: siteConfig.description },
-        { name: 'author', content: siteConfig.author },
-        { name: 'keywords', content: siteConfig.keywords },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
-        { name: 'revisit-after', content: '7 days' },
-        { name: 'msapplication-TileColor', content: '#ffffff' },
-        { charset: 'UTF-8' },
-        { 'http-equiv': 'X-UA-Compatible', 'content': 'IE=edge' },
+        { name: "description", content: siteConfig.description },
+        { name: "author", content: siteConfig.author },
+        { name: "keywords", content: siteConfig.keywords },
+        { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+        { charset: "UTF-8" },
       ],
-      noscript: [
-        { textContent: 'JavaScript is required' },
-      ],
-      htmlAttrs: {
-        lang: siteConfig.lang,
-      },
+      noscript: [{ textContent: "JavaScript is required" }],
+      htmlAttrs: { lang: siteConfig.lang },
       script: [
-        { src: '/iconfont.js', type: "text/javascript" },
-        { src: 'https://hm.baidu.com/hm.js?a42bb662e1d8e0210358ee50d5b4f2d1', type: "text/javascript" },
-      ]
-    }
+        { src: "/iconfont.js", defer: true },
+        {
+          src: "https://hm.baidu.com/hm.js?a42bb662e1d8e0210358ee50d5b4f2d1",
+          async: true,
+        },
+      ],
+    },
   },
-  css: ['~/assets/css/main.css'],
-  modules: ['@nuxtjs/tailwindcss'],
+  css: ["~/assets/css/main.css"],
+  modules: ["@nuxtjs/tailwindcss"],
   vite: {
     build: {
       cssMinify: true,
-      sourcemap: false,
-    }
+    },
   },
   nitro: {
-    preset: 'node-server',
-    compressPublicAssets: true,
+    preset: "node-server",
+    compressPublicAssets: { gzip: true, brotli: true },
     minify: true,
-    sourceMap: false,
   },
-})
+});
