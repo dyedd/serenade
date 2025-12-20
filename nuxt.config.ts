@@ -1,4 +1,5 @@
 import { siteConfig } from "./site.config";
+const isStaticGenerate = process.argv.includes("generate");
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -10,20 +11,36 @@ export default defineNuxtConfig({
     asyncContext: true,
     payloadExtraction: true,
   },
-  routeRules: {
-    "/": { prerender: true },
-    "/feed": {
-      swr: 600,
-    },
-    "/api/friends": {
-      swr: 60,
-    },
-    "/_nuxt/**": {
-      headers: {
-        "Cache-Control": "public, max-age=31536000, immutable",
+  routeRules: isStaticGenerate
+    ? {
+        "/": { prerender: true },
+        "/feed": { prerender: true },
+        "/_nuxt/**": {
+          headers: {
+            "Cache-Control": "public, max-age=31536000, immutable",
+          },
+        },
+      }
+    : {
+        "/": { prerender: true },
+        "/feed": {
+          swr: 600,
+          headers: {
+            "Cache-Control": "public, max-age=600, s-maxage=600",
+          },
+        },
+        "/api/friends": {
+          swr: 60,
+          headers: {
+            "Cache-Control": "public, max-age=60, s-maxage=60",
+          },
+        },
+        "/_nuxt/**": {
+          headers: {
+            "Cache-Control": "public, max-age=31536000, immutable",
+          },
+        },
       },
-    },
-  },
   app: {
     rootId: "nuxt-root",
     head: {
@@ -54,7 +71,7 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    preset: "node-server",
+    preset: isStaticGenerate ? "static" : "node-server",
     compressPublicAssets: { gzip: true, brotli: true },
     minify: true,
   },
