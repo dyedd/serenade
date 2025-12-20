@@ -1,3 +1,5 @@
+import path from 'path';
+
 const API_KEY = process.env.OPENAI_API_KEY;
 const BASE_URL = process.env.OPENAI_BASE_URL || 'https://aiping.cn/api/v1';
 const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -5,6 +7,64 @@ const MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
 const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL || 'https://aiping.cn/api/v1';
 const IMAGE_MODEL = process.env.IMAGE_MODEL || 'Doubao-Seedream-4.5';
+
+function normalizeCoverKindByTargetPath(targetPath) {
+  if (typeof targetPath !== 'string') {
+    return 'post';
+  } else if (!targetPath) {
+    return 'post';
+  } else {
+    const normalizedPath = path.normalize(targetPath);
+    const segments = normalizedPath.split(path.sep).map(segment => segment.toLowerCase());
+
+    if (segments.includes('columns')) {
+      return 'column';
+    } else if (segments.includes('posts')) {
+      return 'post';
+    } else {
+      return 'post';
+    }
+  }
+}
+
+function getCoverAspectHint(coverKind) {
+  if (coverKind === 'column') {
+    return {
+      kind: 'column',
+      layoutHint: '9:16 竖图（portrait）',
+      promptSuffix: 'aspect ratio 9:16, portrait, vertical composition, clean safe area for title',
+    };
+  } else if (coverKind === 'post') {
+    return {
+      kind: 'post',
+      layoutHint: '16:9 横图（landscape）',
+      promptSuffix: 'aspect ratio 16:9, landscape, wide composition, clean safe area for title',
+    };
+  } else {
+    return {
+      kind: 'post',
+      layoutHint: '16:9 横图（landscape）',
+      promptSuffix: 'aspect ratio 16:9, landscape, wide composition, clean safe area for title',
+    };
+  }
+}
+
+function appendPromptSuffix(prompt, suffix) {
+  const normalizedPrompt = String(prompt || '').trim();
+  const normalizedSuffix = String(suffix || '').trim();
+
+  if (!normalizedPrompt && !normalizedSuffix) {
+    return '';
+  } else if (!normalizedPrompt) {
+    return normalizedSuffix;
+  } else if (!normalizedSuffix) {
+    return normalizedPrompt;
+  } else if (normalizedPrompt.includes(normalizedSuffix)) {
+    return normalizedPrompt;
+  } else {
+    return `${normalizedPrompt}, ${normalizedSuffix}`;
+  }
+}
 
 /**
  * 调用AI生成URL路径
@@ -113,6 +173,9 @@ async function generateImageWithAI(title, targetPath) {
     return null;
   }
 
+  const coverKind = normalizeCoverKindByTargetPath(targetPath);
+  const coverAspect = getCoverAspectHint(coverKind);
+
   try {
     // 先用 OpenAI 生成图片描述
     let imagePrompt;
@@ -139,11 +202,12 @@ async function generateImageWithAI(title, targetPath) {
 2. 描述要具体、有画面感
 3. 风格：现代、简约、专业
 4. 色彩：柔和、舒适
-5. 只返回图片描述本身，不要解释
+5. 构图比例：${coverAspect.layoutHint}
+6. 只返回图片描述本身，不要解释
 
 示例：
 标题："Vue3响应式原理深入解析"
-描述：A modern tech illustration showing Vue.js logo with flowing reactive data streams, abstract nodes connecting in a network pattern, soft gradient background in green and blue tones, minimalist style, clean composition
+描述：A modern tech illustration showing Vue.js logo with flowing reactive data streams, abstract nodes connecting in a network pattern, soft gradient background in green and blue tones, minimalist style, clean composition, aspect ratio 16:9, landscape
 
 现在请为"${title}"生成描述：`
             }
@@ -161,6 +225,8 @@ async function generateImageWithAI(title, targetPath) {
     } else {
       imagePrompt = `Blog cover image for "${title}", modern minimalist style, soft colors, tech-themed`;
     }
+
+    imagePrompt = appendPromptSuffix(imagePrompt, coverAspect.promptSuffix);
 
     console.log('🎨 开始生成图片...');
     const response = await fetch(`${IMAGE_BASE_URL}`, {
