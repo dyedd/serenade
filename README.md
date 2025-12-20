@@ -84,8 +84,16 @@ node .output/server/index.mjs
 
 ```bash
 pnpm generate
-# 部署 dist/ 到任意静态托管
+# 部署 .output/public 到任意静态托管
 ```
+
+本地静态调试：
+
+```bash
+py -m http.server 4173 --directory .output/public
+```
+
+访问：`http://localhost:4173/feed`
 
 - 更新内容需要重新 `generate`（可交给 CI 自动化）
 
@@ -122,10 +130,12 @@ AI 与同步相关配置见 `.env.example`：
 
 ```ts
 export const siteConfig = {
-  author: "",
-  title: "",
+  author: "染念",
+  title: "染念的笔记",
   description: "Writing code, painful and happy",
-  keywords: "blog",
+  keywords: "染念,染念的笔记,染念の笔记,染念的博客,博客,blog",
+  url: "https://dyedd.cn",
+  email: "1...2@qq.com",
   lang: "zh-CN",
   startTime: "2017-02-11",
 };
