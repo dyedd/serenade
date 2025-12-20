@@ -22,7 +22,11 @@ export default defineNuxtConfig({
         },
       }
     : {
-        "/": { prerender: true },
+        "/": {
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        },
         "/feed": {
           swr: 600,
           headers: {
