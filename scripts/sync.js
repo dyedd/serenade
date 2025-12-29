@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
@@ -30,9 +30,79 @@ function checkConfig() {
   }
 
   if (isWindows) {
-    console.log('ℹ️  检测到 Windows 系统，将使用 scp 命令（不支持增量同步）');
+    console.log('ℹ️ 检测到 Windows 系统，将使用 scp 命令（不支持增量同步）');
   } else {
-    console.log('ℹ️  检测到 Unix 系统，将使用 rsync 命令（支持增量同步）');
+    console.log('ℹ️ 检测到 Unix 系统，将使用 rsync 命令（支持增量同步）');
+  }
+}
+
+function quoteRemotePath(remotePath) {
+  if (typeof remotePath === 'string') {
+    const trimmedPath = remotePath.trim();
+
+    if (trimmedPath.length > 0) {
+      const jsonPath = JSON.stringify(trimmedPath);
+      const escapedDollar = jsonPath.replace(/\$/g, '\\$');
+      const escapedBacktick = escapedDollar.replace(/`/g, '\\`');
+      return escapedBacktick;
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+}
+
+function runRemoteCommand(command) {
+  if (typeof command === 'string') {
+    const trimmedCommand = command.trim();
+
+    if (trimmedCommand.length > 0) {
+      try {
+        execFileSync(
+          'ssh',
+          [`${SERVER_USER}@${SERVER_HOST}`, trimmedCommand],
+          { stdio: 'inherit' }
+        );
+        return true;
+      } catch (error) {
+        console.error('❌ 远程命令执行失败:', error.message);
+        return false;
+      }
+    } else {
+      console.error('❌ 错误：远程命令为空');
+      return false;
+    }
+  } else {
+    console.error('❌ 错误：远程命令无效');
+    return false;
+  }
+}
+
+function cleanRemoteDirectory(remoteDir, label) {
+  const quotedPath = quoteRemotePath(remoteDir);
+
+  if (quotedPath) {
+    console.log(`🧹 清理远程${label}目录...`);
+    const removed = runRemoteCommand(`rm -rf ${quotedPath}`);
+
+    if (removed) {
+      const created = runRemoteCommand(`mkdir -p ${quotedPath}`);
+
+      if (created) {
+        console.log(`✅ 远程${label}目录已清理`);
+        return true;
+      } else {
+        console.error(`❌ 创建远程${label}目录失败`);
+        return false;
+      }
+    } else {
+      console.error(`❌ 清理远程${label}目录失败`);
+      return false;
+    }
+  } else {
+    console.error('❌ 错误：远程目录路径无效');
+    return false;
   }
 }
 
@@ -75,7 +145,7 @@ async function selectColumn(rl) {
     console.log(`  ${index + 1}. ${title} (${col})`);
   });
 
-  const answer = await question(rl, '\n请选择专栏（输入序号或专栏路径）: ');
+  const answer = await question(rl, '\n📚 请选择专栏（输入序号或专栏路径）: ');
 
   if (!answer) {
     return null;
@@ -165,51 +235,65 @@ function updateTimestamps() {
 function syncContent() {
   updateTimestamps();
   console.log('');
-  console.log('📦 同步内容到服务器...');
-  const contentPath = path.join(projectRoot, 'content');
-  const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/`;
+  const remoteContentDir = `${SERVER_PATH}/content`;
+  const isCleaned = cleanRemoteDirectory(remoteContentDir, '内容');
 
-  try {
-    if (isWindows) {
-      execSync(
-        `scp -r "${contentPath}/*" "${target}"`,
-        { stdio: 'inherit', shell: true }
-      );
-    } else {
-      execSync(
-        `rsync -avz --delete "${contentPath}/" "${target}"`,
-        { stdio: 'inherit' }
-      );
+  if (isCleaned) {
+    console.log('🔄 同步内容到服务器...');
+    const contentPath = path.join(projectRoot, 'content');
+    const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/`;
+
+    try {
+      if (isWindows) {
+        execSync(
+          `scp -r "${contentPath}/*" "${target}"`,
+          { stdio: 'inherit', shell: true }
+        );
+      } else {
+        execSync(
+          `rsync -avz --delete "${contentPath}/" "${target}"`,
+          { stdio: 'inherit' }
+        );
+      }
+      console.log('✅ 内容同步完成');
+      return true;
+    } catch (error) {
+      console.error('❌ 内容同步失败:', error.message);
+      return false;
     }
-    console.log('✅ 内容同步完成');
-    return true;
-  } catch (error) {
-    console.error('❌ 内容同步失败:', error.message);
+  } else {
     return false;
   }
 }
 
 function syncOutput() {
-  console.log('🚀 同步构建产物到服务器...');
-  const outputPath = path.join(projectRoot, '.output');
-  const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/.output/`;
+  const remoteOutputDir = `${SERVER_PATH}/.output`;
+  const isCleaned = cleanRemoteDirectory(remoteOutputDir, '构建产物');
 
-  try {
-    if (isWindows) {
-      execSync(
-        `scp -r "${outputPath}/*" "${target}"`,
-        { stdio: 'inherit', shell: true }
-      );
-    } else {
-      execSync(
-        `rsync -avz --delete "${outputPath}/" "${target}"`,
-        { stdio: 'inherit' }
-      );
+  if (isCleaned) {
+    console.log('🔄 同步构建产物到服务器...');
+    const outputPath = path.join(projectRoot, '.output');
+    const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/.output/`;
+
+    try {
+      if (isWindows) {
+        execSync(
+          `scp -r "${outputPath}/*" "${target}"`,
+          { stdio: 'inherit', shell: true }
+        );
+      } else {
+        execSync(
+          `rsync -avz --delete "${outputPath}/" "${target}"`,
+          { stdio: 'inherit' }
+        );
+      }
+      console.log('✅ 构建产物同步完成');
+      return true;
+    } catch (error) {
+      console.error('❌ 构建产物同步失败:', error.message);
+      return false;
     }
-    console.log('✅ 构建产物同步完成');
-    return true;
-  } catch (error) {
-    console.error('❌ 构建产物同步失败:', error.message);
+  } else {
     return false;
   }
 }
@@ -229,112 +313,173 @@ function syncAll() {
     console.log('✨ 全部同步完成！');
   } else {
     console.log('');
-    console.log('⚠️  部分同步失败，请检查错误信息');
+    console.log('⚠️ 部分同步失败，请检查错误信息');
   }
 
   return success;
 }
 
 function syncContentWithoutUpdate() {
-  console.log('📦 同步内容到服务器...');
-  const contentPath = path.join(projectRoot, 'content');
-  const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/`;
+  const remoteContentDir = `${SERVER_PATH}/content`;
+  const isCleaned = cleanRemoteDirectory(remoteContentDir, '内容');
 
-  try {
-    if (isWindows) {
-      execSync(
-        `scp -r "${contentPath}/*" "${target}"`,
-        { stdio: 'inherit', shell: true }
-      );
-    } else {
-      execSync(
-        `rsync -avz --delete "${contentPath}/" "${target}"`,
-        { stdio: 'inherit' }
-      );
+  if (isCleaned) {
+    console.log('🔄 同步内容到服务器...');
+    const contentPath = path.join(projectRoot, 'content');
+    const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/`;
+
+    try {
+      if (isWindows) {
+        execSync(
+          `scp -r "${contentPath}/*" "${target}"`,
+          { stdio: 'inherit', shell: true }
+        );
+      } else {
+        execSync(
+          `rsync -avz --delete "${contentPath}/" "${target}"`,
+          { stdio: 'inherit' }
+        );
+      }
+      console.log('✅ 内容同步完成');
+      return true;
+    } catch (error) {
+      console.error('❌ 内容同步失败:', error.message);
+      return false;
     }
-    console.log('✅ 内容同步完成');
-    return true;
-  } catch (error) {
-    console.error('❌ 内容同步失败:', error.message);
+  } else {
     return false;
   }
 }
 
 function syncPost(urlName) {
   const postPath = path.join(projectRoot, 'content', 'posts', urlName);
+  const postExists = fs.existsSync(postPath);
 
-  if (!fs.existsSync(postPath)) {
-    console.error(`❌ 错误：文章 "${urlName}" 不存在`);
-    return false;
-  }
+  if (postExists) {
+    const readmePath = path.join(postPath, 'README.md');
+    const hasReadme = fs.existsSync(readmePath);
 
-  const readmePath = path.join(postPath, 'README.md');
-  if (fs.existsSync(readmePath)) {
-    const content = fs.readFileSync(readmePath, 'utf8');
-    if (!/^date:\s*.+$/m.test(content)) {
-      const timestamp = getCurrentTimestamp();
-      const updatedContent = content.replace(
-        /^(---\s*\ntitle:[^\n]+\s*\n)/m,
-        `$1date: ${timestamp}\n`
-      );
-      if (content !== updatedContent) {
-        fs.writeFileSync(readmePath, updatedContent, 'utf8');
-        console.log(`🕐 已添加时间戳: ${timestamp}`);
+    if (hasReadme) {
+      const content = fs.readFileSync(readmePath, 'utf8');
+      const hasDate = /^date:\s*.+$/m.test(content);
+
+      if (hasDate) {
+        console.log('ℹ️ 已存在时间戳，保持不变');
+      } else {
+        const timestamp = getCurrentTimestamp();
+        const updatedContent = content.replace(
+          /^(---\s*\ntitle:[^\n]+\s*\n)/m,
+          `$1date: ${timestamp}\n`
+        );
+
+        if (content !== updatedContent) {
+          fs.writeFileSync(readmePath, updatedContent, 'utf8');
+          console.log(`✅ 已添加时间戳: ${timestamp}`);
+        } else {
+          console.log('⚠️ 未找到可插入的位置，跳过时间戳');
+        }
       }
-    }
-  }
-
-  console.log('');
-  console.log(`📦 同步文章 "${urlName}" 到服务器...`);
-  const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/posts/${urlName}/`;
-
-  try {
-    if (isWindows) {
-      execSync(
-        `scp -r "${postPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/posts/"`,
-        { stdio: 'inherit', shell: true }
-      );
     } else {
-      execSync(
-        `rsync -avz --delete "${postPath}/" "${target}"`,
-        { stdio: 'inherit' }
-      );
+      console.log('⚠️ 未找到 README.md，跳过时间戳');
     }
-    console.log('✅ 文章同步完成');
-    return true;
-  } catch (error) {
-    console.error('❌ 文章同步失败:', error.message);
+
+    const remotePostDir = `${SERVER_PATH}/content/posts/${urlName}`;
+    const isCleaned = cleanRemoteDirectory(remotePostDir, '文章');
+
+    if (isCleaned) {
+      console.log('');
+      console.log(`🔄 同步文章 "${urlName}" 到服务器...`);
+      const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/posts/${urlName}/`;
+
+      try {
+        if (isWindows) {
+          execSync(
+            `scp -r "${postPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/posts/"`,
+            { stdio: 'inherit', shell: true }
+          );
+        } else {
+          execSync(
+            `rsync -avz --delete "${postPath}/" "${target}"`,
+            { stdio: 'inherit' }
+          );
+        }
+        console.log('✅ 文章同步完成');
+        return true;
+      } catch (error) {
+        console.error('❌ 文章同步失败:', error.message);
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } else {
+    console.error(`❌ 错误：文章 "${urlName}" 不存在`);
     return false;
   }
 }
 
 function syncColumn(urlName) {
   const columnPath = path.join(projectRoot, 'content', 'columns', urlName);
+  const columnExists = fs.existsSync(columnPath);
 
-  if (!fs.existsSync(columnPath)) {
-    console.error(`❌ 错误：专栏 "${urlName}" 不存在`);
-    return false;
-  }
+  if (columnExists) {
+    const readmePath = path.join(columnPath, 'README.md');
+    const hasReadme = fs.existsSync(readmePath);
 
-  console.log(`📦 同步专栏 "${urlName}" 到服务器...`);
-  const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/columns/${urlName}/`;
+    if (hasReadme) {
+      const content = fs.readFileSync(readmePath, 'utf8');
+      const hasDate = /^date:\s*.+$/m.test(content);
 
-  try {
-    if (isWindows) {
-      execSync(
-        `scp -r "${columnPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/columns/"`,
-        { stdio: 'inherit', shell: true }
-      );
+      if (hasDate) {
+        console.log('ℹ️ 已存在时间戳，保持不变');
+      } else {
+        const timestamp = getCurrentTimestamp();
+        const updatedContent = content.replace(
+          /^(---\s*\ntitle:[^\n]+\s*\n)/m,
+          `$1date: ${timestamp}\n`
+        );
+
+        if (content !== updatedContent) {
+          fs.writeFileSync(readmePath, updatedContent, 'utf8');
+          console.log(`✅ 已添加时间戳: ${timestamp}`);
+        } else {
+          console.log('⚠️ 未找到可插入的位置，跳过时间戳');
+        }
+      }
     } else {
-      execSync(
-        `rsync -avz --delete "${columnPath}/" "${target}"`,
-        { stdio: 'inherit' }
-      );
+      console.log('⚠️ 未找到 README.md，跳过时间戳');
     }
-    console.log('✅ 专栏同步完成');
-    return true;
-  } catch (error) {
-    console.error('❌ 专栏同步失败:', error.message);
+
+    const remoteColumnDir = `${SERVER_PATH}/content/columns/${urlName}`;
+    const isCleaned = cleanRemoteDirectory(remoteColumnDir, '专栏');
+
+    if (isCleaned) {
+      console.log(`🔄 同步专栏 "${urlName}" 到服务器...`);
+      const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/columns/${urlName}/`;
+
+      try {
+        if (isWindows) {
+          execSync(
+            `scp -r "${columnPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/columns/"`,
+            { stdio: 'inherit', shell: true }
+          );
+        } else {
+          execSync(
+            `rsync -avz --delete "${columnPath}/" "${target}"`,
+            { stdio: 'inherit' }
+          );
+        }
+        console.log('✅ 专栏同步完成');
+        return true;
+      } catch (error) {
+        console.error('❌ 专栏同步失败:', error.message);
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } else {
+    console.error(`❌ 错误：专栏 "${urlName}" 不存在`);
     return false;
   }
 }
@@ -439,7 +584,7 @@ async function main() {
     console.log('6. 同步JSON文件 (json)');
     console.log('');
 
-    const choice = await question(rl, '请输入选项 (1-6): ');
+    const choice = await question(rl, '🧭 请输入选项 (1-6): ');
 
     if (choice === '1') {
       syncContent();
@@ -448,7 +593,7 @@ async function main() {
     } else if (choice === '3') {
       syncAll();
     } else if (choice === '4') {
-      const urlName = await question(rl, '请输入文章URL名称: ');
+      const urlName = await question(rl, '🔗 请输入文章URL名称: ');
       if (!urlName) {
         console.error('❌ 错误：URL名称不能为空');
         rl.close();
@@ -464,7 +609,7 @@ async function main() {
       }
       syncColumn(urlName);
     } else if (choice === '6') {
-      const fileName = await question(rl, '请输入文件名 (friends.json/projects.json): ');
+      const fileName = await question(rl, '📄 请输入文件名 (friends.json/projects.json): ');
       if (!fileName) {
         console.error('❌ 错误：文件名不能为空');
         rl.close();

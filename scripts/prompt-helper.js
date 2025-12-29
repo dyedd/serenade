@@ -25,8 +25,22 @@ function question(rl, query) {
  * 询问是/否问题
  */
 async function confirmQuestion(rl, query) {
-  const answer = await question(rl, `${query} (y/n): `);
-  return answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+  const prompt = `${query} (Y/n，回车默认 Y): `;
+
+  while (true) {
+    const answer = await question(rl, prompt);
+    const normalized = answer.toLowerCase();
+
+    if (normalized.length === 0) {
+      return true;
+    } else if (normalized === 'y' || normalized === 'yes') {
+      return true;
+    } else if (normalized === 'n' || normalized === 'no') {
+      return false;
+    } else {
+      console.log('⚠️ 输入无效，请输入 y 或 n（回车默认 Y）');
+    }
+  }
 }
 
 /**
