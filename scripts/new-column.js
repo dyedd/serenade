@@ -310,14 +310,10 @@ async function createColumn(rl) {
 
   const newColumnDir = path.join(columnsDir, finalUrl);
   const readmePath = path.join(newColumnDir, 'README.md');
-  const now = new Date();
-  const dateStr = now.toISOString().slice(0, 19).replace('T', ' ');
-
   fs.mkdirSync(newColumnDir, { recursive: true });
 
   const readmeContent = `---
 title: ${title}
-date: ${dateStr}
 description: ${description}
 type: "公开"
 image: "cover.png"
