@@ -2,123 +2,161 @@ import { promises as fs } from 'fs'
 import { join } from 'path'
 import Parser from 'rss-parser'
 
-// Fisher-Yates 洗牌算法：随机打乱数组顺序
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
+const shuffle = (items) => {
+  for (let i = items.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[array[i], array[j]] = [array[j], array[i]]
+    ;[items[i], items[j]] = [items[j], items[i]]
   }
-  return array
+
+  return items
 }
 
-async function loadFriendsData() {
-  // 读取友联数据配置文件
+const loadFriendsData = async () => {
   const dataPath = join(process.cwd(), 'content', 'friends.json')
   const fileContent = await fs.readFile(dataPath, 'utf-8')
-  return JSON.parse(fileContent)
+
+  try {
+    return JSON.parse(fileContent)
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: '友链数据解析失败'
+      })
+    } else {
+      throw error
+    }
+  }
+}
+
+const buildBaseInfo = (friend) => ({
+  siteName: friend.name,
+  siteUrl: friend.url,
+  siteLogo: friend.logo,
+  description: friend.description,
+  articles: [],
+  hasRSS: Boolean(friend.rss)
+})
+
+const buildSiteResult = (friend, overrides) => ({
+  siteName: friend.name,
+  siteUrl: friend.url,
+  siteLogo: friend.logo,
+  articles: [],
+  hasRSS: Boolean(friend.rss),
+  ...overrides
+})
+
+const normalizeFeedItems = (items) => {
+  const limitedItems = items.slice(0, 5)
+  const validItems = limitedItems.filter((item) => item.title && item.link)
+
+  return validItems.map((item) => {
+    const title =
+      typeof item.title === 'string' && item.title.length > 0
+        ? item.title
+        : '未知标题'
+    const link =
+      typeof item.link === 'string' && item.link.length > 0
+        ? item.link
+        : '#'
+    const pubDate =
+      typeof item.pubDate === 'string' && item.pubDate.length > 0
+        ? item.pubDate
+        : new Date().toISOString()
+    const description =
+      typeof item.description === 'string' && item.description.length > 0
+        ? item.description
+        : ''
+
+    return {
+      title,
+      link,
+      pubDate,
+      description
+    }
+  })
 }
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const urlQuery = query.url
 
-  // 无 url 参数：返回所有友联的基础信息
   if (!urlQuery) {
     const friendsData = await loadFriendsData()
-    const baseInfo = friendsData.map(moment => ({
-      siteName: moment.name,
-      siteUrl: moment.url,
-      siteLogo: moment.logo,
-      description: moment.description,
-      articles: [],
-      hasRSS: !!moment.rss
-    }))
+    const baseInfo = friendsData.map((friend) => buildBaseInfo(friend))
 
     return { results: shuffle(baseInfo) }
-  }
+  } else {
+    const friendsData = await loadFriendsData()
+    const target = friendsData.find((friend) => friend.url === urlQuery)
 
-  const friendsData = await loadFriendsData()
-  const target = friendsData.find(m => m.url === urlQuery)
+    if (!target) {
+      return { results: [] }
+    } else {
+      if (!target.rss) {
+        return {
+          results: [
+            buildSiteResult(target, {
+              hasRSS: false
+            })
+          ]
+        }
+      } else {
+        const parser = new Parser({
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          timeout: 10000,
+          customFields: {
+            item: [
+              ['title', 'title'],
+              ['link', 'link'],
+              ['pubDate', 'pubDate'],
+              ['description', 'description']
+            ]
+          }
+        })
 
-  if (!target) {
-    return { results: [] }
-  }
+        try {
+          const feed = await parser.parseURL(target.rss)
+          const items = Array.isArray(feed.items) ? feed.items : []
 
-  // 无 RSS：只返回基础信息
-  if (!target.rss) {
-    const siteData = {
-      siteName: target.name,
-      siteUrl: target.url,
-      siteLogo: target.logo,
-      articles: [],
-      hasRSS: false
-    }
-    return { results: [siteData] }
-  }
+          if (items.length === 0) {
+            return {
+              results: [
+                buildSiteResult(target, {
+                  hasRSS: true,
+                  isEmpty: true
+                })
+              ]
+            }
+          } else {
+            const normalizedItems = normalizeFeedItems(items)
 
-  const parser = new Parser({
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    },
-    timeout: 10000,
-    customFields: {
-      item: [
-        ['title', 'title'],
-        ['link', 'link'],
-        ['pubDate', 'pubDate'],
-        ['description', 'description']
-      ]
-    }
-  })
+            return {
+              results: [
+                buildSiteResult(target, {
+                  articles: normalizedItems,
+                  hasRSS: true
+                })
+              ]
+            }
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '未知错误'
 
-  try {
-    const feed = await parser.parseURL(target.rss)
-
-    // RSS 为空的情况
-    if (!feed.items || feed.items.length === 0) {
-      const siteData = {
-        siteName: target.name,
-        siteUrl: target.url,
-        siteLogo: target.logo,
-        articles: [],
-        hasRSS: true,
-        isEmpty: true
+          return {
+            results: [
+              buildSiteResult(target, {
+                hasRSS: true,
+                error: true,
+                errorMessage
+              })
+            ]
+          }
+        }
       }
-      return { results: [siteData] }
     }
-
-    // 提取前5篇文章
-    const items = feed.items.slice(0, 5)
-      .filter(item => item.title && item.link)
-      .map(item => ({
-        title: item.title || '未知标题',
-        link: item.link || '#',
-        pubDate: item.pubDate || new Date().toISOString(),
-        description: item.description || ''
-      }))
-
-    const siteData = {
-      siteName: target.name,
-      siteUrl: target.url,
-      siteLogo: target.logo,
-      articles: items,
-      hasRSS: true
-    }
-
-    return { results: [siteData] }
-
-  } catch (error) {
-    // RSS 解析失败，返回错误信息但保留基础数据
-    const errorSiteData = {
-      siteName: target.name,
-      siteUrl: target.url,
-      siteLogo: target.logo,
-      articles: [],
-      hasRSS: true,
-      error: true,
-      errorMessage: error.message
-    }
-
-    return { results: [errorSiteData] }
   }
 })

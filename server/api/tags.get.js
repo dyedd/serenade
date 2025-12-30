@@ -1,47 +1,52 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { normalizeTags } from '../utils.js'
+
+const readTagsFromMarkdown = (filePath) => {
+  const raw = fs.readFileSync(filePath, 'utf-8')
+  const { data: metaData } = matter(raw)
+  return normalizeTags(metaData.tags)
+}
+
+const countTagsInDirectory = (dirPath) => {
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+  const markdownFiles = entries.filter(
+    (entry) => entry.isFile() && entry.name.endsWith('.md')
+  )
+
+  return markdownFiles.reduce((counts, entry) => {
+    const tags = readTagsFromMarkdown(path.join(dirPath, entry.name))
+    const validTags = tags.filter((tag) => typeof tag === 'string' && tag.length > 0)
+
+    validTags.forEach((tag) => {
+      const current = counts[tag] ?? 0
+      counts[tag] = current + 1
+    })
+
+    return counts
+  }, {})
+}
 
 export default defineEventHandler(() => {
   const directoryPath = path.join('content/posts')
-
-  function getTagsFromMdFile(filePath) {
-    // 从 Markdown 文件的 front-matter 中提取标签
-    const raw = fs.readFileSync(filePath, 'utf-8')
-    const { data: metaData } = matter(raw)
-    return metaData.tags || []
-  }
-
-  function getTagsCount(dirPath) {
-    const entries = fs.readdirSync(dirPath, { withFileTypes: true })
-    const tagCounts = {}
-
-    entries.forEach((entry) => {
-      if (entry.isFile() && entry.name.endsWith('.md')) {
-        const tags = getTagsFromMdFile(path.join(dirPath, entry.name))
-        // 统计每个标签的出现次数
-        tags.forEach(tag => {
-          tagCounts[tag] = (tagCounts[tag] || 0) + 1
-        })
-      }
-    })
-
-    return tagCounts
-  }
-
-  const tagCounts = {}
   const entries = fs.readdirSync(directoryPath, { withFileTypes: true })
 
-  entries.forEach((entry) => {
+  const tagCounts = entries.reduce((counts, entry) => {
     if (entry.isDirectory()) {
       const dirPath = path.join(directoryPath, entry.name)
-      const directoryTagCounts = getTagsCount(dirPath)
-      // 合并每个目录的标签统计
-      for (const tag in directoryTagCounts) {
-        tagCounts[tag] = (tagCounts[tag] || 0) + directoryTagCounts[tag]
-      }
+      const directoryTagCounts = countTagsInDirectory(dirPath)
+
+      Object.entries(directoryTagCounts).forEach(([tag, count]) => {
+        const current = counts[tag] ?? 0
+        counts[tag] = current + count
+      })
+
+      return counts
+    } else {
+      return counts
     }
-  })
+  }, {})
 
   return tagCounts
 })

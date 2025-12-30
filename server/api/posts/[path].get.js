@@ -1,70 +1,83 @@
 import fg from 'fast-glob'
 import fs from 'fs-extra'
 import matter from 'gray-matter'
-import { formatDate, parseAsset, parseMarkdown, calculateReadingTime } from '../../utils.js'
+import {
+  formatDate,
+  parseAsset,
+  parseMarkdown,
+  calculateReadingTime,
+  normalizeTags
+} from '../../utils.js'
 
 export default defineEventHandler(async (event) => {
   const name = event.context.params?.path
 
   const files = await fg('content/posts/*/{readme,README}.md')
-  const filteredFiles = files.filter(i => i.includes(name))
-  if (filteredFiles.length === 0) {
+  const matchedFiles = files.filter((file) => file.includes(name))
+
+  if (matchedFiles.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
-  }
+  } else {
+    const targetFile =
+      matchedFiles.find((file) => file.includes('/README.md')) ?? matchedFiles[0]
+    const raw = await fs.readFile(targetFile, 'utf-8')
+    const { data: metaData, content } = matter(raw)
 
-  // 优先选择大写 README.md，以保持一致性
-  const targetFile = filteredFiles.find(i => i.includes('/README.md')) || filteredFiles[0]
-  const raw = await fs.readFile(targetFile, 'utf-8')
-  const { data: metaData, content } = matter(raw)
+    const htmlContent = parseMarkdown(content, name, false, 'posts')
+    const readingTime = calculateReadingTime(content)
+    const tags = normalizeTags(metaData.tags)
+    const cover = metaData.cover ? parseAsset(name, metaData.cover) : metaData.cover
 
-  const htmlContent = parseMarkdown(content, name, false, 'posts')
-
-  if (metaData.cover) {
-    metaData.cover = parseAsset(name, metaData.cover)
-  }
-  metaData.date = formatDate(metaData.date)
-  const tags = typeof metaData.tags === 'string' ? [metaData.tags] : metaData.tags
-  metaData.tags = tags
-  const readingTime = calculateReadingTime(content)
-  metaData.readingTime = readingTime.text
-
-  // 获取所有文章并按日期排序，用于查找上一篇和下一篇
-  const allPosts = []
-  for (const file of files) {
-    const postRaw = await fs.readFile(file, 'utf-8')
-    const { data: postMeta } = matter(postRaw)
-    const postPath = file.match(/content\/posts\/([^\/]+)\//)?.[1]
-
-    if (postPath && postMeta.date) {
-      allPosts.push({
-        path: postPath,
-        title: postMeta.title,
-        date: new Date(postMeta.date)
-      })
+    const resolvedMeta = {
+      ...metaData,
+      cover,
+      date: formatDate(metaData.date),
+      tags,
+      readingTime: readingTime.text
     }
-  }
 
-  // 按日期降序排序
-  allPosts.sort((a, b) => b.date - a.date)
+    const posts = await Promise.all(
+      files.map(async (file) => {
+        const postRaw = await fs.readFile(file, 'utf-8')
+        const { data: postMeta } = matter(postRaw)
+        const postPath = file.match(/content\/posts\/([^\/]+)\//)?.[1]
 
-  // 查找当前文章的索引
-  const currentIndex = allPosts.findIndex(post => post.path === name)
+        if (postPath && postMeta.date) {
+          return {
+            path: postPath,
+            title: postMeta.title,
+            date: new Date(postMeta.date)
+          }
+        } else {
+          return null
+        }
+      })
+    )
 
-  // 获取上一篇和下一篇
-  const prevPost = currentIndex > 0 ? {
-    path: allPosts[currentIndex - 1].path,
-    title: allPosts[currentIndex - 1].title
-  } : null
+    const allPosts = posts.filter((post) => post !== null)
+    allPosts.sort((a, b) => b.date - a.date)
 
-  const nextPost = currentIndex < allPosts.length - 1 ? {
-    path: allPosts[currentIndex + 1].path,
-    title: allPosts[currentIndex + 1].title
-  } : null
+    const currentIndex = allPosts.findIndex((post) => post.path === name)
+    const prevPost =
+      currentIndex > 0
+        ? {
+          path: allPosts[currentIndex - 1].path,
+          title: allPosts[currentIndex - 1].title
+        }
+        : null
+    const nextPost =
+      currentIndex > -1 && currentIndex < allPosts.length - 1
+        ? {
+          path: allPosts[currentIndex + 1].path,
+          title: allPosts[currentIndex + 1].title
+        }
+        : null
 
-  return {
-    metaData,
-    htmlContent,
-    prevPost,
-    nextPost
+    return {
+      metaData: resolvedMeta,
+      htmlContent,
+      prevPost,
+      nextPost
+    }
   }
 })
