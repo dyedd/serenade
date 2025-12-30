@@ -47,11 +47,11 @@
 
   <!-- 分类项目列表 -->
   <section v-if="activeTab !== 'all'" class="projects-section">
-    <div v-if="loading.categories[activeTab]" class="loading-grid">
+    <div v-if="isCategoryLoading" class="loading-grid">
       <div v-for="n in 6" :key="n" class="skeleton-card"></div>
     </div>
 
-    <div v-else-if="error.categories[activeTab]" class="error-container">
+    <div v-else-if="categoryErrorMessage" class="error-container">
       <div class="error-icon">
         <svg
           width="48"
@@ -67,8 +67,8 @@
         </svg>
       </div>
       <h3 class="error-title">加载失败</h3>
-      <p class="error-description">{{ error.categories[activeTab] }}</p>
-      <button @click="loadCategoryProjects(activeTab)" class="retry-button">
+      <p class="error-description">{{ categoryErrorMessage }}</p>
+      <button @click="refreshCategoryProjects" class="retry-button">
         <svg
           width="16"
           height="16"
@@ -86,7 +86,7 @@
 
     <div v-else class="category-projects-grid">
       <div
-        v-for="(project, index) in currentCategoryProjects"
+        v-for="(project, index) in categoryProjects"
         :key="`${activeTab}-${index}`"
         class="category-project-card"
         @click="goToProject(project.link)"
@@ -116,20 +116,20 @@
 
     <div
       v-if="
-        !loading.categories[activeTab] &&
-        !error.categories[activeTab] &&
-        currentCategoryProjects.length > 0
+        !isCategoryLoading &&
+        !categoryErrorMessage &&
+        categoryProjects.length > 0
       "
       class="load-more-container"
     >
       <button
-        v-if="hasMore.categories[activeTab]"
-        @click="loadMoreCategory(activeTab)"
-        :disabled="loadingMore.categories[activeTab]"
+        v-if="categoryHasMore"
+        @click="loadMoreCategory"
+        :disabled="categoryLoadingMore"
         class="load-more-button"
       >
         <svg
-          v-if="loadingMore.categories[activeTab]"
+          v-if="categoryLoadingMore"
           class="loading-spinner"
           width="16"
           height="16"
@@ -145,7 +145,7 @@
             stroke-linecap="round"
           />
         </svg>
-        {{ loadingMore.categories[activeTab] ? "加载中..." : "加载更多" }}
+        {{ categoryLoadingMore ? "加载中..." : "加载更多" }}
       </button>
       <p v-else class="end-message">已显示所有项目</p>
     </div>
@@ -153,11 +153,11 @@
 
   <!-- 全部项目 -->
   <section v-else class="projects-section">
-    <div v-if="loading.all" class="loading-grid">
+    <div v-if="isAllLoading" class="loading-grid">
       <div v-for="n in 6" :key="n" class="skeleton-card"></div>
     </div>
 
-    <div v-else-if="error.all" class="error-container">
+    <div v-else-if="allErrorMessage" class="error-container">
       <div class="error-icon">
         <svg
           width="48"
@@ -173,8 +173,8 @@
         </svg>
       </div>
       <h3 class="error-title">加载失败</h3>
-      <p class="error-description">{{ error.all }}</p>
-      <button @click="loadAll()" class="retry-button">
+      <p class="error-description">{{ allErrorMessage }}</p>
+      <button @click="refreshAllProjects" class="retry-button">
         <svg
           width="16"
           height="16"
@@ -192,10 +192,10 @@
 
     <div v-else class="all-projects-container">
       <!-- 分类项目 -->
-      <div v-if="shuffledDisplayProjects.length > 0" class="projects-group">
+      <div v-if="allProjects.length > 0" class="projects-group">
         <div class="category-projects-grid">
           <div
-            v-for="(project, index) in shuffledDisplayProjects"
+            v-for="(project, index) in allProjects"
             :key="`all-${index}`"
             class="category-project-card"
             @click="goToProject(project.link)"
@@ -228,13 +228,13 @@
             </div>
           </div>
         </div>
-        <div v-if="hasMore.all" class="load-more-container">
+        <div v-if="allHasMore" class="load-more-container">
           <button
-            @click="loadMoreAllCategory"
-            :disabled="loadingMore.all"
+            @click="loadMoreAll"
+            :disabled="allLoadingMore"
             class="load-more-button small"
           >
-            {{ loadingMore.all ? "加载中..." : "查看更多分类项目" }}
+            {{ allLoadingMore ? "加载中..." : "查看更多分类项目" }}
           </button>
         </div>
       </div>
@@ -242,268 +242,72 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
-  layout: "default",
-});
+  layout: 'default'
+})
 
-const activeTab = ref("all");
-const allCategoryProjects = ref([]);
-const shuffledDisplayProjects = ref([]);
-const currentCategoryProjects = ref([]);
-const loading = ref({
-  all: false,
-  categories: {},
-});
-const loadingMore = ref({
-  categories: {},
-  all: false,
-});
-const error = ref({
-  all: null,
-  categories: {},
-});
-const hasMore = ref({
-  categories: {},
-  all: true,
-});
+const {
+  activeTab,
+  tabs,
+  isAllTab,
+  isAllLoading,
+  isCategoryLoading,
+  allErrorMessage,
+  categoryErrorMessage,
+  allProjects,
+  categoryProjects,
+  allHasMore,
+  categoryHasMore,
+  allLoadingMore,
+  categoryLoadingMore,
+  totalCount,
+  switchTab,
+  refreshAllProjects,
+  refreshCategoryProjects,
+  loadMoreAll,
+  loadMoreCategory
+} = await useProjectsPage()
 
-const totalCategoryCount = ref(0);
-const categoryPages = ref({});
-const allCategoryPage = ref(1);
-const categories = ref([]);
+const isClient = import.meta.client
 
-const tabs = computed(() => {
-  const baseTabs = [
-    {
-      key: "all",
-      label: "全部",
-      icon: "📦",
-      count: totalCategoryCount.value,
-    },
-  ];
-
-  categories.value.forEach((cat) => {
-    baseTabs.push({
-      key: cat.key,
-      label: cat.name,
-      icon: cat.icon,
-      count: cat.count,
-    });
-  });
-
-  return baseTabs;
-});
-
-const totalCount = computed(() => {
-  return totalCategoryCount.value;
-});
-
-// 洗牌函数（Fisher-Yates算法）
-function shuffleProjects(projects) {
-  const shuffled = [...projects];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-async function loadCategories() {
-  try {
-    const data = await $fetch("/api/projects/categories");
-
-    categories.value = data.data || [];
-  } catch (err) {
-    console.error("加载分类失败:", err);
-  }
-}
-
-async function loadCategoryProjects(category) {
-  loading.value.categories[category] = true;
-  error.value.categories[category] = null;
-  categoryPages.value[category] = 1;
-
-  // 清空当前显示的数据
-  currentCategoryProjects.value = [];
-
-  try {
-    const data = await $fetch("/api/projects/categories", {
-      params: {
-        category,
-        page: categoryPages.value[category],
-        pageSize: 10,
-      },
-    });
-
-    currentCategoryProjects.value = data.data.projects;
-    // 更新categories中的count
-    const categoryIndex = categories.value.findIndex(cat => cat.key === category);
-    if (categoryIndex !== -1) {
-      categories.value[categoryIndex].count = data.total;
-    }
-    hasMore.value.categories[category] = data.hasMore;
-  } catch (err) {
-    error.value.categories[category] = err.message || "加载失败";
-    console.error(`加载 ${category} 分类项目失败:`, err);
-  } finally {
-    loading.value.categories[category] = false;
-  }
-}
-
-async function loadMoreCategory(category) {
-  if (
-    loadingMore.value.categories[category] ||
-    !hasMore.value.categories[category]
-  )
-    return;
-
-  loadingMore.value.categories[category] = true;
-  categoryPages.value[category]++;
-
-  try {
-    const data = await $fetch("/api/projects/categories", {
-      params: {
-        category,
-        page: categoryPages.value[category],
-        pageSize: 10,
-      },
-    });
-
-    if (data.data.projects.length > 0) {
-      currentCategoryProjects.value.push(...data.data.projects);
-      hasMore.value.categories[category] = data.hasMore;
+const goToProject = (url: string | undefined) => {
+  if (url) {
+    if (isClient) {
+      window.open(url, '_blank', 'noopener')
     } else {
-      hasMore.value.categories[category] = false;
-    }
-  } catch (err) {
-    console.error(`加载更多 ${category} 项目失败:`, err);
-    categoryPages.value[category]--;
-  } finally {
-    loadingMore.value.categories[category] = false;
-  }
-}
-
-async function loadAllCategoryProjects() {
-  try {
-    const data = await $fetch("/api/projects", {
-      params: {
-        page: allCategoryPage.value,
-        pageSize: 3,
-      },
-    });
-
-    if (allCategoryPage.value === 1) {
-      allCategoryProjects.value = data.data.projects || [];
-      totalCategoryCount.value = data.total;
-      // 初始化时洗牌
-      shuffledDisplayProjects.value = shuffleProjects(allCategoryProjects.value);
-    } else {
-      // 追加新项目到末尾，不洗牌
-      allCategoryProjects.value.push(...data.data.projects);
-      const newProjects = data.data.projects || [];
-      shuffledDisplayProjects.value.push(...newProjects);
-    }
-    hasMore.value.all = data.hasMore;
-  } catch (err) {
-    console.error("加载所有分类项目失败:", err);
-  }
-}
-
-async function loadMoreAllCategory() {
-  if (loadingMore.value.all || !hasMore.value.all) return;
-
-  loadingMore.value.all = true;
-  allCategoryPage.value++;
-
-  try {
-    const data = await $fetch("/api/projects", {
-      params: {
-        page: allCategoryPage.value,
-        pageSize: 3,
-      },
-    });
-
-    if (data.data.projects.length > 0) {
-      allCategoryProjects.value.push(...data.data.projects);
-      // 追加新项目到末尾，不洗牌
-      const newProjects = data.data.projects || [];
-      shuffledDisplayProjects.value.push(...newProjects);
-      hasMore.value.all = data.hasMore;
-    } else {
-      hasMore.value.all = false;
-    }
-  } catch (err) {
-    console.error("加载更多分类项目失败:", err);
-    allCategoryPage.value--;
-  } finally {
-    loadingMore.value.all = false;
-  }
-}
-
-async function loadAll() {
-  loading.value.all = true;
-  error.value.all = null;
-
-  try {
-    await loadAllCategoryProjects();
-  } finally {
-    loading.value.all = false;
-  }
-}
-
-function switchTab(tab) {
-  if (activeTab.value === tab) return;
-
-  activeTab.value = tab;
-
-  if (tab === "all") {
-    // 重置分页状态
-    allCategoryPage.value = 1;
-    hasMore.value.all = true;
-    allCategoryProjects.value = [];
-    shuffledDisplayProjects.value = [];
-    totalCategoryCount.value = 0;
-    if (!loading.value.all) {
-      loadAll();
+      return
     }
   } else {
-    // 分类项目 - 每次切换tab都重新加载数据
-    const isLoading = !!loading.value.categories[tab];
-
-    // 切换tab时直接加载数据
-    if (!isLoading) {
-      loadCategoryProjects(tab);
-    }
+    return
   }
 }
 
-function goToProject(url) {
-  if (url) {
-    window.open(url, "_blank", "noopener");
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  } else {
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
   }
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgODBIMjAwVjkwSDEwMFY4MFpNMTAwIDExMEgyMDBWMTIwSDEwMFYxMTBaTTEwMCAxNDBIMTcwVjE1MEgxMDBWMTQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4='
+
+const handleImageError = (event: Event) => {
+  const target = event.target
+
+  if (target instanceof HTMLImageElement) {
+    target.src = defaultImage
+  } else {
+    return
+  }
 }
-
-const defaultImage =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgODBIMjAwVjkwSDEwMFY4MFpNMTAwIDExMEgyMDBWMTIwSDEwMFYxMTBaTTEwMCAxNDBIMTcwVjE1MEgxMDBWMTQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=";
-
-const handleImageError = (event) => {
-  event.target.src = defaultImage;
-};
-
-onMounted(async () => {
-  await loadCategories();
-  await loadAll();
-});
 </script>
 
 <style lang="scss" scoped>
@@ -1026,3 +830,4 @@ onMounted(async () => {
   }
 }
 </style>
+

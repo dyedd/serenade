@@ -47,27 +47,50 @@
   </aside>
 </template>
 
-<script setup>
-const props = defineProps({
-  columnType: String,
-  columnTitle: String,
-  chapters: Array,
-  currentChapterIndex: Number,
-});
-
-const emit = defineEmits(['selectChapter', 'selectOverview']);
-
-const badgeClass = computed(() => ({
-  'badge-public': props.columnType === '公开',
-  'badge-private': props.columnType === '私有',
-}));
-
-function selectChapter(index) {
-  emit('selectChapter', index);
+<script setup lang="ts">
+type Chapter = {
+  metaData?: {
+    title?: string
+  }
 }
 
-function selectOverview() {
-  emit('selectOverview');
+const props = defineProps<{
+  columnType?: string
+  columnTitle?: string
+  chapters?: Chapter[]
+  currentChapterIndex?: number | null
+}>()
+
+const emit = defineEmits<{
+  (event: 'selectChapter', index: number): void
+  (event: 'selectOverview'): void
+}>()
+
+const badgeClass = computed(() => {
+  if (props.columnType === '公开') {
+    return {
+      'badge-public': true,
+      'badge-private': false
+    }
+  } else if (props.columnType === '私有') {
+    return {
+      'badge-public': false,
+      'badge-private': true
+    }
+  } else {
+    return {
+      'badge-public': false,
+      'badge-private': false
+    }
+  }
+})
+
+const selectChapter = (index: number) => {
+  emit('selectChapter', index)
+}
+
+const selectOverview = () => {
+  emit('selectOverview')
 }
 </script>
 

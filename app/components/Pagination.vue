@@ -41,44 +41,42 @@
   </ul>
 </template>
 
-<script setup>
-const props = defineProps({
-  currentPage: {
-    type: Number,
-    required: true
-  },
-  totalPages: {
-    type: Number,
-    required: true
-  }
-})
+<script setup lang="ts">
+type PageToken = number | string
 
-const emit = defineEmits(['pageChange'])
+const props = defineProps<{
+  currentPage: number
+  totalPages: number
+}>()
 
-const goToPage = (page) => {
+const emit = defineEmits<{
+  (event: 'pageChange', page: number): void
+}>()
+
+const goToPage = (page: number) => {
   if (page >= 1 && page <= props.totalPages) {
     emit('pageChange', page)
+  } else {
+    return
   }
 }
 
-// 计算可见页码数组
-const visiblePages = computed(() => {
-  const total = props.totalPages
-  const current = props.currentPage
+const buildVisiblePages = (total: number, current: number): PageToken[] => {
+  const ellipsis = '...'
 
   if (total <= 10) {
     return Array.from({ length: total }, (_, i) => i + 1)
+  } else if (current <= 6) {
+    return [1, 2, 3, 4, 5, 6, 7, ellipsis, total]
+  } else if (current >= total - 5) {
+    return [1, ellipsis, total - 6, total - 5, total - 4, total - 3, total - 2, total - 1, total]
+  } else {
+    return [1, ellipsis, current - 2, current - 1, current, current + 1, current + 2, ellipsis, total]
   }
+}
 
-  if (current <= 6) {
-    return [1, 2, 3, 4, 5, 6, 7, '...', total]
-  }
-
-  if (current >= total - 5) {
-    return [1, '...', total - 6, total - 5, total - 4, total - 3, total - 2, total - 1, total]
-  }
-
-  return [1, '...', current - 2, current - 1, current, current + 1, current + 2, '...', total]
+const visiblePages = computed(() => {
+  return buildVisiblePages(props.totalPages, props.currentPage)
 })
 </script>
 

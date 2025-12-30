@@ -13,16 +13,16 @@
     <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ tagName }}</h1>
   </header>
 
-  <section v-if="loading" class="text-center py-8 text-neutral-600 dark:text-neutral-400">
+  <section v-if="isLoading" class="text-center py-8 text-neutral-600 dark:text-neutral-400">
     正在加载文章...
   </section>
 
-  <section v-else-if="error" class="text-center py-8 text-neutral-600 dark:text-neutral-400">
+  <section v-else-if="hasError" class="text-center py-8 text-neutral-600 dark:text-neutral-400">
     加载失败，请稍后重试。
   </section>
 
   <section v-else-if="hasPosts" class="space-y-4">
-    <PostPreview v-for="post in postsData" :key="post.id" :post="post" />
+    <PostPreview v-for="post in postsData" :key="post.path" :post="post" />
   </section>
 
   <section v-else class="text-center py-8 text-neutral-600 dark:text-neutral-400">
@@ -30,13 +30,14 @@
   </section>
 
   <Pagination
+    v-if="!isLoading && totalPages > 1"
     :currentPage="currentPage"
     :totalPages="totalPages"
     @pageChange="goToPage"
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
   layout: 'default',
 })
@@ -44,17 +45,37 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 
-const resolveTagName = (value) => {
+const decodeTagName = (value: string) => {
+  try {
+    return decodeURIComponent(value)
+  } catch (error) {
+    if (error instanceof URIError) {
+      return value
+    } else {
+      throw error
+    }
+  }
+}
+
+const resolveTagName = (value: unknown) => {
   if (typeof value === 'string') {
-    return value
+    const trimmed = value.trim()
+
+    if (trimmed.length > 0) {
+      return decodeTagName(trimmed)
+    } else {
+      return ''
+    }
   } else {
     return ''
   }
 }
 
-const tagName = ref(resolveTagName(route.params.path))
+const tagName = computed(() => {
+  return resolveTagName(route.params.path)
+})
 
-const buildHeadConfig = (name) => {
+const buildHeadConfig = (name: string) => {
   if (name.length > 0) {
     return {
       title: `标签: ${name}`,
@@ -78,7 +99,7 @@ const buildHeadConfig = (name) => {
   }
 }
 
-const buildTagApiPath = (name) => {
+const buildTagApiPath = (name: string) => {
   if (name.length > 0) {
     return `/api/tags/${encodeURIComponent(name)}`
   } else {
@@ -91,29 +112,7 @@ watchEffect(() => {
   useHead(headConfig)
 })
 
-const {
-  loading,
-  data: postsData,
-  error,
-  currentPage,
-  totalPages,
-  totalItems,
-  fetchData
-} = useApiFetch(buildTagApiPath(tagName.value), {
-  pageSize: 5
-})
-
-const hasPosts = computed(() => {
-  const currentPosts = postsData.value
-
-  if (Array.isArray(currentPosts)) {
-    return currentPosts.length > 0
-  } else {
-    return false
-  }
-})
-
-const parsePageQuery = (value) => {
+const parsePageQuery = (value: unknown) => {
   if (typeof value === 'string') {
     const parsed = Number.parseInt(value, 10)
 
@@ -127,15 +126,59 @@ const parsePageQuery = (value) => {
   }
 }
 
-watch(
-  () => route.query.page,
-  (newPage) => {
-    const page = parsePageQuery(newPage)
-    fetchData(page)
-  }
-)
+const pageQuery = computed(() => {
+  return parsePageQuery(route.query.page)
+})
 
-const goToPage = (page) => {
+const pageSize = 5
+const queryParams = computed(() => ({
+  page: pageQuery.value,
+  pageSize
+}))
+
+const { data: result, status, error } = await useFetch(() => buildTagApiPath(tagName.value), {
+  query: queryParams,
+  watch: [queryParams, tagName],
+  default: () => ({
+    page: 1,
+    pageSize,
+    totalPages: 0,
+    totalItems: 0,
+    data: []
+  })
+})
+
+const postsData = computed(() => {
+  return result.value.data
+})
+
+const currentPage = computed(() => {
+  return result.value.page
+})
+
+const totalPages = computed(() => {
+  return result.value.totalPages
+})
+
+const isLoading = computed(() => {
+  return status.value === 'pending'
+})
+
+const hasError = computed(() => {
+  return Boolean(error.value)
+})
+
+const hasPosts = computed(() => {
+  const currentPosts = postsData.value
+
+  if (Array.isArray(currentPosts)) {
+    return currentPosts.length > 0
+  } else {
+    return false
+  }
+})
+
+const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     router.push({ query: { ...route.query, page } })
   } else {

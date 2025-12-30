@@ -26,7 +26,7 @@
   </section>
 
   <!-- 加载状态 -->
-  <section v-if="loading" class="flex justify-center items-center p-4">
+  <section v-if="isLoading" class="flex justify-center items-center p-4">
     <div class="loading-dots">
       <span class="dot"></span>
       <span class="dot"></span>
@@ -35,7 +35,11 @@
   </section>
 
   <!-- 专栏列表 -->
-  <section v-else-if="columns?.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+  <section v-else-if="hasError" class="flex justify-center items-center p-8 text-neutral-600 dark:text-neutral-400">
+    <p>加载失败，请稍后重试。</p>
+  </section>
+
+  <section v-else-if="columns.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
     <ColumnsFolderCard
       v-for="item in columns"
       :key="item.path"
@@ -54,55 +58,91 @@
 
   <!-- 分页 -->
   <Pagination
-    v-if="!loading && totalPages > 1"
+    v-if="!isLoading && totalPages > 1"
     :currentPage="currentPage"
     :totalPages="totalPages"
     @pageChange="goToPage"
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
-  layout: 'default',
+  layout: 'default'
 })
 
 const router = useRouter()
 const route = useRoute()
 
-const {
-  loading,
-  data: columns,
-  currentPage,
-  totalPages,
-  totalItems,
-  fetchData,
-  response
-} = useApiFetch('/api/columns', {
-  pageSize: 12,
-  immediate: true
+const parsePageQuery = (value: unknown) => {
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10)
+
+    if (Number.isNaN(parsed)) {
+      return 1
+    } else {
+      return parsed
+    }
+  } else {
+    return 1
+  }
+}
+
+const pageQuery = computed(() => {
+  return parsePageQuery(route.query.page)
 })
 
-const totalDocs = ref(0)
+const pageSize = 12
+const queryParams = computed(() => ({
+  page: pageQuery.value,
+  pageSize
+}))
 
-// 监听路由变化，重新获取数据
-watch(
-  () => route.query.page,
-  (newPage) => {
-    const page = parseInt(newPage) || 1
-    fetchData(page)
-  }
-)
-
-// 从API响应中获取totalDocs
-watch(response, (newResponse) => {
-  if (newResponse && newResponse.totalDocs !== undefined) {
-    totalDocs.value = newResponse.totalDocs
-  }
+const { data: result, status, error } = await useFetch('/api/columns', {
+  query: queryParams,
+  watch: [queryParams],
+  default: () => ({
+    page: 1,
+    pageSize,
+    totalPages: 0,
+    totalItems: 0,
+    totalDocs: 0,
+    data: []
+  })
 })
 
-const goToPage = (page) => {
+const columns = computed(() => {
+  return result.value.data
+})
+
+const currentPage = computed(() => {
+  return result.value.page
+})
+
+const totalPages = computed(() => {
+  return result.value.totalPages
+})
+
+const totalItems = computed(() => {
+  return result.value.totalItems
+})
+
+const totalDocs = computed(() => {
+  return result.value.totalDocs
+})
+
+const isLoading = computed(() => {
+  return status.value === 'pending'
+})
+
+const hasError = computed(() => {
+  return Boolean(error.value)
+})
+
+const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     router.push({ query: { ...route.query, page } })
+  } else {
+    return
   }
 }
 </script>

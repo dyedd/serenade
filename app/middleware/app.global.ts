@@ -9,8 +9,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         titleTemplate: (titleChunk) => {
             if (to.path === '/') {
                 return siteConfig.title
+            } else {
+                return `${titleChunk} - ${siteConfig.title}`
             }
-            return `${titleChunk} - ${siteConfig.title}`
         },
     })
 
@@ -20,6 +21,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     if (currentPath in redirectMap) {
         const newPath = redirectMap[currentPath]
         return navigateTo(`/posts/${newPath}`, { redirectCode: 301 })
+    } else {
+        return
     }
 })
 
@@ -36,18 +39,14 @@ function getRouteTitle(path: string): string {
 
     if (routeMap[path]) {
         return routeMap[path]
-    }
-
-    if (path.startsWith('/posts/')) {
+    } else if (path.startsWith('/posts/')) {
         return '文章详情'
-    }
-    if (path.startsWith('/columns/')) {
+    } else if (path.startsWith('/columns/')) {
         return '专栏详情'
-    }
-    if (path.startsWith('/tags/')) {
+    } else if (path.startsWith('/tags/')) {
         const tagName = path.split('/')[2]
         return `标签: ${tagName}`
+    } else {
+        return siteConfig.title
     }
-
-    return siteConfig.title
 }

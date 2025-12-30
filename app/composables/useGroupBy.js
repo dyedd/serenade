@@ -1,23 +1,44 @@
-// 分组工具Hook
 export const useGroupBy = () => {
-  // 按年份分组文章
   const groupByYear = (posts) => {
-    const groups = {}
-    posts.forEach((post) => {
-      const year = new Date(post.date).getFullYear()
-      if (!groups[year]) {
-        groups[year] = []
-      }
-      groups[year].push(post)
-    })
+    if (Array.isArray(posts)) {
+      const groups = {}
 
-    // 转换为数组并按年份降序排序
-    return Object.keys(groups)
-      .sort((a, b) => b - a)
-      .map((year) => ({
-        year,
-        posts: groups[year]
-      }))
+      posts.forEach((post) => {
+        const date = new Date(post.date)
+        const yearValue = Number.isNaN(date.getTime()) ? '未知' : String(date.getFullYear())
+        const currentGroup = groups[yearValue]
+
+        if (currentGroup) {
+          currentGroup.push(post)
+        } else {
+          groups[yearValue] = [post]
+        }
+      })
+
+      const sortedYears = Object.keys(groups).sort((a, b) => {
+        const first = Number.parseInt(a, 10)
+        const second = Number.parseInt(b, 10)
+
+        if (Number.isNaN(first) && Number.isNaN(second)) {
+          return 0
+        } else if (Number.isNaN(first)) {
+          return 1
+        } else if (Number.isNaN(second)) {
+          return -1
+        } else {
+          return second - first
+        }
+      })
+
+      return sortedYears.map((year) => {
+        return {
+          year,
+          posts: groups[year]
+        }
+      })
+    } else {
+      return []
+    }
   }
 
   return {

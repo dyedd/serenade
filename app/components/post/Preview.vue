@@ -43,11 +43,18 @@
   </article>
 </template>
 
-<script setup>
-defineProps({
-  post: {
-    type: Object,
-    required: true,
-  },
-})
+<script setup lang="ts">
+type PostPreview = {
+  path: string
+  title: string
+  date?: string
+  cover?: string
+  abstract?: string
+  tags?: string[]
+  readingTime?: string
+}
+
+defineProps<{
+  post: PostPreview
+}>()
 </script>

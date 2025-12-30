@@ -1,14 +1,24 @@
-// 搜索功能Hook
 export const useSearch = () => {
   const searchKeyword = ref('')
   const searchMode = ref(false)
   const isSearchVisible = ref(false)
   const searchInput = ref(null)
+  const isClient = import.meta.client
+
+  const focusInput = () => {
+    const element = searchInput.value
+
+    if (element) {
+      element.focus()
+    } else {
+      return
+    }
+  }
 
   const showSearch = () => {
     isSearchVisible.value = true
     nextTick(() => {
-      searchInput.value?.focus()
+      focusInput()
     })
   }
 
@@ -22,28 +32,39 @@ export const useSearch = () => {
   }
 
   const handleKeydown = (e) => {
-    // Ctrl+K 或 Cmd+K 打开搜索
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    const isShortcut = (e.ctrlKey || e.metaKey) && e.key === 'k'
+    const isEscape = e.key === 'Escape'
+
+    if (isShortcut) {
       e.preventDefault()
       showSearch()
-    }
-    // ESC 关闭搜索
-    if (e.key === 'Escape' && isSearchVisible.value) {
+    } else if (isEscape && isSearchVisible.value) {
       hideSearch()
+    } else {
+      return
     }
   }
 
   onMounted(() => {
-    window.addEventListener('keydown', handleKeydown)
-    onUnmounted(() => {
+    if (isClient) {
+      window.addEventListener('keydown', handleKeydown)
+    } else {
+      return
+    }
+  })
+
+  onUnmounted(() => {
+    if (isClient) {
       window.removeEventListener('keydown', handleKeydown)
-    })
+    } else {
+      return
+    }
   })
 
   return {
-    searchKeyword: readonly(searchKeyword),
-    searchMode: readonly(searchMode),
-    isSearchVisible: readonly(isSearchVisible),
+    searchKeyword,
+    searchMode,
+    isSearchVisible,
     searchInput,
     showSearch,
     hideSearch,

@@ -13,17 +13,17 @@
   </section>
   <section class="-mx-2 flex flex-wrap overflow-hidden">
     <article
-      v-for="(count, tag) in tagsData"
+      v-for="(count, tag) in safeTags"
       :key="tag"
       class="my-3 w-full overflow-hidden px-2 sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5"
     >
       <h2 class="flex items-center">
-        <a
+        <NuxtLink
           class="text-xl font-medium decoration-primary-500 hover:underline hover:underline-offset-2"
-          :href="'/tags/' + tag"
+          :to="buildTagLink(tag)"
         >
           {{ tag }}
-        </a>
+        </NuxtLink>
         <span class="px-2 text-base text-primary-500">·</span>
         <span class="text-base text-neutral-400">{{ count }}</span>
       </h2>
@@ -31,20 +31,25 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
-  layout: "default",
-});
+  layout: 'default'
+})
 
-const tagsData = ref([]);
+const { data: tagsData, status, error } = await useFetch<Record<string, number>>('/api/tags', {
+  default: () => ({})
+})
 
-try {
-  const { data } = await useFetch("/api/tags");
-  if (data.value) {
-    tagsData.value = data.value;
+const safeTags = computed(() => {
+  if (status.value === 'pending' || error.value) {
+    return {}
+  } else {
+    return tagsData.value
   }
-} catch (error) {
-  console.error("Failed to fetch tags:", error);
+})
+
+const buildTagLink = (tag: string) => {
+  return `/tags/${encodeURIComponent(tag)}`
 }
 </script>
 

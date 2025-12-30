@@ -23,29 +23,45 @@
   </Transition>
 </template>
 
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-
+<script setup lang="ts">
 const isVisible = ref(false)
+const isClient = import.meta.client
+const scrollThreshold = 300
 
 const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  })
+  if (isClient) {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  } else {
+    return
+  }
 }
 
-const handleScroll = () => {
-  // 滚动超过 300px 后显示返回顶部按钮
-  isVisible.value = window.pageYOffset > 300
+const updateVisibility = () => {
+  if (isClient) {
+    isVisible.value = window.pageYOffset > scrollThreshold
+  } else {
+    return
+  }
 }
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
+  if (isClient) {
+    window.addEventListener('scroll', updateVisibility)
+    updateVisibility()
+  } else {
+    return
+  }
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+  if (isClient) {
+    window.removeEventListener('scroll', updateVisibility)
+  } else {
+    return
+  }
 })
 </script>
 

@@ -17,26 +17,47 @@
   </NuxtLink>
 </template>
 
-<script setup>
-const props = defineProps({
-  id: [String, Number],
-  title: String,
-  type: String,
-  image: String,
-  description: String,
-});
+<script setup lang="ts">
+type ColumnCardProps = {
+  id?: string | number
+  title?: string
+  type?: string
+  image?: string
+  description?: string
+}
 
-const badgeClass = computed(() => ({
-  'badge-public': props.type === '公开',
-  'badge-private': props.type === '私有',
-}));
+const props = defineProps<ColumnCardProps>()
 
-const defaultImage =
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgODBIMjAwVjkwSDEwMFY4MFpNMTAwIDExMEgyMDBWMTIwSDEwMFYxMTBaTTEwMCAxNDBIMTcwVjE1MEgxMDBWMTQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
+const badgeClass = computed(() => {
+  if (props.type === '公开') {
+    return {
+      'badge-public': true,
+      'badge-private': false
+    }
+  } else if (props.type === '私有') {
+    return {
+      'badge-public': false,
+      'badge-private': true
+    }
+  } else {
+    return {
+      'badge-public': false,
+      'badge-private': false
+    }
+  }
+})
 
-const handleImageError = (event) => {
-  event.target.src = defaultImage;
-};
+const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgODBIMjAwVjkwSDEwMFY4MFpNMTAwIDExMEgyMDBWMTIwSDEwMFYxMTBaTTEwMCAxNDBIMTcwVjE1MEgxMDBWMTQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4='
+
+const handleImageError = (event: Event) => {
+  const target = event.target
+
+  if (target instanceof HTMLImageElement) {
+    target.src = defaultImage
+  } else {
+    return
+  }
+}
 </script>
 
 <style lang="scss" scoped>

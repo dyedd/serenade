@@ -34,22 +34,38 @@
   </a>
 </template>
 
-<script setup>
-defineProps({
-  site: {
-    type: Object,
-    required: true,
-  },
-})
+<script setup lang="ts">
+type FriendSite = {
+  siteUrl: string
+  siteLogo: string
+  siteName: string
+  description?: string
+}
+
+defineProps<{
+  site: FriendSite
+}>()
 
 const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIyMCIgcj0iMTAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTE4IDQ0QzE4IDM2IDI1IDMwIDMyIDMwQzM5IDMwIDQ2IDM2IDQ2IDQ0SDE4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4='
 
-const handleImageError = (event) => {
-  event.target.src = defaultAvatar
+const handleImageError = (event: Event) => {
+  const target = event.target
+
+  if (target instanceof HTMLImageElement) {
+    target.src = defaultAvatar
+  } else {
+    return
+  }
 }
 
-const handleImageLoad = (event) => {
-  event.target.onerror = null
+const handleImageLoad = (event: Event) => {
+  const target = event.target
+
+  if (target instanceof HTMLImageElement) {
+    target.onerror = null
+  } else {
+    return
+  }
 }
 </script>
 

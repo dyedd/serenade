@@ -7,15 +7,15 @@
       标签
     </h3>
 
-    <div v-if="loading" class="tag-cloud-loading">
+    <div v-if="isLoading" class="tag-cloud-loading">
       <div class="loading-spinner"></div>
     </div>
 
-    <div v-else-if="tags && Object.keys(tags).length > 0" class="tag-cloud-tags">
+    <div v-else-if="hasTags" class="tag-cloud-tags">
       <NuxtLink
         v-for="tag in sortedTags"
         :key="tag"
-        :to="`/tags/${encodeURIComponent(tag)}`"
+        :to="buildTagLink(tag)"
         class="tag-link"
       >
         {{ tag }}
@@ -26,7 +26,7 @@
       <p>暂无标签</p>
     </div>
 
-    <div v-if="sortedTags && sortedTags.length > 0" class="view-all-wrapper">
+    <div v-if="sortedTags.length > 0" class="view-all-wrapper">
       <NuxtLink to="/tags" class="view-all-link">
         View all →
       </NuxtLink>
@@ -34,46 +34,43 @@
   </aside>
 </template>
 
-<script setup>
-const props = defineProps({
-  maxTags: {
-    type: Number,
-    default: 25,
-  },
+<script setup lang="ts">
+const props = withDefaults(defineProps<{
+  maxTags?: number
+}>(), {
+  maxTags: 25
 })
 
-const loading = ref(true)
-const tags = ref({})
+const { data: tags, status, error } = await useFetch<Record<string, number>>('/api/tags', {
+  default: () => ({})
+})
 
-// 获取标签数据
-async function fetchTags() {
-  loading.value = true
-  try {
-    const data = await $fetch('/api/tags')
-    tags.value = data || {}
-  } catch (error) {
-    console.error('Failed to fetch tags:', error)
-    tags.value = {}
-  } finally {
-    loading.value = false
+const isLoading = computed(() => {
+  return status.value === 'pending'
+})
+
+const hasTags = computed(() => {
+  if (error.value) {
+    return false
+  } else {
+    return Object.keys(tags.value).length > 0
   }
-}
+})
 
-// 按标签使用次数排序
 const sortedTags = computed(() => {
-  if (!tags.value || Object.keys(tags.value).length === 0) {
+  if (hasTags.value) {
+    return Object.entries(tags.value)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag]) => tag)
+      .slice(0, props.maxTags)
+  } else {
     return []
   }
-
-  return Object.entries(tags.value)
-    .sort((a, b) => b[1] - a[1])
-    .map(([tag, count]) => tag)
-    .slice(0, props.maxTags)
 })
 
-onMounted(() => {
-  fetchTags()
-})
+const buildTagLink = (tag: string) => {
+  return `/tags/${encodeURIComponent(tag)}`
+}
 </script>
 
 <style lang="scss" scoped>

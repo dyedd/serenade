@@ -69,133 +69,36 @@
   </article>
 </template>
 
-<script setup>
-const props = defineProps({
-  post: {
-    type: Object,
-    required: true,
-  },
-});
-
-const emit = defineEmits(["scroll"]);
-
-// 目录数据
-const headings = ref([]);
-const activeId = ref("");
-const contentRef = ref(null);
-
-// 解析内容中的标题
-function parseHeadings() {
-  if (!contentRef.value) {
-    headings.value = [];
-    return;
-  }
-
-  // 查找所有标题元素
-  const headingElements = Array.from(
-    contentRef.value.querySelectorAll("h2, h3, h4")
-  );
-
-  const parsedHeadings = headingElements.map((heading) => ({
-    id:
-      heading.id ||
-      heading.textContent?.replace(/\s+/g, "-").toLowerCase() ||
-      "",
-    text: heading.textContent || "",
-    level: parseInt(heading.tagName[1]),
-    children: [],
-  }));
-
-  // 构建层级结构
-  const rootHeadings = [];
-  const stack = [];
-
-  for (const heading of parsedHeadings) {
-    // 弹出比当前级别更高级别的标题
-    while (stack.length > 0 && stack[stack.length - 1].level >= heading.level) {
-      stack.pop();
-    }
-
-    if (stack.length === 0) {
-      // 顶级标题
-      rootHeadings.push(heading);
-    } else {
-      // 作为子标题添加到栈顶标题的children中
-      stack[stack.length - 1].children.push(heading);
-    }
-
-    // 当前标题入栈
-    stack.push(heading);
-  }
-
-  headings.value = rootHeadings;
+<script setup lang="ts">
+type PostMeta = {
+  title: string
+  date?: string
+  readingTime?: string
+  tags?: string[]
+  cover?: string
 }
 
-// 监听滚动，高亮当前标题
-function updateActiveHeading() {
-  if (typeof window === "undefined" || !contentRef.value) return;
-
-  const headingElements = headings.value
-    .map((h) => document.getElementById(h.id))
-    .filter(Boolean);
-  if (headingElements.length === 0) return;
-
-  // 获取页面滚动的位置
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  const windowHeight = window.innerHeight;
-
-  // 找到在视窗内的标题
-  let currentActiveId = headingElements[0].id;
-
-  for (const element of headingElements) {
-    if (element) {
-      const rect = element.getBoundingClientRect();
-      // 检查标题是否在视窗内（允许一定的偏移）
-      if (rect.top <= windowHeight * 0.3) {
-        currentActiveId = element.id;
-      }
-    }
-  }
-
-  // 如果滚动到了页面底部，直接选中最后一个标题
-  const documentHeight = document.documentElement.scrollHeight;
-  const maxScrollTop = documentHeight - windowHeight;
-
-  if (scrollTop >= maxScrollTop - 50) {
-    currentActiveId = headingElements[headingElements.length - 1].id;
-  }
-
-  activeId.value = currentActiveId;
+type PostContentData = {
+  metaData: PostMeta
+  htmlContent: string
 }
 
-// 监听内容变化，解析标题
+const props = defineProps<{
+  post: PostContentData
+}>()
+
+const contentRef = ref<HTMLElement | null>(null)
+const { headings, activeId, refreshHeadings, updateActiveHeading } = useHeadingTree(contentRef)
+
 watch(
   () => props.post.htmlContent,
   () => {
     nextTick(() => {
-      parseHeadings();
-      updateActiveHeading();
-    });
+      refreshHeadings()
+      updateActiveHeading()
+    })
   }
-);
-
-// 组件挂载后解析标题和监听滚动
-onMounted(() => {
-  nextTick(() => {
-    parseHeadings();
-    updateActiveHeading();
-  });
-
-  if (typeof window !== "undefined") {
-    window.addEventListener("scroll", updateActiveHeading);
-  }
-});
-
-onUnmounted(() => {
-  if (typeof window !== "undefined") {
-    window.removeEventListener("scroll", updateActiveHeading);
-  }
-});
+)
 </script>
 
 <style>

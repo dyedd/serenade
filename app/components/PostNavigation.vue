@@ -46,16 +46,18 @@
   </nav>
 </template>
 
-<script setup>
-defineProps({
-  prevPost: {
-    type: Object,
-    default: null
-  },
-  nextPost: {
-    type: Object,
-    default: null
-  }
+<script setup lang="ts">
+type PostLink = {
+  path: string
+  title: string
+}
+
+withDefaults(defineProps<{
+  prevPost?: PostLink | null
+  nextPost?: PostLink | null
+}>(), {
+  prevPost: null,
+  nextPost: null
 })
 </script>
 

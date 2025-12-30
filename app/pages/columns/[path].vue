@@ -7,6 +7,12 @@
       </div>
     </div>
 
+    <div v-else-if="hasError" class="loading-overlay">
+      <div class="loading-spinner">
+        <p class="loading-text">加载失败，请稍后再试。</p>
+      </div>
+    </div>
+
     <ColumnsSidebar
       :columnTitle="columnMeta.title"
       :columnType="columnMeta.type"
@@ -26,187 +32,45 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
-  layout: "columns",
-});
+  layout: 'columns'
+})
 
-const columnMeta = ref({});
-const readmeHtml = ref("");
-const chapters = ref([]);
-const currentChapter = ref(null);
-const currentChapterIndex = ref(null);
-const route = useRoute();
-const router = useRouter();
-const isLoading = ref(true);
+const {
+  error,
+  isLoading,
+  columnMeta,
+  readmeHtml,
+  chapters,
+  currentChapter,
+  currentChapterIndex,
+  prevChapter,
+  nextChapter,
+  setCurrentChapter,
+  setOverview
+} = await useColumnDetail()
 
-const prevChapter = computed(() => {
-  if (currentChapterIndex.value === null) return null;
-  if (currentChapterIndex.value === 0) return null;
-  return {
-    title: chapters.value[currentChapterIndex.value - 1]?.metaData?.title,
-    index: currentChapterIndex.value - 1,
-  };
-});
-
-const nextChapter = computed(() => {
-  if (currentChapterIndex.value === null) {
-    return chapters.value.length > 0
-      ? {
-          title: chapters.value[0]?.metaData?.title,
-          index: 0,
-        }
-      : null;
-  }
-  if (currentChapterIndex.value >= chapters.value.length - 1) return null;
-  return {
-    title: chapters.value[currentChapterIndex.value + 1]?.metaData?.title,
-    index: currentChapterIndex.value + 1,
-  };
-});
+const hasError = computed(() => {
+  return Boolean(error.value)
+})
 
 watchEffect(() => {
-  const columnTitle = columnMeta.value?.title || "专栏";
-  const chapterTitle = currentChapter.value?.metaData?.title;
-
-  const pageTitle = chapterTitle ? `${chapterTitle} - ${columnTitle}` : columnTitle;
+  const columnTitle = columnMeta.value?.title || '专栏'
+  const chapterTitle = currentChapter.value?.metaData?.title
+  const pageTitle = chapterTitle ? `${chapterTitle} - ${columnTitle}` : columnTitle
+  const description = columnMeta.value?.description || pageTitle
 
   useHead({
     title: pageTitle,
     meta: [
       {
-        name: "description",
-        content: columnMeta.value?.description || pageTitle,
-      },
-    ],
-  });
-});
-
-onMounted(async () => {
-  const response = await fetch(`/api/columns/${route.params.path}`);
-  const data = await response.json();
-  columnMeta.value = data.metaData;
-  readmeHtml.value = data.readmeHtml;
-  chapters.value = data.chapters;
-
-  const chapterSlug = route.query.slug;
-  if (chapterSlug !== undefined) {
-    const index = findChapterIndexBySlug(chapterSlug);
-    if (index !== -1) {
-      await setCurrentChapterBySlug(chapterSlug, false);
-      return;
-    }
-  } else if (route.hash) {
-    nextTick(() => {
-      scrollToHash(route.hash);
-    });
-  }
-
-  isLoading.value = false;
-});
-
-async function loadChapterContent(index) {
-  if (index < 0 || index >= chapters.value.length) return;
-
-  if (chapters.value[index]?.htmlContent) {
-    currentChapter.value = chapters.value[index];
-    return;
-  }
-
-  const fileName = chapters.value[index].fileName;
-  const response = await fetch(`/api/columns/${route.params.path}/${fileName}`);
-  const chapterData = await response.json();
-
-  chapters.value[index] = { ...chapters.value[index], ...chapterData };
-  currentChapter.value = chapters.value[index];
-}
-
-function findChapterIndexBySlug(slug) {
-  let index = chapters.value.findIndex((ch) => ch.fileName === slug);
-  if (index !== -1) return index;
-
-  const slugWithoutExt = slug.replace(/\.md$/, '');
-  index = chapters.value.findIndex((ch) => ch.fileName.replace(/\.md$/, '') === slugWithoutExt);
-  if (index !== -1) return index;
-
-  return -1;
-}
-
-async function setCurrentChapter(index) {
-  if (index < 0 || index >= chapters.value.length) return;
-  const fileName = chapters.value[index].fileName;
-  await setCurrentChapterBySlug(fileName, true);
-}
-
-async function setCurrentChapterBySlug(slug, shouldUpdateUrl = true) {
-  const index = findChapterIndexBySlug(slug);
-  if (index === -1) {
-    isLoading.value = false;
-    return;
-  }
-
-  currentChapterIndex.value = index;
-
-  const slugWithoutExt = slug.replace(/\.md$/, "");
-
-  if (shouldUpdateUrl && route.query.slug !== slugWithoutExt) {
-    await router.push({
-      query: { ...route.query, slug: slugWithoutExt },
-    });
-  }
-
-  await loadChapterContent(index);
-
-  isLoading.value = false;
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function scrollToHash(hash) {
-  nextTick(() => {
-    const element = document.querySelector(hash);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  });
-}
-
-function setOverview() {
-  currentChapterIndex.value = null;
-  currentChapter.value = null;
-  const newHash = route.hash;
-  router.push({
-    query: {},
-    hash: newHash
-  });
-  if (newHash) {
-    scrollToHash(newHash);
-  } else {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-}
-
-watch(
-  () => route.query.slug,
-  async (newSlug) => {
-    if (newSlug !== undefined) {
-      await setCurrentChapterBySlug(String(newSlug), false);
-    } else {
-      setOverview();
-    }
-  }
-);
-
-watch(
-  () => route.hash,
-  (newHash) => {
-    if (newHash) {
-      scrollToHash(newHash);
-    }
-  }
-);
+        name: 'description',
+        content: description
+      }
+    ]
+  })
+})
 </script>
 
 <style scoped>

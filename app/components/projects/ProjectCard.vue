@@ -1,5 +1,5 @@
 <template>
-  <component :is="linkComponent" :to="linkTo" class="project-card">
+  <component :is="linkComponent" v-bind="linkProps" class="project-card">
     <div class="project-header">
       <div class="project-icon">
         <svg v-if="type === 'github'" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -49,52 +49,96 @@
   </component>
 </template>
 
-<script setup>
-const props = defineProps({
-  type: {
-    type: String,
-    required: true,
-    validator: (value) => ['github', 'custom'].includes(value),
-  },
-  data: {
-    type: Object,
-    required: true,
-  },
+<script setup lang="ts">
+type ProjectType = 'github' | 'custom'
+
+type ProjectData = {
+  name: string
+  description?: string
+  url?: string
+  stars?: number
+  language?: string
+  languageColor?: string
+  updatedAt?: string
+  isPrivate?: boolean
+  status?: string
+  techStack?: string[]
+}
+
+const props = defineProps<{
+  type: ProjectType
+  data: ProjectData
+}>()
+
+const hasLink = computed(() => {
+  const url = props.data.url
+
+  if (typeof url === 'string' && url.length > 0 && url !== '#') {
+    return true
+  } else {
+    return false
+  }
 })
 
 const linkComponent = computed(() => {
-  return props.data.url && props.data.url !== '#' ? 'a' : 'div'
+  if (hasLink.value) {
+    return 'a'
+  } else {
+    return 'div'
+  }
 })
 
-const linkTo = computed(() => {
-  if (props.data.url && props.data.url !== '#') {
-    return props.data.url
+const linkProps = computed(() => {
+  if (hasLink.value) {
+    return {
+      href: props.data.url,
+      target: '_blank',
+      rel: 'noopener noreferrer'
+    }
+  } else {
+    return {}
   }
-  return null
 })
 
 const statusText = computed(() => {
-  const statusMap = {
-    'active': '进行中',
-    'planning': '规划中',
-    'completed': '已完成',
-    'paused': '已暂停',
+  const statusMap: Record<string, string> = {
+    active: '进行中',
+    planning: '规划中',
+    completed: '已完成',
+    paused: '已暂停'
   }
-  return statusMap[props.data.status] || props.data.status
+  const status = props.data.status
+
+  if (status && status in statusMap) {
+    return statusMap[status]
+  } else if (status) {
+    return status
+  } else {
+    return ''
+  }
 })
 
-function formatDate(dateString) {
+const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
-  const diffTime = Math.abs(now - date)
+  const diffTime = Math.abs(now.getTime() - date.getTime())
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return '今天'
-  if (diffDays === 1) return '昨天'
-  if (diffDays < 7) return `${diffDays} 天前`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} 周前`
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)} 个月前`
-  return `${Math.floor(diffDays / 365)} 年前`
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  } else if (diffDays === 0) {
+    return '今天'
+  } else if (diffDays === 1) {
+    return '昨天'
+  } else if (diffDays < 7) {
+    return `${diffDays} 天前`
+  } else if (diffDays < 30) {
+    return `${Math.floor(diffDays / 7)} 周前`
+  } else if (diffDays < 365) {
+    return `${Math.floor(diffDays / 30)} 个月前`
+  } else {
+    return `${Math.floor(diffDays / 365)} 年前`
+  }
 }
 </script>
 

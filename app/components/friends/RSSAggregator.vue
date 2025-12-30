@@ -3,9 +3,9 @@
     <div class="rss-header">
       <h3 class="rss-title">友链动态</h3>
       <p class="rss-desc">看看朋友们最近在写什么</p>
-      <button class="refresh-btn" @click="refreshRSS" :disabled="loading">
+      <button class="refresh-btn" @click="refreshFeed" :disabled="isLoading">
         <svg
-          v-if="!loading"
+          v-if="!isLoading"
           class="icon"
           width="16"
           height="16"
@@ -20,19 +20,19 @@
           />
         </svg>
         <div v-else class="spinner-small"></div>
-        <span>{{ loading ? "刷新中..." : "刷新" }}</span>
+        <span>{{ isLoading ? "刷新中..." : "刷新" }}</span>
       </button>
     </div>
 
     <div class="rss-content">
-      <div v-if="loading && !articles.length" class="loading-state">
+      <div v-if="isLoading && articles.length === 0" class="loading-state">
         <div class="loading-spinner">
           <div class="spinner"></div>
         </div>
         <p class="loading-text">正在获取友链动态...</p>
       </div>
 
-      <div v-else-if="error" class="error-state">
+      <div v-else-if="hasError" class="error-state">
         <div class="error-icon">
           <svg
             width="32"
@@ -48,10 +48,10 @@
           </svg>
         </div>
         <p class="error-text">获取动态失败</p>
-        <button class="retry-btn" @click="refreshRSS">重试</button>
+        <button class="retry-btn" @click="refreshFeed">重试</button>
       </div>
 
-      <div v-else-if="!articles.length" class="empty-state">
+      <div v-else-if="articles.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg
             width="32"
@@ -117,122 +117,74 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  sites: {
-    type: Array,
-    required: true,
-  },
-});
+<script setup lang="ts">
+type FriendSite = {
+  siteName: string
+  siteUrl: string
+  siteLogo: string
+}
 
-const articles = ref([]);
-const loading = ref(false);
-const loadingMore = ref(false);
-const error = ref(false);
-const currentPage = ref(0);
-const articlesPerPage = 10;
+const props = defineProps<{
+  sites: FriendSite[]
+}>()
 
-const displayedArticles = computed(() => {
-  const start = 0;
-  const end = start + (currentPage.value + 1) * articlesPerPage;
-  return articles.value.slice(start, end);
-});
+const sites = computed(() => {
+  return props.sites
+})
 
-const hasMore = computed(() => {
-  return displayedArticles.value.length < articles.value.length;
-});
+const {
+  status,
+  error,
+  articles,
+  displayedArticles,
+  hasMore,
+  loadingMore,
+  refreshFeed,
+  loadMore
+} = useFriendsFeed(sites, { pageSize: 10 })
 
-const refreshRSS = async () => {
-  loading.value = true;
-  error.value = false;
-  currentPage.value = 0;
+const isLoading = computed(() => {
+  return status.value === 'pending'
+})
 
-  try {
-    const allArticles = [];
+const hasError = computed(() => {
+  return Boolean(error.value)
+})
 
-    // 并行获取所有站点的RSS
-    const promises = props.sites.map(async (site) => {
-      try {
-        const data = await $fetch(
-          `/api/friends?url=${encodeURIComponent(site.siteUrl)}`
-        );
-        const siteResult = data?.results?.[0];
-        if (siteResult?.articles && siteResult.articles.length > 0) {
-          return siteResult.articles.map((article) => ({
-            ...article,
-            siteName: site.siteName,
-            siteLogo: site.siteLogo,
-            siteUrl: site.siteUrl,
-          }));
-        }
-      } catch (err) {
-        console.warn(`Failed to fetch RSS for ${site.siteName}:`, err);
-        return [];
-      }
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
 
-      return [];
-    });
-
-    const results = await Promise.all(promises);
-    results.forEach((siteArticles) => {
-      allArticles.push(...siteArticles);
-    });
-
-    // 按发布时间排序
-    articles.value = allArticles.sort(
-      (a, b) => new Date(b.pubDate) - new Date(a.pubDate)
-    );
-  } catch (err) {
-    console.error("Failed to refresh RSS:", err);
-    error.value = true;
-  } finally {
-    loading.value = false;
-  }
-};
-
-const loadMore = () => {
-  if (!loadingMore.value && hasMore.value) {
-    loadingMore.value = true;
-    setTimeout(() => {
-      currentPage.value++;
-      loadingMore.value = false;
-    }, 300);
-  }
-};
-
-const formatDate = (dateString) => {
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (Number.isNaN(date.getTime())) {
+    return '未知日期'
+  } else {
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - date.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
     if (diffDays === 1) {
-      return "今天";
+      return '今天'
     } else if (diffDays === 2) {
-      return "昨天";
+      return '昨天'
     } else if (diffDays <= 7) {
-      return `${diffDays - 1}天前`;
+      return `${diffDays - 1}天前`
     } else {
-      return date.toLocaleDateString("zh-CN", {
-        month: "short",
-        day: "numeric",
-      });
+      return date.toLocaleDateString('zh-CN', {
+        month: 'short',
+        day: 'numeric'
+      })
     }
-  } catch {
-    return "未知日期";
   }
-};
+}
 
-const handleImageError = (event) => {
-  event.target.src =
-    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iI0YzRjRGNiIvPgo8c3ZnIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjgiIHk9IjgiPgo8Y2lyY2xlIGN4PSI4IiBjeT0iNiIgcj0iMiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNNCAxMkM0IDkgNiA3IDggN0MxMCA3IDEyIDkgMTIgMTJINEgiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+Cjwvc3ZnPgo=";
-};
+const handleImageError = (event: Event) => {
+  const target = event.target
 
-// 组件挂载时自动刷新
-onMounted(() => {
-  refreshRSS();
-});
+  if (target instanceof HTMLImageElement) {
+    target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iI0YzRjRGNiIvPgo8c3ZnIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjgiIHk9IjgiPgo8Y2lyY2xlIGN4PSI4IiBjeT0iNiIgcj0iMiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNNCAxMkM0IDkgNiA3IDggN0MxMCA3IDEyIDkgMTIgMTJINEgiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+Cjwvc3ZnPgo='
+  } else {
+    return
+  }
+}
 </script>
 
 <style lang="scss" scoped>
