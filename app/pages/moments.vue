@@ -194,7 +194,7 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({
   layout: 'default'
 })
@@ -243,7 +243,7 @@ const hasError = computed(() => {
   return Boolean(sitesError.value || feedError.value)
 })
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString) => {
   const date = new Date(dateString)
 
   if (Number.isNaN(date.getTime())) {
@@ -269,7 +269,7 @@ const formatDate = (dateString: string) => {
   }
 }
 
-const handleImageError = (event: Event) => {
+const handleImageError = (event) => {
   const target = event.target
 
   if (target instanceof HTMLImageElement) {
@@ -279,12 +279,12 @@ const handleImageError = (event: Event) => {
   }
 }
 
-const parseStatusMessage = (message: string) => {
+const parseStatusMessage = (message) => {
   const match = message.match(/Status code (\d+)/)
 
   if (match) {
     const code = match[1]
-    const statusMessages: Record<string, string> = {
+    const statusMessages = {
       '404': 'RSS 地址不存在',
       '403': '访问被拒绝',
       '500': '服务器内部错误',
@@ -303,7 +303,7 @@ const parseStatusMessage = (message: string) => {
   }
 }
 
-const formatErrorMessage = (errorMessage: string | null | undefined) => {
+const formatErrorMessage = (errorMessage) => {
   const normalized = typeof errorMessage === 'string' ? errorMessage.trim() : ''
   const message = normalized.length > 0 ? normalized : '未知错误'
   const statusMessage = parseStatusMessage(message)

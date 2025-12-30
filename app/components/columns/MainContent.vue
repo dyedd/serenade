@@ -46,35 +46,31 @@
   </div>
 </template>
 
-<script setup lang="ts">
-type ColumnMeta = {
-  title?: string
-  date?: string
-}
-
-type ChapterContent = {
-  htmlContent?: string
-  metaData?: {
-    title?: string
+<script setup>
+defineProps({
+  columnMeta: {
+    type: Object,
+    required: true
+  },
+  readmeHtml: {
+    type: String,
+    default: ''
+  },
+  currentChapter: {
+    type: Object,
+    default: null
+  },
+  prevChapter: {
+    type: Object,
+    default: null
+  },
+  nextChapter: {
+    type: Object,
+    default: null
   }
-}
+})
 
-type ChapterNav = {
-  title?: string
-  index?: number
-}
-
-defineProps<{
-  columnMeta: ColumnMeta
-  readmeHtml?: string
-  currentChapter?: ChapterContent | null
-  prevChapter?: ChapterNav | null
-  nextChapter?: ChapterNav | null
-}>()
-
-defineEmits<{
-  (event: 'selectChapter', index: number): void
-}>()
+defineEmits(['selectChapter'])
 </script>
 
 <style lang="scss" scoped>

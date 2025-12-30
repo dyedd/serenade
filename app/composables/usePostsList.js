@@ -1,22 +1,4 @@
-type PostPreview = {
-  path: string
-  title: string
-  date: string
-  cover?: string
-  abstract?: string
-  tags?: string[]
-  readingTime?: string
-}
-
-type PostsApiResponse = {
-  data: PostPreview[]
-  page: number
-  pageSize: number
-  totalPages: number
-  totalItems: number
-}
-
-const parsePage = (value: unknown, fallback: number) => {
+const parsePage = (value, fallback) => {
   if (typeof value === 'string') {
     const parsed = Number.parseInt(value, 10)
 
@@ -30,7 +12,7 @@ const parsePage = (value: unknown, fallback: number) => {
   }
 }
 
-const parseSearch = (value: unknown) => {
+const parseSearch = (value) => {
   if (typeof value === 'string') {
     return value.trim()
   } else {
@@ -38,7 +20,7 @@ const parseSearch = (value: unknown) => {
   }
 }
 
-const buildSearchQuery = (keyword: string, page: number, pageSize: number) => {
+const buildSearchQuery = (keyword, page, pageSize) => {
   if (keyword.length > 0) {
     return {
       keyword,
@@ -53,7 +35,7 @@ const buildSearchQuery = (keyword: string, page: number, pageSize: number) => {
   }
 }
 
-const buildPostsUrl = (keyword: string) => {
+const buildPostsUrl = (keyword) => {
   if (keyword.length > 0) {
     return '/api/posts/search'
   } else {
@@ -61,7 +43,7 @@ const buildPostsUrl = (keyword: string) => {
   }
 }
 
-export const usePostsList = async (options?: { pageSize?: number }) => {
+export const usePostsList = async (options) => {
   const route = useRoute()
   const router = useRouter()
   const pageSize = typeof options?.pageSize === 'number' ? options.pageSize : 5
@@ -79,7 +61,7 @@ export const usePostsList = async (options?: { pageSize?: number }) => {
     return buildSearchQuery(searchQuery.value, pageQuery.value, pageSize)
   })
 
-  const { data: result, status, error } = await useAsyncData<PostsApiResponse>(
+  const { data: result, status, error } = await useAsyncData(
     () => `posts-${searchQuery.value}-${pageQuery.value}-${pageSize}`,
     () => $fetch(buildPostsUrl(searchQuery.value), { query: queryParams.value }),
     {
@@ -122,7 +104,7 @@ export const usePostsList = async (options?: { pageSize?: number }) => {
     return searchQuery.value.length > 0
   })
 
-  const goToPage = async (page: number) => {
+  const goToPage = async (page) => {
     if (page >= 1 && page <= totalPages.value) {
       await router.push({ query: { ...route.query, page } })
     } else {
@@ -130,7 +112,7 @@ export const usePostsList = async (options?: { pageSize?: number }) => {
     }
   }
 
-  const applySearch = async (keyword: string) => {
+  const applySearch = async (keyword) => {
     const trimmed = keyword.trim()
 
     if (trimmed.length > 0) {

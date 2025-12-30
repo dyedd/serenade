@@ -1,33 +1,4 @@
-type ProjectItem = {
-  name: string
-  description?: string
-  cover?: string
-  techStack?: string[]
-  link?: string
-  date?: string
-  categoryName?: string
-}
-
-type CategoryItem = {
-  key: string
-  name: string
-  icon?: string
-  count?: number
-}
-
-type ProjectsResponse = {
-  data: {
-    projects: ProjectItem[]
-  }
-  total: number
-  hasMore: boolean
-}
-
-type CategoriesResponse = {
-  data: CategoryItem[]
-}
-
-const createEmptyProjectsResponse = (): ProjectsResponse => {
+const createEmptyProjectsResponse = () => {
   return {
     data: {
       projects: []
@@ -37,13 +8,13 @@ const createEmptyProjectsResponse = (): ProjectsResponse => {
   }
 }
 
-const createEmptyCategoriesResponse = (): CategoriesResponse => {
+const createEmptyCategoriesResponse = () => {
   return {
     data: []
   }
 }
 
-const shuffleProjects = (projects: ProjectItem[]) => {
+const shuffleProjects = (projects) => {
   const shuffled = [...projects]
 
   for (let i = shuffled.length - 1; i > 0; i -= 1) {
@@ -56,7 +27,7 @@ const shuffleProjects = (projects: ProjectItem[]) => {
   return shuffled
 }
 
-const buildErrorMessage = (error: unknown) => {
+const buildErrorMessage = (error) => {
   if (error instanceof Error) {
     return error.message || '加载失败'
   } else {
@@ -66,10 +37,10 @@ const buildErrorMessage = (error: unknown) => {
 
 export const useProjectsPage = async () => {
   const activeTab = ref('all')
-  const categories = ref<CategoryItem[]>([])
+  const categories = ref([])
   const totalCount = ref(0)
-  const allProjects = ref<ProjectItem[]>([])
-  const categoryProjects = ref<ProjectItem[]>([])
+  const allProjects = ref([])
+  const categoryProjects = ref([])
   const allPage = ref(1)
   const categoryPage = ref(1)
   const allHasMore = ref(true)
@@ -77,7 +48,7 @@ export const useProjectsPage = async () => {
   const allLoadingMore = ref(false)
   const categoryLoadingMore = ref(false)
 
-  const { data: categoriesData, status: categoriesStatus, error: categoriesError } = await useFetch<CategoriesResponse>(
+  const { data: categoriesData, status: categoriesStatus, error: categoriesError } = await useFetch(
     '/api/projects/categories',
     {
       default: createEmptyCategoriesResponse
@@ -104,7 +75,7 @@ export const useProjectsPage = async () => {
     }
   })
 
-  const { data: allResult, status: allStatus, error: allError, refresh: refreshAll } = await useAsyncData<ProjectsResponse>(
+  const { data: allResult, status: allStatus, error: allError, refresh: refreshAll } = await useAsyncData(
     () => `projects-all-${allPage.value}`,
     () => $fetch('/api/projects', { query: { page: allPage.value, pageSize: 3 } }),
     {
@@ -113,7 +84,7 @@ export const useProjectsPage = async () => {
     }
   )
 
-  const { data: categoryResult, status: categoryStatus, error: categoryError, refresh: refreshCategory } = await useAsyncData<ProjectsResponse>(
+  const { data: categoryResult, status: categoryStatus, error: categoryError, refresh: refreshCategory } = await useAsyncData(
     () => `projects-category-${activeCategoryKey.value}-${categoryPage.value}`,
     () => {
       if (activeCategoryKey.value.length > 0) {
@@ -134,7 +105,7 @@ export const useProjectsPage = async () => {
     }
   )
 
-  const updateAllProjects = (result: ProjectsResponse) => {
+  const updateAllProjects = (result) => {
     const projects = Array.isArray(result.data?.projects) ? result.data.projects : []
 
     if (allPage.value === 1) {
@@ -152,7 +123,7 @@ export const useProjectsPage = async () => {
     allHasMore.value = Boolean(result.hasMore)
   }
 
-  const updateCategoryCount = (key: string, count: number) => {
+  const updateCategoryCount = (key, count) => {
     const index = categories.value.findIndex((category) => category.key === key)
 
     if (index >= 0) {
@@ -163,7 +134,7 @@ export const useProjectsPage = async () => {
     }
   }
 
-  const updateCategoryProjects = (result: ProjectsResponse) => {
+  const updateCategoryProjects = (result) => {
     const projects = Array.isArray(result.data?.projects) ? result.data.projects : []
 
     if (categoryPage.value === 1) {
@@ -293,7 +264,7 @@ export const useProjectsPage = async () => {
     await refreshCategory()
   }
 
-  const switchTab = async (tabKey: string) => {
+  const switchTab = async (tabKey) => {
     if (activeTab.value === tabKey) {
       return
     } else {

@@ -34,21 +34,17 @@
   </a>
 </template>
 
-<script setup lang="ts">
-type FriendSite = {
-  siteUrl: string
-  siteLogo: string
-  siteName: string
-  description?: string
-}
-
-defineProps<{
-  site: FriendSite
-}>()
+<script setup>
+defineProps({
+  site: {
+    type: Object,
+    required: true
+  }
+})
 
 const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIyMCIgcj0iMTAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTE4IDQ0QzE4IDM2IDI1IDMwIDMyIDMwQzM5IDMwIDQ2IDM2IDQ2IDQ0SDE4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4='
 
-const handleImageError = (event: Event) => {
+const handleImageError = (event) => {
   const target = event.target
 
   if (target instanceof HTMLImageElement) {
@@ -58,7 +54,7 @@ const handleImageError = (event: Event) => {
   }
 }
 
-const handleImageLoad = (event: Event) => {
+const handleImageLoad = (event) => {
   const target = event.target
 
   if (target instanceof HTMLImageElement) {

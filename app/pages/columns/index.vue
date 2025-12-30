@@ -65,7 +65,7 @@
   />
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({
   layout: 'default'
 })
@@ -73,7 +73,7 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 
-const parsePageQuery = (value: unknown) => {
+const parsePageQuery = (value) => {
   if (typeof value === 'string') {
     const parsed = Number.parseInt(value, 10)
 
@@ -138,7 +138,7 @@ const hasError = computed(() => {
   return Boolean(error.value)
 })
 
-const goToPage = (page: number) => {
+const goToPage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     router.push({ query: { ...route.query, page } })
   } else {

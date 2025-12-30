@@ -47,24 +47,27 @@
   </aside>
 </template>
 
-<script setup lang="ts">
-type Chapter = {
-  metaData?: {
-    title?: string
+<script setup>
+const props = defineProps({
+  columnType: {
+    type: String,
+    default: ''
+  },
+  columnTitle: {
+    type: String,
+    default: ''
+  },
+  chapters: {
+    type: Array,
+    default: () => []
+  },
+  currentChapterIndex: {
+    type: Number,
+    default: null
   }
-}
+})
 
-const props = defineProps<{
-  columnType?: string
-  columnTitle?: string
-  chapters?: Chapter[]
-  currentChapterIndex?: number | null
-}>()
-
-const emit = defineEmits<{
-  (event: 'selectChapter', index: number): void
-  (event: 'selectOverview'): void
-}>()
+const emit = defineEmits(['selectChapter', 'selectOverview'])
 
 const badgeClass = computed(() => {
   if (props.columnType === '公开') {
@@ -85,7 +88,7 @@ const badgeClass = computed(() => {
   }
 })
 
-const selectChapter = (index: number) => {
+const selectChapter = (index) => {
   emit('selectChapter', index)
 }
 

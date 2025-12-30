@@ -16,22 +16,15 @@
   </div>
 </template>
 
-<script setup lang="ts">
-type TimelineItem = {
-  path: string
-  title: string
-  date: string
-  abstract?: string
-  tags?: string[]
-}
-
-withDefaults(defineProps<{
-  items?: TimelineItem[]
-}>(), {
-  items: () => []
+<script setup>
+defineProps({
+  items: {
+    type: Array,
+    default: () => []
+  }
 })
 
-const formatDate = (value: string) => {
+const formatDate = (value) => {
   const date = new Date(value)
 
   if (Number.isNaN(date.getTime())) {
@@ -45,7 +38,7 @@ const formatDate = (value: string) => {
   }
 }
 
-const navigateToPost = (path: string) => {
+const navigateToPost = (path) => {
   return navigateTo(`/posts/${path}`)
 }
 </script>

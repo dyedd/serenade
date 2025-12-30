@@ -1,18 +1,11 @@
-export type HeadingNode = {
-  id: string
-  text: string
-  level: number
-  children: HeadingNode[]
-}
-
-export const useHeadingTree = (containerRef: Ref<HTMLElement | null>) => {
-  const headings = ref<HeadingNode[]>([])
+export const useHeadingTree = (containerRef) => {
+  const headings = ref([])
   const activeId = ref('')
   const isClient = import.meta.client
   const scrollOffsetRatio = 0.3
   const bottomOffset = 50
 
-  const buildHeadingId = (text: string, level: number, index: number) => {
+  const buildHeadingId = (text, level, index) => {
     const normalized = text.trim().replace(/\s+/g, '-').toLowerCase()
 
     if (normalized.length > 0) {
@@ -57,9 +50,9 @@ export const useHeadingTree = (containerRef: Ref<HTMLElement | null>) => {
     }
   }
 
-  const buildHeadingTree = (flat: HeadingNode[]) => {
-    const root: HeadingNode[] = []
-    const stack: HeadingNode[] = []
+  const buildHeadingTree = (flat) => {
+    const root = []
+    const stack = []
 
     flat.forEach((heading) => {
       while (stack.length > 0 && stack[stack.length - 1].level >= heading.level) {
@@ -80,8 +73,8 @@ export const useHeadingTree = (containerRef: Ref<HTMLElement | null>) => {
     return root
   }
 
-  const flattenHeadings = (nodes: HeadingNode[]): HeadingNode[] => {
-    const result: HeadingNode[] = []
+  const flattenHeadings = (nodes) => {
+    const result = []
 
     nodes.forEach((node) => {
       result.push(node)
@@ -106,7 +99,7 @@ export const useHeadingTree = (containerRef: Ref<HTMLElement | null>) => {
       const flatHeadings = flattenHeadings(headings.value)
       const elements = flatHeadings
         .map((heading) => document.getElementById(heading.id))
-        .filter((element): element is HTMLElement => Boolean(element))
+        .filter((element) => Boolean(element))
 
       if (elements.length > 0) {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop

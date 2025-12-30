@@ -23,7 +23,7 @@
   </Transition>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const isVisible = ref(false)
 const isClient = import.meta.client
 const scrollThreshold = 300

@@ -34,14 +34,15 @@
   </aside>
 </template>
 
-<script setup lang="ts">
-const props = withDefaults(defineProps<{
-  maxTags?: number
-}>(), {
-  maxTags: 25
+<script setup>
+const props = defineProps({
+  maxTags: {
+    type: Number,
+    default: 25
+  }
 })
 
-const { data: tags, status, error } = await useFetch<Record<string, number>>('/api/tags', {
+const { data: tags, status, error } = await useFetch('/api/tags', {
   default: () => ({})
 })
 
@@ -68,7 +69,7 @@ const sortedTags = computed(() => {
   }
 })
 
-const buildTagLink = (tag: string) => {
+const buildTagLink = (tag) => {
   return `/tags/${encodeURIComponent(tag)}`
 }
 </script>

@@ -1,27 +1,4 @@
-type ColumnMeta = {
-  title?: string
-  type?: string
-  description?: string
-  date?: string
-}
-
-type ChapterMeta = {
-  title?: string
-}
-
-type Chapter = {
-  fileName: string
-  metaData: ChapterMeta
-  htmlContent?: string
-}
-
-type ColumnDataResponse = {
-  metaData: ColumnMeta
-  readmeHtml: string
-  chapters: Chapter[]
-}
-
-const resolveString = (value: unknown) => {
+const resolveString = (value) => {
   if (typeof value === 'string') {
     return value
   } else {
@@ -29,7 +6,7 @@ const resolveString = (value: unknown) => {
   }
 }
 
-const normalizeSlug = (slug: string) => {
+const normalizeSlug = (slug) => {
   if (slug.endsWith('.md')) {
     return slug.replace(/\.md$/, '')
   } else {
@@ -37,7 +14,7 @@ const normalizeSlug = (slug: string) => {
   }
 }
 
-const createEmptyColumn = (): ColumnDataResponse => {
+const createEmptyColumn = () => {
   return {
     metaData: {},
     readmeHtml: '',
@@ -54,7 +31,7 @@ export const useColumnDetail = async () => {
     return resolveString(route.params.path)
   })
 
-  const { data: columnData, status, error } = await useFetch<ColumnDataResponse>(
+  const { data: columnData, status, error } = await useFetch(
     () => `/api/columns/${columnPath.value}`,
     {
       watch: [columnPath],
@@ -62,10 +39,10 @@ export const useColumnDetail = async () => {
     }
   )
 
-  const columnMeta = ref<ColumnMeta>({})
+  const columnMeta = ref({})
   const readmeHtml = ref('')
-  const chapters = ref<Chapter[]>([])
-  const currentChapterIndex = ref<number | null>(null)
+  const chapters = ref([])
+  const currentChapterIndex = ref(null)
   const chapterLoading = ref(false)
 
   const currentChapter = computed(() => {
@@ -82,7 +59,7 @@ export const useColumnDetail = async () => {
     return status.value === 'pending' || chapterLoading.value
   })
 
-  const updateBaseData = (data: ColumnDataResponse) => {
+  const updateBaseData = (data) => {
     columnMeta.value = data.metaData ?? {}
     readmeHtml.value = data.readmeHtml ?? ''
 
@@ -107,7 +84,7 @@ export const useColumnDetail = async () => {
     { immediate: true }
   )
 
-  const findChapterIndexBySlug = (slug: string) => {
+  const findChapterIndexBySlug = (slug) => {
     const directIndex = chapters.value.findIndex((chapter) => chapter.fileName === slug)
 
     if (directIndex !== -1) {
@@ -124,7 +101,7 @@ export const useColumnDetail = async () => {
     }
   }
 
-  const loadChapterContent = async (index: number) => {
+  const loadChapterContent = async (index) => {
     const isValidIndex = index >= 0 && index < chapters.value.length
 
     if (isValidIndex) {
@@ -149,7 +126,7 @@ export const useColumnDetail = async () => {
     }
   }
 
-  const scrollToHash = (hash: string) => {
+  const scrollToHash = (hash) => {
     if (isClient) {
       nextTick(() => {
         const element = document.querySelector(hash)
@@ -173,7 +150,7 @@ export const useColumnDetail = async () => {
     }
   }
 
-  const updateSlugQuery = async (normalizedSlug: string, shouldUpdateUrl: boolean) => {
+  const updateSlugQuery = async (normalizedSlug, shouldUpdateUrl) => {
     if (shouldUpdateUrl) {
       if (route.query.slug !== normalizedSlug) {
         await router.push({
@@ -187,7 +164,7 @@ export const useColumnDetail = async () => {
     }
   }
 
-  const setCurrentChapterBySlug = async (slug: string, shouldUpdateUrl = true) => {
+  const setCurrentChapterBySlug = async (slug, shouldUpdateUrl = true) => {
     const index = findChapterIndexBySlug(slug)
 
     if (index === -1) {
@@ -205,7 +182,7 @@ export const useColumnDetail = async () => {
     scrollToTop()
   }
 
-  const setCurrentChapter = async (index: number) => {
+  const setCurrentChapter = async (index) => {
     const isValidIndex = index >= 0 && index < chapters.value.length
 
     if (isValidIndex) {
@@ -216,7 +193,7 @@ export const useColumnDetail = async () => {
     }
   }
 
-  const updateOverviewQuery = async (hash: string, shouldUpdateUrl: boolean) => {
+  const updateOverviewQuery = async (hash, shouldUpdateUrl) => {
     if (shouldUpdateUrl) {
       await router.push({
         query: {},

@@ -117,16 +117,13 @@
   </div>
 </template>
 
-<script setup lang="ts">
-type FriendSite = {
-  siteName: string
-  siteUrl: string
-  siteLogo: string
-}
-
-const props = defineProps<{
-  sites: FriendSite[]
-}>()
+<script setup>
+const props = defineProps({
+  sites: {
+    type: Array,
+    required: true
+  }
+})
 
 const sites = computed(() => {
   return props.sites
@@ -151,7 +148,7 @@ const hasError = computed(() => {
   return Boolean(error.value)
 })
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString) => {
   const date = new Date(dateString)
 
   if (Number.isNaN(date.getTime())) {
@@ -176,7 +173,7 @@ const formatDate = (dateString: string) => {
   }
 }
 
-const handleImageError = (event: Event) => {
+const handleImageError = (event) => {
   const target = event.target
 
   if (target instanceof HTMLImageElement) {

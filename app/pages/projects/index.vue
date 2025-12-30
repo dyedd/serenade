@@ -242,7 +242,7 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({
   layout: 'default'
 })
@@ -271,7 +271,7 @@ const {
 
 const isClient = import.meta.client
 
-const goToProject = (url: string | undefined) => {
+const goToProject = (url) => {
   if (url) {
     if (isClient) {
       window.open(url, '_blank', 'noopener')
@@ -283,7 +283,7 @@ const goToProject = (url: string | undefined) => {
   }
 }
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString) => {
   const date = new Date(dateString)
 
   if (Number.isNaN(date.getTime())) {
@@ -299,7 +299,7 @@ const formatDate = (dateString: string) => {
 
 const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgODBIMjAwVjkwSDEwMFY4MFpNMTAwIDExMEgyMDBWMTIwSDEwMFYxMTBaTTEwMCAxNDBIMTcwVjE1MEgxMDBWMTQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4='
 
-const handleImageError = (event: Event) => {
+const handleImageError = (event) => {
   const target = event.target
 
   if (target instanceof HTMLImageElement) {

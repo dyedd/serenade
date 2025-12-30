@@ -37,7 +37,7 @@
   />
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({
   layout: 'default',
 })
@@ -45,7 +45,7 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 
-const decodeTagName = (value: string) => {
+const decodeTagName = (value) => {
   try {
     return decodeURIComponent(value)
   } catch (error) {
@@ -57,7 +57,7 @@ const decodeTagName = (value: string) => {
   }
 }
 
-const resolveTagName = (value: unknown) => {
+const resolveTagName = (value) => {
   if (typeof value === 'string') {
     const trimmed = value.trim()
 
@@ -75,7 +75,7 @@ const tagName = computed(() => {
   return resolveTagName(route.params.path)
 })
 
-const buildHeadConfig = (name: string) => {
+const buildHeadConfig = (name) => {
   if (name.length > 0) {
     return {
       title: `标签: ${name}`,
@@ -99,7 +99,7 @@ const buildHeadConfig = (name: string) => {
   }
 }
 
-const buildTagApiPath = (name: string) => {
+const buildTagApiPath = (name) => {
   if (name.length > 0) {
     return `/api/tags/${encodeURIComponent(name)}`
   } else {
@@ -112,7 +112,7 @@ watchEffect(() => {
   useHead(headConfig)
 })
 
-const parsePageQuery = (value: unknown) => {
+const parsePageQuery = (value) => {
   if (typeof value === 'string') {
     const parsed = Number.parseInt(value, 10)
 
@@ -178,7 +178,7 @@ const hasPosts = computed(() => {
   }
 })
 
-const goToPage = (page: number) => {
+const goToPage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     router.push({ query: { ...route.query, page } })
   } else {
