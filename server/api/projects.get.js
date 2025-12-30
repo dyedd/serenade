@@ -1,37 +1,61 @@
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
+import { parsePagination } from '../utils.js'
+
+const readProjectsData = () => {
+  const dataPath = join(process.cwd(), 'content', 'projects.json')
+
+  if (!existsSync(dataPath)) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: '未找到项目数据文件'
+    })
+  } else {
+    const fileContent = readFileSync(dataPath, 'utf-8')
+
+    try {
+      return JSON.parse(fileContent)
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: '项目数据解析失败'
+        })
+      } else {
+        throw error
+      }
+    }
+  }
+}
+
+const resolveErrorStatus = (error, fallbackMessage) => {
+  if (error && typeof error === 'object' && 'statusCode' in error) {
+    return {
+      statusCode: error.statusCode,
+      statusMessage: error.statusMessage ?? fallbackMessage
+    }
+  } else {
+    return {
+      statusCode: 500,
+      statusMessage: fallbackMessage
+    }
+  }
+}
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const page = parseInt(query.page) || 1
-  const pageSize = parseInt(query.pageSize) || 3
+  const { page, pageSize } = parsePagination(query, 1, 3)
 
   try {
-    const dataPath = join(process.cwd(), 'content', 'projects.json')
+    const data = readProjectsData()
+    const allProjects = Object.entries(data.categories).flatMap(([catKey, catData]) =>
+      catData.projects.map((project) => ({
+        ...project,
+        categoryKey: catKey,
+        categoryName: catData.name
+      }))
+    )
 
-    if (!existsSync(dataPath)) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: '未找到项目数据文件',
-      })
-    }
-
-    const fileContent = readFileSync(dataPath, 'utf-8')
-    const data = JSON.parse(fileContent)
-
-    // 获取所有分类的所有项目
-    const allProjects = []
-    Object.entries(data.categories).forEach(([catKey, catData]) => {
-      catData.projects.forEach(project => {
-        allProjects.push({
-          ...project,
-          categoryKey: catKey,
-          categoryName: catData.name,
-        })
-      })
-    })
-
-    // 按日期排序
     allProjects.sort((a, b) => new Date(b.date) - new Date(a.date))
 
     const startIndex = (page - 1) * pageSize
@@ -47,14 +71,24 @@ export default defineEventHandler(async (event) => {
       data: {
         name: '全部',
         categories: data.categories,
-        projects: paginatedProjects,
-      },
+        projects: paginatedProjects
+      }
     }
   } catch (error) {
-    console.error('获取所有项目失败:', error)
+    if (error instanceof Error) {
+      console.error('获取所有项目失败:', error)
+    } else {
+      console.error('获取所有项目失败: 未知错误')
+    }
+
+    const { statusCode, statusMessage } = resolveErrorStatus(
+      error,
+      '获取所有项目失败'
+    )
+
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.message || '获取所有项目失败',
+      statusCode,
+      statusMessage
     })
   }
 })

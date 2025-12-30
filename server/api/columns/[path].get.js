@@ -11,38 +11,48 @@ export default defineEventHandler(async (event) => {
 
   if (readmeFiles.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
-  }
+  } else {
+    const targetReadmePath =
+      readmeFiles.find((file) => file.includes('/README.md')) ?? readmeFiles[0]
+    const readmeContent = await fs.readFile(targetReadmePath, 'utf-8')
+    const { data: readmeMeta, content: readmeMarkdown } = matter(readmeContent)
 
-  // 优先选择大写 README.md，以保持一致性
-  const targetReadmePath = readmeFiles.find(i => i.includes('/README.md')) || readmeFiles[0]
-  const readmeContent = await fs.readFile(targetReadmePath, 'utf-8')
-  const { data: readmeMeta, content: readmeMarkdown } = matter(readmeContent)
+    const readmeHtml = parseMarkdown(readmeMarkdown, name, true, 'columns')
+    const resolvedMeta = {
+      ...readmeMeta,
+      date: formatDate(readmeMeta.date)
+    }
 
-  const readmeHtml = parseMarkdown(readmeMarkdown, name, true, 'columns')
-  readmeMeta.date = formatDate(readmeMeta.date)
+    const chapterFiles = await fg(`${columnPath}/*.md`)
+    const chapters = await Promise.all(
+      chapterFiles.map(async (file) => {
+        const fileName = file.split('/').pop() ?? ''
+        const isReadme = fileName.toLowerCase() === 'readme.md'
 
-  const chapters = []
-  const chapterFiles = await fg(`${columnPath}/*.md`)
+        if (isReadme) {
+          return null
+        } else {
+          const chapterContent = await fs.readFile(file, 'utf-8')
+          const h1Match = chapterContent.match(/^#\s+(.+)$/m)
+          const title = h1Match ? h1Match[1].trim() : fileName
 
-  for (const file of chapterFiles) {
-    const fileName = file.split('/').pop()
-    if (fileName.toLowerCase() === 'readme.md') continue
+          return {
+            metaData: { title },
+            fileName
+          }
+        }
+      })
+    )
 
-    const chapterContent = await fs.readFile(file, 'utf-8')
-    const h1Match = chapterContent.match(/^#\s+(.+)$/m)
-    const title = h1Match ? h1Match[1].trim() : fileName
+    const filteredChapters = chapters.filter((chapter) => chapter !== null)
+    filteredChapters.sort(
+      (a, b) => Number.parseInt(a.fileName, 10) - Number.parseInt(b.fileName, 10)
+    )
 
-    chapters.push({
-      metaData: { title },
-      fileName
-    })
-  }
-
-  chapters.sort((a, b) => parseInt(a.fileName) - parseInt(b.fileName))
-
-  return {
-    metaData: readmeMeta,
-    readmeHtml,
-    chapters
+    return {
+      metaData: resolvedMeta,
+      readmeHtml,
+      chapters: filteredChapters
+    }
   }
 })

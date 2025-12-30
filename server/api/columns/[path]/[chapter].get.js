@@ -5,21 +5,20 @@ export default defineEventHandler(async (event) => {
   const { path, chapter } = event.context.params
 
   const chapterPath = `content/columns/${path}/${chapter}`
+  const exists = await fs.pathExists(chapterPath)
 
-  if (!await fs.pathExists(chapterPath)) {
+  if (!exists) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
-  }
+  } else {
+    const chapterContent = await fs.readFile(chapterPath, 'utf-8')
+    const htmlContent = parseMarkdown(chapterContent, path, true, 'columns')
+    const h1Match = chapterContent.match(/^#\s+(.+)$/m)
+    const title = h1Match ? h1Match[1].trim() : chapter
 
-  const chapterContent = await fs.readFile(chapterPath, 'utf-8')
-  const htmlContent = parseMarkdown(chapterContent, path, true, 'columns')
-
-  // 从 Markdown 内容中提取第一个一级标题作为章节标题
-  const h1Match = chapterContent.match(/^#\s+(.+)$/m)
-  const title = h1Match ? h1Match[1].trim() : chapter
-
-  return {
-    metaData: { title },
-    htmlContent,
-    fileName: chapter
+    return {
+      metaData: { title },
+      htmlContent,
+      fileName: chapter
+    }
   }
 })
