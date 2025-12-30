@@ -56,18 +56,25 @@
   </footer>
 </template>
 
-<script setup>
-import { siteConfig } from "../../site.config";
+<script setup lang="ts">
+import { siteConfig } from '../../site.config'
 
-const runningDays = ref(0);
-const currentYear = ref(new Date().getFullYear());
+const currentYear = new Date().getFullYear()
 
-onMounted(() => {
-  const start = new Date(siteConfig.startTime);
-  const now = new Date();
-  const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-  runningDays.value = days;
-});
+const calculateRunningDays = (startTime: string) => {
+  const start = new Date(startTime)
+
+  if (Number.isNaN(start.getTime())) {
+    return 0
+  } else {
+    const now = new Date()
+    const diffTime = now.getTime() - start.getTime()
+    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    return days
+  }
+}
+
+const runningDays = calculateRunningDays(siteConfig.startTime)
 </script>
 
 <style lang="scss" scoped>

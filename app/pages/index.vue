@@ -121,21 +121,29 @@
     </main>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 definePageMeta({
-  layout: "home",
-});
+  layout: 'home'
+})
 
-// 获取最新博文
-const { data: postsData } = await useFetch("/api/posts", {
+const { data: postsData, status, error } = await useFetch('/api/posts', {
   query: { page: 1, pageSize: 5 },
-  // 使用 key 来确保每次都能获取到数据，同时禁用预渲染缓存
-  key: "home-latest-posts",
+  key: 'home-latest-posts',
   server: true,
-  lazy: false,
-});
+  default: () => ({ data: [] })
+})
 
-const latestPosts = computed(() => postsData.value?.data || []);
+const latestPosts = computed(() => {
+  if (status.value === 'pending') {
+    return []
+  } else if (error.value) {
+    return []
+  } else if (postsData.value && Array.isArray(postsData.value.data)) {
+    return postsData.value.data
+  } else {
+    return []
+  }
+})
 </script>
 
 <style lang="scss" scoped>

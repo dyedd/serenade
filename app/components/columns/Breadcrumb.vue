@@ -7,19 +7,40 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  columnTitle: String,
-  currentChapter: Object,
-  readmeDate: String,
-})
+<script setup lang="ts">
+type ChapterMeta = {
+  metaData?: {
+    title?: string
+    date?: string
+  }
+}
+
+const props = defineProps<{
+  columnTitle?: string
+  currentChapter?: ChapterMeta | null
+  readmeDate?: string
+}>()
 
 const currentChapterTitle = computed(() => {
-  return props.currentChapter?.metaData?.title || '专栏概览'
+  const title = props.currentChapter?.metaData?.title
+
+  if (title) {
+    return title
+  } else {
+    return '专栏概览'
+  }
 })
 
 const lastModified = computed(() => {
-  return props.currentChapter?.metaData?.date || props.readmeDate
+  const chapterDate = props.currentChapter?.metaData?.date
+
+  if (chapterDate) {
+    return chapterDate
+  } else if (props.readmeDate) {
+    return props.readmeDate
+  } else {
+    return ''
+  }
 })
 </script>
 

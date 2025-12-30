@@ -16,27 +16,37 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  items: {
-    type: Array,
-    default: () => []
-  }
-})
-
-const router = useRouter()
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+<script setup lang="ts">
+type TimelineItem = {
+  path: string
+  title: string
+  date: string
+  abstract?: string
+  tags?: string[]
 }
 
-const navigateToPost = (path) => {
-  router.push(`/posts/${path}`)
+withDefaults(defineProps<{
+  items?: TimelineItem[]
+}>(), {
+  items: () => []
+})
+
+const formatDate = (value: string) => {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  } else {
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+}
+
+const navigateToPost = (path: string) => {
+  return navigateTo(`/posts/${path}`)
 }
 </script>
 

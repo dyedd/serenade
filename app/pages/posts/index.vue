@@ -4,7 +4,7 @@
       class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral"
     >
       文章
-      <span v-if="!searchMode && totalItems > 0" class="total-count">{{
+      <span v-if="!isSearchMode && totalItems > 0" class="total-count">{{
         totalItems
       }}</span>
       🎉
@@ -73,7 +73,7 @@
     </div>
   </Transition>
 
-  <section v-if="!loading && searchMode && postsData.length === 0">
+  <section v-if="!isLoading && !hasError && isSearchMode && posts.length === 0">
     <div class="empty-state">
       <div class="empty-icon">
         <svg
@@ -108,11 +108,11 @@
     </div>
   </section>
   <section
-    v-else-if="!loading && groupedpostsData.length > 0"
+    v-else-if="!isLoading && !hasError && groupedPosts.length > 0"
     class="flex flex-col lg:flex-row gap-8 lg:gap-12"
   >
     <div class="flex-1 min-w-0">
-      <div v-if="searchMode" class="search-results-header">
+      <div v-if="isSearchMode" class="search-results-header">
         <div class="results-badge">
           <svg
             width="16"
@@ -141,7 +141,7 @@
           清除搜索
         </button>
       </div>
-      <div v-for="group in groupedpostsData" :key="group.year">
+      <div v-for="group in groupedPosts" :key="group.year">
         <h2
           class="mt-8 md:mt-12 text-xl md:text-2xl font-bold text-neutral-700 first:mt-6 md:first:mt-8 dark:text-neutral-300"
         >
@@ -159,12 +159,12 @@
     </div>
 
     <!-- 右侧标签云 - 只在非搜索模式下显示 -->
-    <div v-if="!searchMode" class="w-full lg:w-64 xl:w-72 flex-shrink-0">
+    <div v-if="!isSearchMode" class="w-full lg:w-64 xl:w-72 flex-shrink-0">
       <TagCloud />
     </div>
   </section>
   <section v-else class="loading-container">
-    <div class="loading-spinner">
+    <div v-if="showSpinner" class="loading-spinner">
       <div class="spinner-ring"></div>
       <div class="spinner-ring"></div>
       <div class="spinner-ring"></div>
@@ -179,181 +179,105 @@
         <path d="m21 21-4.35-4.35"></path>
       </svg>
     </div>
-    <p class="loading-text">{{ searchMode ? "正在搜索..." : "正在加载..." }}</p>
+    <p class="loading-text">{{ loadingMessage }}</p>
   </section>
   <Pagination
-    v-if="!loading && totalPages > 1"
+    v-if="!isLoading && totalPages > 1"
     :currentPage="currentPage"
     :totalPages="totalPages"
     @pageChange="goToPage"
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
-  layout: "default",
-});
+  layout: 'default'
+})
 
-const loading = ref(true);
-const postsData = ref([]);
-const groupedpostsData = ref({});
-const currentPage = ref(1);
-const pageSize = ref(5);
-const totalPages = ref(0);
-const totalItems = ref(0);
-const searchMode = ref(false);
-const searchKeyword = ref("");
-const searchInput = ref(null);
-const isSearchVisible = ref(false);
+const {
+  searchKeyword,
+  isSearchVisible,
+  searchInput,
+  showSearch,
+  hideSearch
+} = useSearch()
 
-const router = useRouter();
-const route = useRoute();
+const {
+  error,
+  posts,
+  groupedPosts,
+  currentPage,
+  totalPages,
+  totalItems,
+  isLoading,
+  isSearchMode,
+  searchQuery,
+  goToPage,
+  applySearch,
+  clearSearch
+} = await usePostsList({ pageSize: 5 })
 
-function grouppostsByYear() {
-  const groups = {};
-  postsData.value.forEach((post) => {
-    const year = new Date(post.date).getFullYear();
-    if (!groups[year]) {
-      groups[year] = [];
-    }
-    groups[year].push(post);
-  });
+const hasError = computed(() => {
+  return Boolean(error.value)
+})
 
-  // 将 groupedpostsData 转换为数组并按年份降序排序
-  const sortedGroups = Object.keys(groups)
-    .sort((a, b) => b - a)
-    .map((year) => {
-      return {
-        year: year,
-        posts: groups[year],
-      };
-    });
+const showSpinner = computed(() => {
+  return isLoading.value
+})
 
-  groupedpostsData.value = sortedGroups;
-}
+const loadingMessage = computed(() => {
+  if (hasError.value) {
+    return '加载失败，请稍后重试。'
+  } else if (isLoading.value) {
+    return isSearchMode.value ? '正在搜索...' : '正在加载...'
+  } else {
+    return '暂无文章'
+  }
+})
 
-async function fetchposts(page, size) {
-  loading.value = true;
-  try {
-    const { data } = await useFetch(`/api/posts?page=${page}&pageSize=${size}`);
-    if (data.value) {
-      postsData.value = data.value.data;
-      currentPage.value = data.value.page;
-      pageSize.value = data.value.pageSize;
-      totalPages.value = data.value.totalPages;
-      totalItems.value = data.value.totalItems;
-      grouppostsByYear();
-    }
-  } catch (error) {
-    console.error("Failed to fetch posts:", error);
-  } finally {
-    loading.value = false;
+const focusSearchInput = () => {
+  const input = searchInput.value
+
+  if (input) {
+    input.focus()
+  } else {
+    return
   }
 }
-
-async function searchPosts(keyword, page = 1, size = 10) {
-  loading.value = true;
-  searchMode.value = true;
-  searchKeyword.value = keyword;
-
-  try {
-    const url = `/api/posts/search?keyword=${encodeURIComponent(
-      keyword
-    )}&page=${page}&pageSize=${size}`;
-
-    const data = await $fetch(url);
-
-    if (data) {
-      postsData.value = data.data;
-      currentPage.value = data.page;
-      pageSize.value = data.pageSize;
-      totalPages.value = data.totalPages;
-      totalItems.value = data.totalItems;
-
-      grouppostsByYear();
-    }
-  } catch (error) {
-    console.error("❌ 搜索失败:", error);
-    console.error("错误详情:", error.message);
-  } finally {
-    loading.value = false;
-  }
-}
-
-function showSearch() {
-  isSearchVisible.value = true;
-  nextTick(() => {
-    searchInput.value?.focus();
-  });
-}
-
-function hideSearch() {
-  isSearchVisible.value = false;
-}
-
-function performSearch() {
-  if (searchKeyword.value.trim()) {
-    router.push({ query: { search: searchKeyword.value.trim(), page: 1 } });
-    hideSearch();
-  }
-}
-
-function clearInput() {
-  searchKeyword.value = "";
-  nextTick(() => {
-    searchInput.value?.focus();
-  });
-}
-
-function handleClear() {
-  searchKeyword.value = "";
-  searchMode.value = false;
-  router.push({ query: { page: 1 } });
-}
-
-// 键盘快捷键支持
-onMounted(() => {
-  const handleKeydown = (e) => {
-    // Ctrl+K 或 Cmd+K 打开搜索
-    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-      e.preventDefault();
-      showSearch();
-    }
-    // ESC 关闭搜索
-    if (e.key === "Escape" && isSearchVisible.value) {
-      hideSearch();
-    }
-  };
-
-  window.addEventListener("keydown", handleKeydown);
-
-  onUnmounted(() => {
-    window.removeEventListener("keydown", handleKeydown);
-  });
-});
 
 watch(
-  () => route.query,
-  (newQuery) => {
-    const page = parseInt(newQuery.page) || 1;
-    const size = parseInt(newQuery.pageSize) || pageSize.value;
-
-    if (newQuery.search) {
-      searchKeyword.value = newQuery.search;
-      searchPosts(newQuery.search, page, size);
+  () => searchQuery.value,
+  (value) => {
+    if (value.length > 0) {
+      searchKeyword.value = value
     } else {
-      searchMode.value = false;
-      searchKeyword.value = "";
-      fetchposts(page, size);
+      searchKeyword.value = ''
     }
   },
   { immediate: true }
-);
+)
 
-function goToPage(page) {
-  if (page >= 1 && page <= totalPages.value) {
-    router.push({ query: { ...route.query, page } })
+const performSearch = async () => {
+  const keyword = searchKeyword.value.trim()
+
+  if (keyword.length > 0) {
+    await applySearch(keyword)
+    hideSearch()
+  } else {
+    hideSearch()
   }
+}
+
+const clearInput = () => {
+  searchKeyword.value = ''
+  nextTick(() => {
+    focusSearchInput()
+  })
+}
+
+const handleClear = async () => {
+  searchKeyword.value = ''
+  await clearSearch()
 }
 </script>
 
@@ -973,3 +897,4 @@ function goToPage(page) {
   }
 }
 </style>
+

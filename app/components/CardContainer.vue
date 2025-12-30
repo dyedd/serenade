@@ -4,8 +4,6 @@
   </div>
 </template>
 
-<script setup></script>
-
 <style lang="scss" scoped>
 .card-container {
   background: rgba(255, 255, 255, 0.7);

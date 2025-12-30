@@ -29,113 +29,150 @@
   </aside>
 </template>
 
-<script setup>
-const props = defineProps({
-  content: String,
-});
-
-const headings = ref([]);
-const activeId = ref('');
-
-// 解析内容中的标题
-function parseHeadings(content) {
-  if (!content) {
-    headings.value = [];
-    return;
-  }
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(content, 'text/html');
-  const parsedHeadings = Array.from(doc.querySelectorAll('h2, h3, h4')).map((heading) => ({
-    id: heading.id || heading.textContent.replace(/\s+/g, '-').toLowerCase(),
-    text: heading.textContent,
-    level: parseInt(heading.tagName[1]),
-  }));
-
-  headings.value = parsedHeadings;
-
-  // 为DOM中的标题添加ID
-  nextTick(() => {
-    const mainContent = document.querySelector('.main-container .markdown-body');
-    if (mainContent) {
-      parsedHeadings.forEach((heading) => {
-        // 根据文本内容查找对应的标题元素
-        const headingElements = mainContent.querySelectorAll(`h${heading.level}`);
-        for (const el of headingElements) {
-          if (el.textContent.trim() === heading.text.trim()) {
-            if (!el.id) {
-              el.id = heading.id;
-            }
-            break;
-          }
-        }
-      });
-    }
-  });
+<script setup lang="ts">
+type TocHeading = {
+  id: string
+  text: string
+  level: number
 }
 
-// 监听滚动，高亮当前标题
-function updateActiveHeading() {
-  if (typeof window === 'undefined') return;
+const props = defineProps<{
+  content?: string
+}>()
 
-  const headingElements = headings.value.map(h => document.getElementById(h.id)).filter(Boolean);
-  if (headingElements.length === 0) return;
+const headings = ref<TocHeading[]>([])
+const activeId = ref('')
+const isClient = import.meta.client
+const scrollOffsetRatio = 0.3
+const bottomOffset = 50
 
-  // 获取页面滚动的位置
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  const windowHeight = window.innerHeight;
+const buildHeadingId = (text: string, fallback: string) => {
+  const normalized = text.trim().replace(/\s+/g, '-').toLowerCase()
 
-  // 找到在视窗内的标题
-  let currentActiveId = headingElements[0].id;
+  if (normalized.length > 0) {
+    return normalized
+  } else {
+    return fallback
+  }
+}
 
-  for (const element of headingElements) {
-    if (element) {
-      const rect = element.getBoundingClientRect();
-      // 检查标题是否在视窗内（允许一定的偏移）
-      if (rect.top <= windowHeight * 0.3) {
-        currentActiveId = element.id;
-      }
+const extractHeadingsFromDom = (): TocHeading[] => {
+  if (isClient) {
+    const mainContent = document.querySelector('.main-container .markdown-body')
+
+    if (mainContent) {
+      const elements = Array.from(mainContent.querySelectorAll('h2, h3, h4'))
+      return elements.map((element, index) => {
+        const text = element.textContent ? element.textContent.trim() : ''
+        const level = Number.parseInt(element.tagName[1], 10)
+        const fallbackId = `heading-${level}-${index}`
+        const id = element.id || buildHeadingId(text, fallbackId)
+
+        if (!element.id) {
+          element.id = id
+        } else {
+          element.id = element.id
+        }
+
+        return {
+          id,
+          text,
+          level
+        }
+      })
+    } else {
+      return []
     }
+  } else {
+    return []
   }
+}
 
-  // 如果滚动到了页面底部，直接选中最后一个标题
-  const documentHeight = document.documentElement.scrollHeight;
-  const maxScrollTop = documentHeight - windowHeight;
-
-  if (scrollTop >= maxScrollTop - 50) {
-    currentActiveId = headingElements[headingElements.length - 1].id;
+const refreshHeadings = () => {
+  if (isClient) {
+    const parsed = extractHeadingsFromDom()
+    headings.value = parsed
+  } else {
+    headings.value = []
   }
+}
 
-  activeId.value = currentActiveId;
+const updateActiveHeading = () => {
+  if (isClient) {
+    const headingElements = headings.value
+      .map((heading) => document.getElementById(heading.id))
+      .filter((element): element is HTMLElement => Boolean(element))
+
+    if (headingElements.length > 0) {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      const windowHeight = window.innerHeight
+      let currentActiveId = headingElements[0].id
+
+      headingElements.forEach((element) => {
+        const rect = element.getBoundingClientRect()
+
+        if (rect.top <= windowHeight * scrollOffsetRatio) {
+          currentActiveId = element.id
+        } else {
+          currentActiveId = currentActiveId
+        }
+      })
+
+      const documentHeight = document.documentElement.scrollHeight
+      const maxScrollTop = documentHeight - windowHeight
+
+      if (scrollTop >= maxScrollTop - bottomOffset) {
+        currentActiveId = headingElements[headingElements.length - 1].id
+      } else {
+        currentActiveId = currentActiveId
+      }
+
+      activeId.value = currentActiveId
+    } else {
+      activeId.value = ''
+    }
+  } else {
+    activeId.value = ''
+  }
+}
+
+const setupScrollTracking = () => {
+  if (isClient) {
+    window.addEventListener('scroll', updateActiveHeading)
+  } else {
+    return
+  }
+}
+
+const teardownScrollTracking = () => {
+  if (isClient) {
+    window.removeEventListener('scroll', updateActiveHeading)
+  } else {
+    return
+  }
 }
 
 onMounted(() => {
-  parseHeadings(props.content);
-
-  // 监听窗口滚动
   nextTick(() => {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('scroll', updateActiveHeading);
-      // 延迟一点时间再更新，确保标题ID已经添加
-      setTimeout(updateActiveHeading, 100);
-    }
-  });
-});
+    refreshHeadings()
+    updateActiveHeading()
+    setupScrollTracking()
+  })
+})
 
 onUnmounted(() => {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('scroll', updateActiveHeading);
-  }
-});
+  teardownScrollTracking()
+})
 
-watch(() => props.content, (newContent) => {
-  parseHeadings(newContent);
-  // 内容变化后，重新设置滚动监听
-  nextTick(() => {
-    // 延迟更新active状态，确保标题ID已经添加
-    setTimeout(updateActiveHeading, 100);
-  });
-});
+watch(
+  () => props.content,
+  () => {
+    nextTick(() => {
+      refreshHeadings()
+      updateActiveHeading()
+    })
+  }
+)
 </script>
 
 <style lang="scss" scoped>

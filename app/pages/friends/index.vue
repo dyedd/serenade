@@ -4,7 +4,7 @@
       class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral"
     >
       友链
-      <span v-if="!loading && sites.length > 0" class="total-count">{{
+      <span v-if="!isLoading && !hasError && sites.length > 0" class="total-count">{{
         sites.length
       }}</span>
       🤝
@@ -61,51 +61,70 @@
 
   <!-- 友链列表部分 -->
   <section
-    v-if="!loading && sites?.length > 0"
+    v-if="!isLoading && !hasError && sites.length > 0"
     class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8"
   >
     <FriendsCard v-for="site in sites" :key="site.siteUrl" :site="site" />
   </section>
 
   <section v-else class="flex justify-center items-center p-4">
-    <div>
+    <div v-if="isLoading">
       <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
       <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
       <span class="w-2 h-2 ml-2 rounded-full bg-gray-200 inline-block"></span>
     </div>
+    <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">
+      {{ fallbackMessage }}
+    </p>
   </section>
 </template>
 
-<script setup>
-const sites = ref([]);
-const loading = ref(true);
-
+<script setup lang="ts">
 definePageMeta({
-  layout: "default",
-});
+  layout: 'default'
+})
 
-// 页面标题和meta信息
 useHead({
-  title: "友情链接",
+  title: '友情链接',
   meta: [
     {
-      name: "description",
-      content: "友情链接页面，与优秀的人为邻，与有趣的灵魂相遇",
-    },
-  ],
-});
+      name: 'description',
+      content: '友情链接页面，与优秀的人为邻，与有趣的灵魂相遇'
+    }
+  ]
+})
 
-// 获取友链基础信息
-try {
-  const { data } = await useFetch("/api/friends");
-  if (data.value) {
-    sites.value = data.value.results;
-    loading.value = false;
+const { data: sitesData, status, error } = await useFetch('/api/friends', {
+  default: () => ({ results: [] })
+})
+
+const sites = computed(() => {
+  const results = sitesData.value?.results
+
+  if (Array.isArray(results)) {
+    return results
+  } else {
+    return []
   }
-} catch (error) {
-  console.error("Failed to load base info:", error);
-  loading.value = false;
-}
+})
+
+const isLoading = computed(() => {
+  return status.value === 'pending'
+})
+
+const hasError = computed(() => {
+  return Boolean(error.value)
+})
+
+const fallbackMessage = computed(() => {
+  if (hasError.value) {
+    return '加载失败，请稍后重试。'
+  } else if (isLoading.value) {
+    return '加载中...'
+  } else {
+    return '暂无友链'
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -136,3 +155,4 @@ try {
   }
 }
 </style>
+

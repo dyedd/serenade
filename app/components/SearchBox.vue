@@ -26,23 +26,40 @@
   </div>
 </template>
 
-<script setup>
-const emit = defineEmits(['search', 'clear'])
+<script setup lang="ts">
+const emit = defineEmits<{
+  (event: 'search', keyword: string): void
+  (event: 'clear'): void
+}>()
 
 const isExpanded = ref(false)
 const searchKeyword = ref('')
-const searchInput = ref(null)
+const searchInput = ref<HTMLInputElement | null>(null)
+
+const focusInput = () => {
+  const input = searchInput.value
+
+  if (input) {
+    input.focus()
+  } else {
+    return
+  }
+}
 
 const toggleSearch = () => {
   isExpanded.value = true
   nextTick(() => {
-    searchInput.value?.focus()
+    focusInput()
   })
 }
 
 const handleSearch = () => {
-  if (searchKeyword.value.trim()) {
-    emit('search', searchKeyword.value.trim())
+  const keyword = searchKeyword.value.trim()
+
+  if (keyword.length > 0) {
+    emit('search', keyword)
+  } else {
+    return
   }
 }
 
@@ -50,21 +67,24 @@ const handleClear = () => {
   searchKeyword.value = ''
   emit('clear')
   nextTick(() => {
-    searchInput.value?.focus()
+    focusInput()
   })
 }
 
 const handleEscape = () => {
-  if (!searchKeyword.value) {
+  if (searchKeyword.value.length === 0) {
     isExpanded.value = false
+  } else {
+    return
   }
 }
 
 const handleBlur = () => {
-  // 延迟关闭，让其他按钮点击有时间处理
   setTimeout(() => {
-    if (!searchKeyword.value) {
+    if (searchKeyword.value.length === 0) {
       isExpanded.value = false
+    } else {
+      return
     }
   }, 200)
 }

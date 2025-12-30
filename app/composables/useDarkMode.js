@@ -1,15 +1,20 @@
 export const useDarkMode = () => {
   const isDark = useState('darkMode', () => false)
+  const isClient = import.meta.client
 
   const updateDomClass = () => {
-    if (process.client) {
+    if (isClient) {
       document.documentElement.classList.toggle('dark', isDark.value)
+    } else {
+      return
     }
   }
 
   const savePreference = () => {
-    if (process.client) {
+    if (isClient) {
       localStorage.setItem('darkMode', isDark.value ? 'dark' : 'light')
+    } else {
+      return
     }
   }
 
@@ -26,15 +31,18 @@ export const useDarkMode = () => {
   }
 
   const load = () => {
-    if (process.client) {
+    if (isClient) {
       const saved = localStorage.getItem('darkMode')
-      if (saved) {
-        isDark.value = saved === 'dark'
+      if (saved === 'dark') {
+        isDark.value = true
+      } else if (saved === 'light') {
+        isDark.value = false
       } else {
-        // 默认跟随系统
         isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
       }
       updateDomClass()
+    } else {
+      return
     }
   }
 

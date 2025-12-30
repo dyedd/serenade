@@ -15,17 +15,20 @@
   </ul>
 </template>
 
-<script setup>
-const props = defineProps({
-  headings: {
-    type: Array,
-    required: true,
-  },
-  activeId: {
-    type: String,
-    default: "",
-  },
-});
+<script setup lang="ts">
+type HeadingItem = {
+  id: string
+  text: string
+  level?: number
+  children: HeadingItem[]
+}
+
+withDefaults(defineProps<{
+  headings: HeadingItem[]
+  activeId?: string
+}>(), {
+  activeId: ''
+})
 </script>
 
 <style lang="scss" scoped>
