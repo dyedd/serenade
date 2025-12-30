@@ -17,11 +17,35 @@ const createEmptyResponse = (page, pageSize) => {
   }
 }
 
+const decodeTagName = (rawTagName) => {
+  const hasEncodedChars = rawTagName.includes('%')
+
+  if (hasEncodedChars) {
+    try {
+      return decodeURIComponent(rawTagName)
+    } catch (error) {
+      if (error instanceof URIError) {
+        return rawTagName
+      } else {
+        throw error
+      }
+    }
+  } else {
+    return rawTagName
+  }
+}
+
 const getTagName = (event) => {
   const { path } = event.context?.params ?? {}
 
   if (typeof path === 'string') {
-    return path
+    const trimmed = path.trim()
+
+    if (trimmed.length > 0) {
+      return decodeTagName(trimmed)
+    } else {
+      return ''
+    }
   } else {
     return ''
   }
