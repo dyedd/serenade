@@ -17,16 +17,29 @@
   </NuxtLink>
 </template>
 
-<script setup lang="ts">
-type ColumnCardProps = {
-  id?: string | number
-  title?: string
-  type?: string
-  image?: string
-  description?: string
-}
-
-const props = defineProps<ColumnCardProps>()
+<script setup>
+const props = defineProps({
+  id: {
+    type: [String, Number],
+    default: ''
+  },
+  title: {
+    type: String,
+    default: ''
+  },
+  type: {
+    type: String,
+    default: ''
+  },
+  image: {
+    type: String,
+    default: ''
+  },
+  description: {
+    type: String,
+    default: ''
+  }
+})
 
 const badgeClass = computed(() => {
   if (props.type === '公开') {
@@ -49,7 +62,7 @@ const badgeClass = computed(() => {
 
 const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgODBIMjAwVjkwSDEwMFY4MFpNMTAwIDExMEgyMDBWMTIwSDEwMFYxMTBaTTEwMCAxNDBIMTcwVjE1MEgxMDBWMTQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4='
 
-const handleImageError = (event: Event) => {
+const handleImageError = (event) => {
   const target = event.target
 
   if (target instanceof HTMLImageElement) {

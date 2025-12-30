@@ -7,19 +7,21 @@
   </div>
 </template>
 
-<script setup lang="ts">
-type ChapterMeta = {
-  metaData?: {
-    title?: string
-    date?: string
+<script setup>
+const props = defineProps({
+  columnTitle: {
+    type: String,
+    default: ''
+  },
+  currentChapter: {
+    type: Object,
+    default: null
+  },
+  readmeDate: {
+    type: String,
+    default: ''
   }
-}
-
-const props = defineProps<{
-  columnTitle?: string
-  currentChapter?: ChapterMeta | null
-  readmeDate?: string
-}>()
+})
 
 const currentChapterTitle = computed(() => {
   const title = props.currentChapter?.metaData?.title

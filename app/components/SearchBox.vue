@@ -26,15 +26,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
-const emit = defineEmits<{
-  (event: 'search', keyword: string): void
-  (event: 'clear'): void
-}>()
+<script setup>
+const emit = defineEmits(['search', 'clear'])
 
 const isExpanded = ref(false)
 const searchKeyword = ref('')
-const searchInput = ref<HTMLInputElement | null>(null)
+const searchInput = ref(null)
 
 const focusInput = () => {
   const input = searchInput.value

@@ -49,26 +49,17 @@
   </component>
 </template>
 
-<script setup lang="ts">
-type ProjectType = 'github' | 'custom'
-
-type ProjectData = {
-  name: string
-  description?: string
-  url?: string
-  stars?: number
-  language?: string
-  languageColor?: string
-  updatedAt?: string
-  isPrivate?: boolean
-  status?: string
-  techStack?: string[]
-}
-
-const props = defineProps<{
-  type: ProjectType
-  data: ProjectData
-}>()
+<script setup>
+const props = defineProps({
+  type: {
+    type: String,
+    required: true
+  },
+  data: {
+    type: Object,
+    required: true
+  }
+})
 
 const hasLink = computed(() => {
   const url = props.data.url
@@ -101,7 +92,7 @@ const linkProps = computed(() => {
 })
 
 const statusText = computed(() => {
-  const statusMap: Record<string, string> = {
+  const statusMap = {
     active: '进行中',
     planning: '规划中',
     completed: '已完成',
@@ -118,7 +109,7 @@ const statusText = computed(() => {
   }
 })
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString) => {
   const date = new Date(dateString)
   const now = new Date()
   const diffTime = Math.abs(now.getTime() - date.getTime())

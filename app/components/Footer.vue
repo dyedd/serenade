@@ -56,12 +56,12 @@
   </footer>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { siteConfig } from '../../site.config'
 
 const currentYear = new Date().getFullYear()
 
-const calculateRunningDays = (startTime: string) => {
+const calculateRunningDays = (startTime) => {
   const start = new Date(startTime)
 
   if (Number.isNaN(start.getTime())) {

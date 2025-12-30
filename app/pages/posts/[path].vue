@@ -8,21 +8,10 @@
   <div v-else>暂无内容。</div>
 </template>
 
-<script setup lang="ts">
-type PostMeta = {
-  title?: string
-  description?: string
-}
-
-type PostDetail = {
-  metaData?: PostMeta
-  prevPost?: { path: string; title: string } | null
-  nextPost?: { path: string; title: string } | null
-}
-
+<script setup>
 const route = useRoute()
 
-const resolvePath = (value: unknown) => {
+const resolvePath = (value) => {
   if (typeof value === 'string') {
     return value
   } else {
@@ -34,7 +23,7 @@ const postPath = computed(() => {
   return resolvePath(route.params.path)
 })
 
-const { data: post, status, error } = await useFetch<PostDetail | null>(
+const { data: post, status, error } = await useFetch(
   () => `/api/posts/${postPath.value}`,
   {
     default: () => null

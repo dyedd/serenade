@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         },
     })
 
-    const redirectMap = redirectsData as Record<string, string>
+    const redirectMap = redirectsData
     const currentPath = to.path.slice(1)
 
     if (currentPath in redirectMap) {
@@ -27,8 +27,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 })
 
 // 根据路由路径自动生成页面标题
-function getRouteTitle(path: string): string {
-    const routeMap: Record<string, string> = {
+function getRouteTitle(path) {
+    const routeMap = {
         '/posts': '所有文章',
         '/columns': '专栏',
         '/tags': '标签',

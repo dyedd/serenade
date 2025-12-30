@@ -69,25 +69,15 @@
   </article>
 </template>
 
-<script setup lang="ts">
-type PostMeta = {
-  title: string
-  date?: string
-  readingTime?: string
-  tags?: string[]
-  cover?: string
-}
+<script setup>
+const props = defineProps({
+  post: {
+    type: Object,
+    required: true
+  }
+})
 
-type PostContentData = {
-  metaData: PostMeta
-  htmlContent: string
-}
-
-const props = defineProps<{
-  post: PostContentData
-}>()
-
-const contentRef = ref<HTMLElement | null>(null)
+const contentRef = ref(null)
 const { headings, activeId, refreshHeadings, updateActiveHeading } = useHeadingTree(contentRef)
 
 watch(

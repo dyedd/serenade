@@ -29,24 +29,21 @@
   </aside>
 </template>
 
-<script setup lang="ts">
-type TocHeading = {
-  id: string
-  text: string
-  level: number
-}
+<script setup>
+const props = defineProps({
+  content: {
+    type: String,
+    default: ''
+  }
+})
 
-const props = defineProps<{
-  content?: string
-}>()
-
-const headings = ref<TocHeading[]>([])
+const headings = ref([])
 const activeId = ref('')
 const isClient = import.meta.client
 const scrollOffsetRatio = 0.3
 const bottomOffset = 50
 
-const buildHeadingId = (text: string, fallback: string) => {
+const buildHeadingId = (text, fallback) => {
   const normalized = text.trim().replace(/\s+/g, '-').toLowerCase()
 
   if (normalized.length > 0) {
@@ -56,7 +53,7 @@ const buildHeadingId = (text: string, fallback: string) => {
   }
 }
 
-const extractHeadingsFromDom = (): TocHeading[] => {
+const extractHeadingsFromDom = () => {
   if (isClient) {
     const mainContent = document.querySelector('.main-container .markdown-body')
 
@@ -101,7 +98,7 @@ const updateActiveHeading = () => {
   if (isClient) {
     const headingElements = headings.value
       .map((heading) => document.getElementById(heading.id))
-      .filter((element): element is HTMLElement => Boolean(element))
+      .filter((element) => Boolean(element))
 
     if (headingElements.length > 0) {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop

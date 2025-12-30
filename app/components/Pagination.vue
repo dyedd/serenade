@@ -41,19 +41,21 @@
   </ul>
 </template>
 
-<script setup lang="ts">
-type PageToken = number | string
+<script setup>
+const props = defineProps({
+  currentPage: {
+    type: Number,
+    required: true
+  },
+  totalPages: {
+    type: Number,
+    required: true
+  }
+})
 
-const props = defineProps<{
-  currentPage: number
-  totalPages: number
-}>()
+const emit = defineEmits(['pageChange'])
 
-const emit = defineEmits<{
-  (event: 'pageChange', page: number): void
-}>()
-
-const goToPage = (page: number) => {
+const goToPage = (page) => {
   if (page >= 1 && page <= props.totalPages) {
     emit('pageChange', page)
   } else {
@@ -61,7 +63,7 @@ const goToPage = (page: number) => {
   }
 }
 
-const buildVisiblePages = (total: number, current: number): PageToken[] => {
+const buildVisiblePages = (total, current) => {
   const ellipsis = '...'
 
   if (total <= 10) {

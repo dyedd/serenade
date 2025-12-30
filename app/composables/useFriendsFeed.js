@@ -1,31 +1,4 @@
-type FriendSite = {
-  siteName: string
-  siteUrl: string
-  siteLogo: string
-}
-
-type FriendArticle = {
-  link: string
-  title: string
-  pubDate: string
-  description?: string
-  siteName: string
-  siteLogo: string
-  siteUrl: string
-}
-
-type FailedFeed = {
-  siteName: string
-  siteUrl: string
-  errorMessage: string
-}
-
-type FriendsFeedResult = {
-  articles: FriendArticle[]
-  failedFeeds: FailedFeed[]
-}
-
-const buildErrorMessage = (error: unknown) => {
+const buildErrorMessage = (error) => {
   if (error instanceof Error) {
     return error.message || '请求失败'
   } else {
@@ -33,7 +6,7 @@ const buildErrorMessage = (error: unknown) => {
   }
 }
 
-const fetchSiteFeed = async (site: FriendSite) => {
+const fetchSiteFeed = async (site) => {
   try {
     const data = await $fetch('/api/friends', {
       query: {
@@ -53,7 +26,7 @@ const fetchSiteFeed = async (site: FriendSite) => {
         }
       }
     } else if (siteResult && Array.isArray(siteResult.articles) && siteResult.articles.length > 0) {
-      const articles = siteResult.articles.map((article: { link: string; title: string; pubDate: string; description?: string }) => {
+      const articles = siteResult.articles.map((article) => {
         return {
           ...article,
           siteName: site.siteName,
@@ -84,9 +57,9 @@ const fetchSiteFeed = async (site: FriendSite) => {
   }
 }
 
-const buildFeedResult = (results: Array<{ articles: FriendArticle[]; failedFeed: FailedFeed | null }>) => {
-  const articles: FriendArticle[] = []
-  const failedFeeds: FailedFeed[] = []
+const buildFeedResult = (results) => {
+  const articles = []
+  const failedFeeds = []
 
   results.forEach((result) => {
     if (result.articles.length > 0) {
@@ -112,7 +85,7 @@ const buildFeedResult = (results: Array<{ articles: FriendArticle[]; failedFeed:
   }
 }
 
-const fetchFriendsFeed = async (sites: FriendSite[]): Promise<FriendsFeedResult> => {
+const fetchFriendsFeed = async (sites) => {
   if (sites.length > 0) {
     const results = await Promise.all(sites.map((site) => fetchSiteFeed(site)))
     return buildFeedResult(results)
@@ -124,12 +97,12 @@ const fetchFriendsFeed = async (sites: FriendSite[]): Promise<FriendsFeedResult>
   }
 }
 
-export const useFriendsFeed = (sites: Ref<FriendSite[]>, options?: { pageSize?: number }) => {
+export const useFriendsFeed = (sites, options) => {
   const pageSize = typeof options?.pageSize === 'number' ? options.pageSize : 10
   const currentPage = ref(0)
   const loadingMore = ref(false)
 
-  const { data, status, error, refresh } = useAsyncData<FriendsFeedResult>(
+  const { data, status, error, refresh } = useAsyncData(
     () => `friends-feed-${sites.value.length}`,
     () => fetchFriendsFeed(sites.value),
     {

@@ -31,12 +31,12 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({
   layout: 'default'
 })
 
-const { data: tagsData, status, error } = await useFetch<Record<string, number>>('/api/tags', {
+const { data: tagsData, status, error } = await useFetch('/api/tags', {
   default: () => ({})
 })
 
@@ -48,7 +48,7 @@ const safeTags = computed(() => {
   }
 })
 
-const buildTagLink = (tag: string) => {
+const buildTagLink = (tag) => {
   return `/tags/${encodeURIComponent(tag)}`
 }
 </script>
