@@ -160,6 +160,11 @@
 
     <!-- 右侧标签云 - 只在非搜索模式下显示 -->
     <div v-if="!isSearchMode" class="w-full lg:w-64 xl:w-72 flex-shrink-0">
+      <PostsHeatmap
+        :posts="heatmapPosts"
+        :is-loading="heatmapLoading"
+        :has-error="heatmapHasError"
+      />
       <TagCloud />
     </div>
   </section>
@@ -216,6 +221,39 @@ const {
   applySearch,
   clearSearch
 } = await usePostsList({ pageSize: 5 })
+
+const heatmapPageSize = 1000
+const { data: heatmapResult, status: heatmapStatus, error: heatmapError } = await useFetch('/api/posts', {
+  query: {
+    page: 1,
+    pageSize: heatmapPageSize
+  },
+  default: () => ({
+    data: []
+  })
+})
+
+const heatmapPosts = computed(() => {
+  const result = heatmapResult.value
+
+  if (result) {
+    if (Array.isArray(result.data)) {
+      return result.data
+    } else {
+      return []
+    }
+  } else {
+    return []
+  }
+})
+
+const heatmapLoading = computed(() => {
+  return heatmapStatus.value === 'pending'
+})
+
+const heatmapHasError = computed(() => {
+  return Boolean(heatmapError.value)
+})
 
 const hasError = computed(() => {
   return Boolean(error.value)

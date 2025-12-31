@@ -101,7 +101,7 @@ const navigateToPost = (path) => {
   font-size: 0.75rem;
   color: var(--text-color-2);
   margin-bottom: 0.375rem;
-  font-family: 'Courier New', monospace;
+  font-family: inherit;
 }
 
 .timeline-title {
