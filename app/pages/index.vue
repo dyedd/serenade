@@ -29,7 +29,7 @@
           过去我也学习过<span class="highlight-text">前后端</span
           >，所以现在也是不专业的全栈开发者
         </p>
-        <p class="intro-emoji">🐍巳巳如意,生生不息</p>
+        <p class="intro-emoji">🐎 马到成功，心想事成</p>
         <p class="intro-emoji">🌈🌈🌈</p>
       </div>
 
@@ -123,27 +123,31 @@
 </template>
 <script setup>
 definePageMeta({
-  layout: 'home'
-})
+  layout: "home",
+});
 
-const { data: postsData, status, error } = await useFetch('/api/posts', {
+const {
+  data: postsData,
+  status,
+  error,
+} = await useFetch("/api/posts", {
   query: { page: 1, pageSize: 5 },
-  key: 'home-latest-posts',
+  key: "home-latest-posts",
   server: true,
-  default: () => ({ data: [] })
-})
+  default: () => ({ data: [] }),
+});
 
 const latestPosts = computed(() => {
-  if (status.value === 'pending') {
-    return []
+  if (status.value === "pending") {
+    return [];
   } else if (error.value) {
-    return []
+    return [];
   } else if (postsData.value && Array.isArray(postsData.value.data)) {
-    return postsData.value.data
+    return postsData.value.data;
   } else {
-    return []
+    return [];
   }
-})
+});
 </script>
 
 <style lang="scss" scoped>
