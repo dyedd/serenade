@@ -7,7 +7,15 @@
         </svg>
         <span>统计</span>
       </div>
-      <div v-if="summaryText" class="heatmap-subtitle">{{ summaryText }}</div>
+      <div v-if="summaryLines.length > 0" class="heatmap-subtitle">
+        <span
+          v-for="(line, index) in summaryLines"
+          :key="index"
+          class="heatmap-subtitle-line"
+        >
+          {{ line }}
+        </span>
+      </div>
       <div v-else class="heatmap-subtitle"></div>
     </div>
     <div v-if="hasError" class="heatmap-empty">加载失败</div>
@@ -53,6 +61,10 @@ const props = defineProps({
   hasError: {
     type: Boolean,
     default: false
+  },
+  totalCount: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -322,6 +334,26 @@ const buildSummary = (counts) => {
   }
 }
 
+const buildTotalLabel = (count) => {
+  if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+    return `共 ${count} 篇文章`
+  } else {
+    return ''
+  }
+}
+
+const appendSummaryLine = (lines, value) => {
+  const hasValue = typeof value === 'string' && value.length > 0
+
+  if (hasValue) {
+    const next = lines.slice()
+    next.push(value)
+    return next
+  } else {
+    return lines
+  }
+}
+
 const heatmapData = computed(() => {
   return buildHeatmap(countsMap.value)
 })
@@ -334,7 +366,7 @@ const weeks = computed(() => {
   return heatmapData.value.weeks
 })
 
-const summaryText = computed(() => {
+const activityLabel = computed(() => {
   const activeDays = summaryData.value.activeDays
   const totalPosts = summaryData.value.totalPosts
 
@@ -345,6 +377,16 @@ const summaryText = computed(() => {
   } else {
     return ''
   }
+})
+
+const totalLabel = computed(() => {
+  return buildTotalLabel(props.totalCount)
+})
+
+const summaryLines = computed(() => {
+  const withTotal = appendSummaryLine([], totalLabel.value)
+  const withActivity = appendSummaryLine(withTotal, activityLabel.value)
+  return withActivity
 })
 </script>
 
@@ -382,8 +424,17 @@ const summaryText = computed(() => {
 }
 
 .heatmap-subtitle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
   font-size: 0.7rem;
   color: var(--text-color-2);
+  text-align: right;
+}
+
+.heatmap-subtitle-line {
+  line-height: 1.2;
 }
 
 .heatmap-grid {
