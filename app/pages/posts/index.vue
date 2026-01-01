@@ -4,9 +4,6 @@
       class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral"
     >
       文章
-      <span v-if="!isSearchMode && totalItems > 0" class="total-count">{{
-        totalItems
-      }}</span>
       🎉
     </h1>
   </header>
@@ -164,6 +161,7 @@
         :posts="heatmapPosts"
         :is-loading="heatmapLoading"
         :has-error="heatmapHasError"
+        :total-count="totalItems"
       />
       <TagCloud />
     </div>
@@ -320,33 +318,6 @@ const handleClear = async () => {
 </script>
 
 <style lang="scss" scoped>
-// 文章总数样式
-.total-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: rgb(var(--color-primary-600));
-  background: rgba(var(--color-primary-500), 0.1);
-  border-radius: 8px;
-  vertical-align: middle;
-}
-
-:global(.dark) .total-count {
-  color: rgb(var(--color-primary-400));
-  background: rgba(var(--color-primary-500), 0.15);
-}
-
-@media screen and (max-width: 768px) {
-  .total-count {
-    font-size: 1rem;
-    padding: 0.2rem 0.6rem;
-    margin-left: 0.5rem;
-  }
-}
-
 // 搜索链接样式
 .search-link {
   background: none;
