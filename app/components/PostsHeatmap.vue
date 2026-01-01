@@ -56,7 +56,7 @@ const props = defineProps({
   }
 })
 
-const weeksToShow = 16
+const weeksToShow = 14
 const daysToShow = weeksToShow * 7
 const summaryDays = 365
 const englishMonthMap = {
@@ -350,8 +350,8 @@ const summaryText = computed(() => {
 
 <style scoped>
 .posts-heatmap {
-  --cell-size: 9px;
-  --cell-gap: 3px;
+  --cell-size: 14px;
+  --cell-gap: 2px;
   padding: 0;
   border: none;
   background: transparent;
@@ -362,23 +362,23 @@ const summaryText = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   gap: 0.5rem;
 }
 
 .heatmap-title {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.95rem;
+  gap: 0.5rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: rgb(var(--color-neutral-800));
 }
 
 .heatmap-icon {
-  width: 14px;
-  height: 14px;
-  color: rgb(var(--color-primary-500));
+  width: 1.1rem;
+  height: 1.1rem;
+  color: rgb(var(--color-primary-600));
 }
 
 .heatmap-subtitle {
@@ -389,6 +389,7 @@ const summaryText = computed(() => {
 .heatmap-grid {
   display: grid;
   grid-template-columns: 34px 1fr;
+  padding-top: 0.5rem;
 }
 
 .weekday-labels {
