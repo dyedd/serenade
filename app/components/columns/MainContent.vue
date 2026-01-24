@@ -17,23 +17,25 @@
 
       <!-- 上一篇/下一篇导航 -->
       <nav v-if="prevChapter || nextChapter" class="page-nav">
-        <div class="nav-prev" v-if="prevChapter">
-          <div class="nav-label">上一篇</div>
-          <a
-            @click.prevent="$emit('selectChapter', prevChapter.index)"
-            class="nav-link"
-          >
-            {{ prevChapter.title }}
-          </a>
+        <div class="nav-item prev-item" v-if="prevChapter" @click="$emit('selectChapter', prevChapter.index)">
+          <div class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </div>
+          <div class="nav-text">
+            <span class="nav-label">上一篇</span>
+            <span class="nav-title">{{ prevChapter.title }}</span>
+          </div>
         </div>
-        <div class="nav-next" v-if="nextChapter">
-          <div class="nav-label">下一篇</div>
-          <a
-            @click.prevent="$emit('selectChapter', nextChapter.index)"
-            class="nav-link"
-          >
-            {{ nextChapter.title }}
-          </a>
+        <div v-else class="nav-spacer"></div>
+
+        <div class="nav-item next-item" v-if="nextChapter" @click="$emit('selectChapter', nextChapter.index)">
+          <div class="nav-text">
+            <span class="nav-label">下一篇</span>
+            <span class="nav-title">{{ nextChapter.title }}</span>
+          </div>
+          <div class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
         </div>
       </nav>
     </main>
@@ -78,13 +80,14 @@ defineEmits(['selectChapter'])
   flex: 1;
   display: flex;
   overflow-y: auto;
-  padding-right: 240px;
+  padding-right: 240px; /* Space for TOC */
 }
 
 .content-main {
   flex: 1;
-  padding: 2rem 3rem;
-  max-width: 900px;
+  padding: 3rem 4rem;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 // 面包屑
@@ -95,34 +98,30 @@ defineEmits(['selectChapter'])
 // Markdown 内容
 .markdown-body {
   color: var(--text-color);
-  line-height: 1.7;
-  font-size: 16px;
+  line-height: 1.8;
+  font-size: 1rem;
 
   :deep(h1) {
     font-size: 2.25rem;
-    font-weight: 700;
+    font-weight: 800;
     margin-top: 0;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(var(--color-neutral-200), 0.8);
+    margin-bottom: 2rem;
+    line-height: 1.2;
     color: var(--text-color);
+    letter-spacing: -0.02em;
   }
 
   :deep(h2) {
-    font-size: 1.875rem;
+    font-size: 1.75rem;
     font-weight: 700;
-    margin-top: 2.5rem;
-    margin-bottom: 1.25rem;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
     color: var(--text-color);
-    position: relative;
-
-    &:hover::before {
-      opacity: 1;
-    }
+    line-height: 1.3;
   }
 
   :deep(h3) {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 600;
     margin-top: 2rem;
     margin-bottom: 1rem;
@@ -130,17 +129,18 @@ defineEmits(['selectChapter'])
   }
 
   :deep(p) {
-    margin: 1rem 0;
+    margin: 1.25rem 0;
     color: var(--fg-deep);
   }
 
   :deep(a) {
     color: var(--color);
     text-decoration: none;
-    font-weight: 500;
+    border-bottom: 1px solid rgba(var(--color-rgb), 0.3);
+    transition: border-color 0.2s;
 
     &:hover {
-      text-decoration: underline;
+      border-bottom-color: var(--color);
     }
   }
 
@@ -148,124 +148,105 @@ defineEmits(['selectChapter'])
     background: rgba(var(--color-neutral-100), 1);
     padding: 0.2em 0.4em;
     border-radius: 4px;
-    font-size: 0.9em;
+    font-size: 0.875em;
     color: rgb(var(--color-secondary-700));
-    font-family: "Consolas", "Monaco", monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 
   :deep(pre) {
-    background: rgba(var(--color-neutral-50), 1);
+    background: #282c34;
     padding: 1.25rem;
     border-radius: 8px;
     overflow-x: auto;
     margin: 1.5rem 0;
-    border: 1px solid rgba(var(--color-neutral-200), 0.6);
+    color: #abb2bf;
 
     code {
       background: none;
       padding: 0;
-      color: var(--fg-deeper);
+      color: inherit;
       font-size: 0.875rem;
       line-height: 1.6;
     }
   }
 
   :deep(blockquote) {
-    margin: 1.5rem 0;
+    margin: 2rem 0;
     padding: 1rem 1.5rem;
     border-left: 4px solid var(--color);
     background: rgba(var(--color-primary-50), 0.3);
     border-radius: 0 8px 8px 0;
+    font-style: italic;
 
     p {
-      margin: 0.5rem 0;
+      margin: 0;
     }
   }
 
   :deep(ul),
   :deep(ol) {
     padding-left: 1.5rem;
-    margin: 1rem 0;
+    margin: 1.25rem 0;
 
     li {
       margin: 0.5rem 0;
       color: var(--fg-deep);
     }
   }
-
-  :deep(table) {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5rem 0;
-    font-size: 0.9375rem;
-
-    th,
-    td {
-      border: 1px solid rgba(var(--color-neutral-200), 0.8);
-      padding: 0.75rem;
-      text-align: left;
-    }
-
-    th {
-      background: rgba(var(--color-neutral-100), 1);
-      font-weight: 600;
-      color: var(--text-color);
-    }
-
-    tr:hover {
-      background: rgba(var(--color-neutral-50), 1);
-    }
-  }
-
+  
   :deep(img) {
     max-width: 100%;
     height: auto;
     border-radius: 8px;
-    margin: 1.5rem 0;
-  }
-
-  // KaTeX 公式样式
-  :deep(.katex-display) {
-    margin: 1.5rem 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  :deep(.katex) {
-    font-size: 1.1em;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 }
 
 // 页面导航
 .page-nav {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-top: 3rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: 4rem;
   padding-top: 2rem;
   border-top: 1px solid rgba(var(--color-neutral-200), 0.6);
 }
 
-.nav-prev,
-.nav-next {
-  padding: 1.25rem;
-  border-radius: 12px;
-  background: rgba(var(--color-neutral-50), 0.5);
-  border: 1px solid rgba(var(--color-neutral-200), 0.6);
-  transition: all 0.3s ease;
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1;
+  max-width: 48%;
   cursor: pointer;
-
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  
   &:hover {
-    background: rgba(var(--color-primary-50), 0.4);
-    border-color: var(--color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(var(--color-primary-500), 0.1);
+    background: rgba(var(--color-neutral-100), 0.5);
+    
+    .nav-title {
+        color: var(--color);
+    }
   }
 }
 
-.nav-next {
-  grid-column: 2;
+.prev-item {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.next-item {
+  justify-content: flex-end;
   text-align: right;
+}
+
+.nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .nav-label {
@@ -274,116 +255,82 @@ defineEmits(['selectChapter'])
   color: var(--fg);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
 }
 
-.nav-link {
-  display: block;
+.nav-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color);
-  text-decoration: none;
+  color: var(--text-color);
   line-height: 1.4;
-
-  &:hover {
-    text-decoration: underline;
-  }
+  transition: color 0.2s ease;
 }
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg);
+  transition: transform 0.2s ease;
+}
+
+.prev-item:hover .nav-icon { transform: translateX(-3px); color: var(--color); }
+.next-item:hover .nav-icon { transform: translateX(3px); color: var(--color); }
+
+.nav-spacer { flex: 1; }
 
 // 深色模式
 :global(.dark) {
   .markdown-body {
-    :deep(h1),
-    :deep(h2),
-    :deep(h3) {
-      border-color: rgba(var(--color-neutral-700), 0.6);
-    }
-
     :deep(code) {
       background: rgba(var(--color-neutral-800), 0.6);
       color: rgb(var(--color-secondary-400));
     }
 
-    :deep(pre) {
-      background: rgba(var(--color-neutral-900), 0.6);
-      border-color: rgba(var(--color-neutral-700), 0.6);
-    }
-
     :deep(blockquote) {
       background: rgba(var(--color-primary-900), 0.2);
-    }
-
-    :deep(table) {
-      th,
-      td {
-        border-color: rgba(var(--color-neutral-700), 0.6);
-      }
-
-      th {
-        background: rgba(var(--color-neutral-800), 0.6);
-      }
-
-      tr:hover {
-        background: rgba(var(--color-neutral-800), 0.3);
-      }
     }
   }
 
   .page-nav {
     border-top-color: rgba(var(--color-neutral-700), 0.6);
   }
-
-  .nav-prev,
-  .nav-next {
-    background: rgba(var(--color-neutral-800), 0.4);
-    border-color: rgba(var(--color-neutral-700), 0.6);
-
-    &:hover {
-      background: rgba(var(--color-primary-900), 0.3);
-    }
+  
+  .nav-item:hover {
+      background: rgba(var(--color-neutral-800), 0.5);
   }
 }
 
 // 响应式
 @media (max-width: 1024px) {
   .main-container {
-    padding-right: 0; // 移除 TOC 空间，因为 TOC 在此断点隐藏
+    padding-right: 0; 
   }
 
   .content-main {
-    padding: 1.5rem 2rem;
+    padding: 2rem;
   }
 }
 
 @media (max-width: 768px) {
   .content-main {
-    padding: 1.25rem 1.5rem;
+    padding: 1.5rem;
   }
 
   .markdown-body {
-    font-size: 15px;
+    font-size: 0.95rem;
 
     :deep(h1) {
       font-size: 1.875rem;
     }
-
-    :deep(h2) {
-      font-size: 1.5rem;
-    }
-
-    :deep(h3) {
-      font-size: 1.25rem;
-    }
   }
 
   .page-nav {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 1rem;
   }
-
-  .nav-next {
-    grid-column: 1;
-    text-align: left;
+  
+  .nav-item {
+      max-width: 100%;
   }
 }
 </style>

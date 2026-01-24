@@ -2,11 +2,11 @@ import fg from 'fast-glob'
 import fs from 'fs-extra'
 import matter from 'gray-matter'
 import {
-  formatDate,
-  parseAsset,
-  parseMarkdown,
   calculateReadingTime,
-  normalizeTags
+  formatDate,
+  normalizeTags,
+  parseAsset,
+  parseMarkdown
 } from '../../utils.js'
 
 export default defineEventHandler(async (event) => {

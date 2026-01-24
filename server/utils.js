@@ -4,6 +4,7 @@ import matter from 'gray-matter'
 import dayjs from 'dayjs'
 import { marked } from 'marked'
 import markedKatex from 'marked-katex-extension'
+import hljs from 'highlight.js'
 
 export const parseAsset = (slug, href, type = 'posts') => {
   if (!href || typeof href !== 'string') {
@@ -35,9 +36,6 @@ export const createRenderer = (path, assetType = 'posts') => {
       return `
       <h${level} class="relative group" id="${id}">
         ${text}
-        <span class="absolute top-0 w-6 transition-opacity opacity-0 -start-10 not-prose group-hover:opacity-100">
-          <a class="group-hover:text-neutral-400 dark:group-hover:text-neutral-500" href="#${id}" aria-label="Anchor">#</a>
-        </span>
       </h${level}>`
     },
     image(token) {
@@ -49,6 +47,34 @@ export const createRenderer = (path, assetType = 'posts') => {
         const imageUrl = parseAsset(path, href.trim(), assetType)
         return `<img src="${imageUrl}" alt="${text}"${title ? ` title="${title}"` : ''} loading="lazy">`
       }
+    },
+    code(token) {
+      const text = token.text
+      const lang = token.lang || 'text'
+      const validLang = !!(token.lang && hljs.getLanguage(token.lang))
+      const highlighted = validLang
+        ? hljs.highlight(text, { language: token.lang }).value
+        : hljs.highlightAuto(text).value
+      
+      const lines = text.trim().split('\n').length
+      const lineNumbers = Array.from({ length: lines }, (_, i) => `<span>${i + 1}</span>`).join('')
+
+      return `
+      <div class="code-block-wrapper my-6 rounded-lg overflow-hidden bg-[#282c34] shadow-lg border border-neutral-700/50">
+        <div class="code-header flex justify-between items-center px-4 py-1.5 bg-[#21252b] border-b border-neutral-700/50 text-xs text-neutral-300 select-none">
+          <span class="font-mono font-medium opacity-80">${lang}</span>
+          <button class="copy-btn hover:text-white text-neutral-400 transition-colors cursor-pointer flex items-center gap-1.5 opacity-80 hover:opacity-100" aria-label="Copy code">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            Copy
+          </button>
+        </div>
+        <div class="code-body flex text-sm relative">
+          <div class="line-numbers flex flex-col items-end px-3 py-3 text-neutral-500 bg-[#282c34] border-r border-neutral-700/30 select-none font-mono text-right min-w-[2.5rem] leading-relaxed">
+            ${lineNumbers}
+          </div>
+          <pre class="flex-1 !my-0 !p-3 !bg-transparent overflow-x-auto custom-scrollbar"><code class="hljs ${lang} !bg-transparent !p-0 font-mono leading-relaxed block">${highlighted}</code></pre>
+        </div>
+      </div>`
     }
   }
 }

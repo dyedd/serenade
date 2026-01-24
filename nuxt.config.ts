@@ -5,18 +5,16 @@ export default defineNuxtConfig({
   devtools: {
     enabled: true,
   },
+  telemetry: false,
   experimental: {
     asyncContext: true,
-    payloadExtraction: true,
-    inlineRouteRules: true,
     viewTransition: true,
   },
   routeRules: {
     "/_nuxt/**": {
       headers: { "Cache-Control": "public, max-age=31536000, immutable" },
     },
-    "/": { prerender: true },
-    "/feed": { prerender: true, swr: 600 },
+    "/feed": { swr: 600 },
     "/api/friends": { swr: 60, cors: true },
   },
 
@@ -40,7 +38,7 @@ export default defineNuxtConfig({
       noscript: [{ textContent: "JavaScript is required" }],
     },
   },
-  css: ["~/assets/css/main.css"],
+  css: ["~/assets/css/main.css", "highlight.js/styles/atom-one-dark.css"],
   modules: ["@nuxtjs/tailwindcss"],
   vite: {
     esbuild: {
@@ -55,7 +53,6 @@ export default defineNuxtConfig({
               if (id.includes("katex")) return "math";
               if (id.includes("marked") || id.includes("gray-matter"))
                 return "markdown";
-              return "vendor";
             }
           },
         },

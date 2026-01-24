@@ -102,7 +102,7 @@ const selectOverview = () => {
   width: 280px;
   height: 100vh;
   background: var(--bg);
-  border-right: 1px solid rgba(var(--color-neutral-200), 0.8);
+  border-right: 1px solid rgba(var(--color-neutral-200), 0.5);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -113,7 +113,7 @@ const selectOverview = () => {
 // 侧边栏头部
 .sidebar-header {
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(var(--color-neutral-200), 0.6);
+  padding-bottom: 1rem;
 }
 
 .back-link {
@@ -123,24 +123,30 @@ const selectOverview = () => {
   font-size: 0.875rem;
   color: var(--fg);
   text-decoration: none;
-  margin-bottom: 1rem;
-  transition: color 0.3s ease;
+  margin-bottom: 1.25rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
 
   svg {
     width: 16px;
     height: 16px;
+    transition: transform 0.2s ease;
   }
 
   &:hover {
     color: var(--color);
+    
+    svg {
+      transform: translateX(-3px);
+    }
   }
 }
 
 .column-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .column-title {
@@ -148,36 +154,37 @@ const selectOverview = () => {
   font-weight: 700;
   color: var(--text-color);
   margin: 0;
-  flex: 1;
   line-height: 1.4;
 }
 
 .column-badge {
-  padding: 0.25rem 0.625rem;
-  border-radius: 12px;
-  font-size: 0.6875rem;
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
   font-weight: 600;
   white-space: nowrap;
+  flex-shrink: 0;
 
   &.badge-public {
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(59, 130, 246, 0.1);
     color: rgb(37, 99, 235);
   }
 
   &.badge-private {
-    background: rgba(251, 146, 60, 0.15);
+    background: rgba(251, 146, 60, 0.1);
     color: rgb(234, 88, 12);
   }
 }
 
 :global(.dark) .column-badge {
   &.badge-public {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.15);
     color: rgb(96, 165, 250);
   }
 
   &.badge-private {
-    background: rgba(251, 146, 60, 0.2);
+    background: rgba(251, 146, 60, 0.15);
     color: rgb(251, 146, 60);
   }
 }
@@ -186,48 +193,44 @@ const selectOverview = () => {
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 0;
+  padding: 0.5rem 1rem 2rem 1rem;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: 0.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
   color: var(--fg-deep);
-  font-size: 0.9375rem;
-  position: relative;
+  font-size: 0.9rem;
+  border-radius: 8px;
 
   &:hover {
-    background: rgba(var(--color-primary-50), 0.5);
+    background: rgba(var(--color-neutral-100), 0.8);
     color: var(--color);
   }
 
   &.active {
-    background: rgba(var(--color-primary-50), 0.8);
+    background: rgba(var(--color-primary-50), 0.6);
     color: var(--color);
     font-weight: 600;
-
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: var(--color);
-    }
   }
 }
 
 .overview-item {
-  margin-bottom: 0.5rem;
-
+  margin-bottom: 1.5rem;
+  
   .nav-icon {
     width: 18px;
     height: 18px;
+    opacity: 0.8;
+  }
+  
+  &.active .nav-icon {
+    opacity: 1;
   }
 }
 
@@ -236,12 +239,14 @@ const selectOverview = () => {
 }
 
 .section-title {
-  padding: 0.5rem 1.5rem;
+  padding: 0 0.875rem;
+  margin-bottom: 0.75rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--fg);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  opacity: 0.7;
 }
 
 .chapter-item {
@@ -249,49 +254,55 @@ const selectOverview = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
     background: rgba(var(--color-neutral-200), 0.5);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--fg);
     flex-shrink: 0;
+    transition: all 0.2s ease;
   }
 
   &.active .chapter-number {
     background: var(--color);
     color: white;
   }
+  
+  &:hover:not(.active) .chapter-number {
+    background: rgba(var(--color-neutral-300), 0.5);
+  }
 
   .chapter-title {
     flex: 1;
     line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 }
 
 // 深色模式
 :global(.dark) .sidebar {
-  background: rgba(var(--color-neutral-900), 0.6);
-  border-right-color: rgba(var(--color-neutral-700), 0.8);
-}
-
-:global(.dark) .sidebar-header {
-  border-bottom-color: rgba(var(--color-neutral-700), 0.6);
+  background: var(--bg);
+  border-right-color: rgba(255, 255, 255, 0.05);
 }
 
 :global(.dark) .nav-item {
   &:hover {
-    background: rgba(var(--color-primary-900), 0.3);
+    background: rgba(255, 255, 255, 0.05);
   }
 
   &.active {
-    background: rgba(var(--color-primary-900), 0.4);
+    background: rgba(var(--color-primary-900), 0.2);
   }
 }
 
 :global(.dark) .chapter-number {
-  background: rgba(var(--color-neutral-700), 0.6);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--fg-deep);
 }
 
@@ -300,11 +311,6 @@ const selectOverview = () => {
   .sidebar {
     width: 240px;
   }
-
-  .nav-item {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -312,7 +318,8 @@ const selectOverview = () => {
     position: fixed;
     left: -280px;
     z-index: 100;
-    transition: left 0.3s ease;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 16px rgba(0,0,0,0.1);
 
     &.mobile-open {
       left: 0;

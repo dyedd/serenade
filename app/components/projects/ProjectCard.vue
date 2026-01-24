@@ -135,40 +135,43 @@ const formatDate = (dateString) => {
 
 <style lang="scss" scoped>
 .project-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--bg);
+  border: 1px solid rgba(var(--color-neutral-200), 0.6);
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   color: inherit;
+  height: 100%;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
+    border-color: var(--color-30);
   }
 }
 
 .project-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 1rem;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .project-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 8px;
-  color: rgb(59, 130, 246);
+  width: 48px;
+  height: 48px;
+  background: rgba(var(--color-primary-50), 0.5);
+  border-radius: 10px;
+  color: var(--color);
   flex-shrink: 0;
+  border: 1px solid rgba(var(--color-primary-100), 0.5);
 }
 
 .project-badges {
@@ -183,20 +186,20 @@ const formatDate = (dateString) => {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
 
   &.badge-github {
-    background: rgba(251, 191, 36, 0.1);
-    color: rgb(251, 191, 36);
+    background: rgba(var(--color-neutral-100), 0.8);
+    color: var(--fg-deep);
   }
 
   &.badge-language {
     color: white;
-    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
 
   &.badge-private {
@@ -208,38 +211,25 @@ const formatDate = (dateString) => {
     background: rgba(34, 197, 94, 0.1);
     color: rgb(34, 197, 94);
   }
-
-  &.badge-planning {
-    background: rgba(59, 130, 246, 0.1);
-    color: rgb(59, 130, 246);
-  }
-
-  &.badge-completed {
-    background: rgba(168, 85, 247, 0.1);
-    color: rgb(168, 85, 247);
-  }
-
-  &.badge-paused {
-    background: rgba(156, 163, 175, 0.1);
-    color: rgb(156, 163, 175);
-  }
+  
+  /* Add other statuses as needed */
 }
 
 .project-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
-  color: rgb(var(--color-neutral-900));
+  color: var(--text-color);
   line-height: 1.4;
 }
 
 .project-description {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   line-height: 1.6;
-  color: rgb(var(--color-neutral-600));
-  margin: 0 0 1rem 0;
+  color: var(--fg);
+  margin: 0 0 auto 0; /* Push tech stack down */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -248,16 +238,17 @@ const formatDate = (dateString) => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 1.5rem;
   margin-bottom: 1rem;
 }
 
 .tech-tag {
-  padding: 0.25rem 0.625rem;
-  background: rgba(99, 102, 241, 0.1);
-  color: rgb(99, 102, 241);
+  padding: 0.15rem 0.5rem;
+  background: rgba(var(--color-neutral-100), 0.5);
+  color: var(--fg);
   border-radius: 6px;
   font-size: 0.75rem;
-  font-weight: 500;
+  border: 1px solid rgba(var(--color-neutral-200), 0.5);
 }
 
 .project-meta {
@@ -265,7 +256,7 @@ const formatDate = (dateString) => {
   align-items: center;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgba(var(--color-neutral-200), 0.5);
   margin-top: 1rem;
 }
 
@@ -274,63 +265,42 @@ const formatDate = (dateString) => {
   align-items: center;
   gap: 0.375rem;
   font-size: 0.75rem;
-  color: rgb(var(--color-neutral-500));
+  color: var(--fg);
 }
 
 :global(.dark) {
   .project-card {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(var(--color-neutral-900), 0.3);
+    border-color: rgba(var(--color-neutral-700), 0.5);
 
     &:hover {
-      border-color: rgba(96, 165, 250, 0.4);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      background: rgba(var(--color-neutral-800), 0.5);
+      border-color: var(--color-30);
     }
   }
 
-  .project-title {
-    color: rgb(var(--color-neutral-100));
+  .project-icon {
+    background: rgba(var(--color-primary-900), 0.2);
+    border-color: rgba(var(--color-primary-800), 0.3);
   }
 
-  .project-description {
-    color: rgb(var(--color-neutral-400));
+  .badge-github {
+    background: rgba(var(--color-neutral-800), 0.8);
   }
 
   .tech-tag {
-    background: rgba(129, 140, 248, 0.15);
-    color: rgb(129, 140, 248);
+    background: rgba(var(--color-neutral-800), 0.5);
+    border-color: rgba(var(--color-neutral-700), 0.5);
   }
 
   .project-meta {
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .meta-item {
-    color: rgb(var(--color-neutral-500));
+    border-color: rgba(var(--color-neutral-700), 0.5);
   }
 }
 
 @media (max-width: 768px) {
   .project-card {
     padding: 1.25rem;
-  }
-
-  .project-title {
-    font-size: 1.125rem;
-  }
-
-  .project-description {
-    font-size: 0.8125rem;
-  }
-
-  .project-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .project-badges {
-    width: 100%;
-    justify-content: flex-start;
   }
 }
 </style>
