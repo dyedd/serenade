@@ -1,48 +1,46 @@
 <template>
-  <header>
-    <h1
-      class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral"
-    >
-      项目
-      🚀
-    </h1>
-  </header>
+  <div class="projects-page">
+    <header>
+      <h1 class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral">
+        项目 🚀
+      </h1>
+    </header>
 
-  <section
-    class="mt-0 md:mt-4 prose flex max-w-full flex-col dark:prose-invert lg:flex-row"
-  >
-    <div class="min-h-0 min-w-0 max-w-prose grow">
-      <blockquote class="text-sm md:text-base">
-        <p>
-          这里是我的折腾项目。还有些没有整理的项目，可以<a
-            href="https://github.com/dyedd"
-            target="_blank"
-            rel="noopener"
-            >访问我的 GitHub</a
-          >
-          查看/关注。
-        </p>
-      </blockquote>
+    <section class="mt-0 md:mt-4 prose flex max-w-full flex-col dark:prose-invert lg:flex-row mb-8">
+      <div class="min-h-0 min-w-0 max-w-prose grow">
+        <blockquote class="text-sm md:text-base">
+          <p>
+            这里是我的折腾项目。还有些没有整理的项目，可以<a
+              href="https://github.com/dyedd"
+              target="_blank"
+              rel="noopener"
+              >访问我的 GitHub</a
+            >
+            查看/关注。
+          </p>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- Tab 标签 -->
+    <div class="project-tabs-container">
+      <div class="project-tabs">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="['tab-button', { active: activeTab === tab.key }]"
+          @click="switchTab(tab.key)"
+        >
+          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-label">{{ tab.label }}</span>
+          <span v-if="tab.count !== undefined" class="tab-count">{{
+            tab.count
+          }}</span>
+        </button>
+      </div>
     </div>
-  </section>
 
-  <!-- Tab 标签 -->
-  <div class="project-tabs">
-    <button
-      v-for="tab in tabs"
-      :key="tab.key"
-      :class="['tab-button', { active: activeTab === tab.key }]"
-      @click="switchTab(tab.key)"
-    >
-      <span class="tab-icon">{{ tab.icon }}</span>
-      <span class="tab-label">{{ tab.label }}</span>
-      <span v-if="tab.count !== undefined" class="tab-count">{{
-        tab.count
-      }}</span>
-    </button>
-  </div>
-
-  <!-- 分类项目列表 -->
+    <!-- 分类项目列表 -->
   <section v-if="activeTab !== 'all'" class="projects-section">
     <div v-if="isCategoryLoading" class="loading-grid">
       <div v-for="n in 6" :key="n" class="skeleton-card"></div>
@@ -237,6 +235,7 @@
       </div>
     </div>
   </section>
+  </div>
 </template>
 
 <script setup>
@@ -309,82 +308,94 @@ const handleImageError = (event) => {
 
 <style lang="scss" scoped>
 // Tab 标签样式
+.project-tabs-container {
+  margin-bottom: 2.5rem;
+  /* Removed bottom border for cleaner look with pill tabs */
+}
+
 .project-tabs {
   display: flex;
-  gap: 0.5rem;
-  margin: 2rem 0;
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 12px;
+  gap: 0.75rem;
   overflow-x: auto;
+  padding: 0.25rem;
+  
+  /* Hide scrollbar */
+  scrollbar-width: none; 
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .tab-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 9999px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: rgb(var(--color-neutral-600));
+  color: var(--fg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
-    color: rgb(var(--color-neutral-800));
+    background: rgba(var(--color-neutral-100), 0.8);
+    color: var(--text-color);
   }
 
   &.active {
-    background: rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.2);
-    color: rgb(59, 130, 246);
+    background: rgba(var(--color-primary-50), 1);
+    color: rgb(var(--color-primary-600));
     font-weight: 600;
+    box-shadow: 0 1px 2px rgba(var(--color-primary-500), 0.1);
+    
+    .tab-count {
+      background: white;
+      color: rgb(var(--color-primary-600));
+    }
   }
 }
 
 .tab-icon {
   font-size: 1.1rem;
-}
-
-.tab-label {
-  font-weight: inherit;
+  display: flex;
+  align-items: center;
 }
 
 .tab-count {
-  padding: 0.125rem 0.5rem;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  padding: 0.1rem 0.5rem;
+  background: rgba(var(--color-neutral-200), 0.8);
+  border-radius: 99px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgb(var(--color-neutral-700));
+  color: var(--fg-deep);
+  transition: all 0.2s ease;
+  min-width: 1.25em;
+  text-align: center;
 }
 
 :global(.dark) {
-  .project-tabs {
-    background: rgba(255, 255, 255, 0.03);
-  }
-
   .tab-button {
-    color: rgb(var(--color-neutral-400));
-
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: rgb(var(--color-neutral-200));
+      background: rgba(var(--color-neutral-800), 0.8);
     }
 
     &.active {
-      color: rgb(96, 165, 250);
+      background: rgba(var(--color-primary-900), 0.3);
+      color: rgb(var(--color-primary-400));
+      
+      .tab-count {
+        background: rgba(var(--color-primary-900), 0.6);
+        color: rgb(var(--color-primary-300));
+      }
     }
   }
 
   .tab-count {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgb(var(--color-neutral-300));
+    background: rgba(var(--color-neutral-800), 0.8);
   }
 }
 

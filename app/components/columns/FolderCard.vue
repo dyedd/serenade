@@ -1,7 +1,9 @@
 <template>
-  <NuxtLink :to="`/columns/${id}`" class="column-card">
+  <NuxtLink :to="`/columns/${id}`" class="column-card group">
     <!-- 背景图片 -->
-    <img :src="image" :alt="title" class="card-bg-image" loading="lazy" @error="handleImageError" />
+    <div class="image-wrapper">
+      <img :src="image" :alt="title" class="card-bg-image group-hover:scale-105" loading="lazy" @error="handleImageError" />
+    </div>
 
     <!-- 渐变叠加层 -->
     <div class="card-overlay"></div>
@@ -11,7 +13,7 @@
 
     <!-- 内容区域 -->
     <div class="card-content">
-      <h3 class="card-title">{{ title }}</h3>
+      <h3 class="card-title group-hover:text-primary-300 transition-colors">{{ title }}</h3>
       <p class="card-description">{{ description }}</p>
     </div>
   </NuxtLink>
@@ -78,30 +80,34 @@ const handleImageError = (event) => {
   position: relative;
   display: block;
   text-decoration: none;
-  border-radius: 16px;
+  border-radius: 1.25rem;
   overflow: hidden;
-  height: 320px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 18rem; /* Reduced height */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgb(var(--color-neutral-900));
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
   &:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-
-    .card-bg-image {
-      transform: scale(1.1);
-    }
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
   }
+}
+
+.image-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 }
 
 // 背景图片
 .card-bg-image {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  object-position: center top; /* Prioritize top of image */
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // 渐变叠加层
@@ -109,35 +115,40 @@ const handleImageError = (event) => {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.2) 40%,
-    rgba(0, 0, 0, 0.7) 100%
+    to bottom,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.8) 85%,
+    rgba(0, 0, 0, 0.95) 100%
   );
-  z-index: 1;
+  z-index: 10;
+  pointer-events: none;
 }
 
 // 标签
 .card-badge {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 0.375rem 0.875rem;
-  border-radius: 6px;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  z-index: 2;
-  backdrop-filter: blur(8px);
-  transition: all 0.3s ease;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 
   &.badge-public {
-    background: rgba(59, 130, 246, 0.9);
-    color: white;
+    /* Kept neutral for cleaner look */
   }
 
   &.badge-private {
-    background: rgba(251, 146, 60, 0.9);
-    color: white;
+    background: rgba(249, 115, 22, 0.3);
+    border-color: rgba(249, 115, 22, 0.4);
   }
 }
 
@@ -148,35 +159,37 @@ const handleImageError = (event) => {
   left: 0;
   right: 0;
   padding: 1.5rem;
-  z-index: 2;
+  z-index: 20;
+  transform: translateY(0);
 }
 
 .card-title {
-  font-size: 1.375rem;
-  font-weight: 700;
+  font-size: 1.35rem; /* Slightly adjusted for shorter card */
+  font-weight: 800;
   color: white;
   margin: 0 0 0.5rem 0;
-  line-height: 1.4;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .card-description {
   font-size: 0.875rem;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 400;
 }
 
 // 响应式
 @media (max-width: 768px) {
   .column-card {
-    height: 280px;
+    height: 16rem; /* Reduced mobile height */
   }
 
   .card-content {
@@ -184,32 +197,7 @@ const handleImageError = (event) => {
   }
 
   .card-title {
-    font-size: 1.125rem;
-  }
-
-  .card-description {
-    font-size: 0.8125rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .column-card {
-    height: 240px;
-  }
-
-  .card-badge {
-    top: 12px;
-    left: 12px;
-    padding: 0.25rem 0.625rem;
-    font-size: 0.6875rem;
-  }
-
-  .card-content {
-    padding: 1rem;
-  }
-
-  .card-title {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
 }
 </style>

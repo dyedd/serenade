@@ -3,15 +3,14 @@
     <h1
       class="mt-0 text-4xl md:text-4xl text-3xl font-extrabold text-neutral-900 dark:text-neutral"
     >
-      文章
-      🎉
+      文章 🎉
     </h1>
   </header>
   <section
     class="mt-0 md:mt-4 prose flex max-w-full flex-col dark:prose-invert lg:flex-row"
   >
     <div class="min-h-0 min-w-0 max-w-prose grow">
-      <blockquote class="text-sm md:text-base">
+      <blockquote class="text-sm md:text-base mb-6">
         <p>
           你可以通过 <a href="/feed">RSS</a> 订阅所有文章，还可以
           <span class="search-shortcut search-link" @click="showSearch"
@@ -194,16 +193,11 @@
 
 <script setup>
 definePageMeta({
-  layout: 'default'
-})
+  layout: "default",
+});
 
-const {
-  searchKeyword,
-  isSearchVisible,
-  searchInput,
-  showSearch,
-  hideSearch
-} = useSearch()
+const { searchKeyword, isSearchVisible, searchInput, showSearch, hideSearch } =
+  useSearch();
 
 const {
   error,
@@ -217,104 +211,108 @@ const {
   searchQuery,
   goToPage,
   applySearch,
-  clearSearch
-} = await usePostsList({ pageSize: 5 })
+  clearSearch,
+} = await usePostsList({ pageSize: 5 });
 
-const heatmapPageSize = 1000
-const { data: heatmapResult, status: heatmapStatus, error: heatmapError } = await useFetch('/api/posts', {
+const heatmapPageSize = 1000;
+const {
+  data: heatmapResult,
+  status: heatmapStatus,
+  error: heatmapError,
+} = await useFetch("/api/posts", {
   query: {
     page: 1,
-    pageSize: heatmapPageSize
+    pageSize: heatmapPageSize,
   },
   default: () => ({
-    data: []
-  })
-})
+    data: [],
+  }),
+});
 
 const heatmapPosts = computed(() => {
-  const result = heatmapResult.value
+  const result = heatmapResult.value;
 
   if (result) {
     if (Array.isArray(result.data)) {
-      return result.data
+      return result.data;
     } else {
-      return []
+      return [];
     }
   } else {
-    return []
+    return [];
   }
-})
+});
 
 const heatmapLoading = computed(() => {
-  return heatmapStatus.value === 'pending'
-})
+  return heatmapStatus.value === "pending";
+});
 
 const heatmapHasError = computed(() => {
-  return Boolean(heatmapError.value)
-})
+  return Boolean(heatmapError.value);
+});
 
 const hasError = computed(() => {
-  return Boolean(error.value)
-})
+  return Boolean(error.value);
+});
 
 const showSpinner = computed(() => {
-  return isLoading.value
-})
+  return isLoading.value;
+});
 
 const loadingMessage = computed(() => {
   if (hasError.value) {
-    return '加载失败，请稍后重试。'
+    return "加载失败，请稍后重试。";
   } else if (isLoading.value) {
-    return isSearchMode.value ? '正在搜索...' : '正在加载...'
+    return isSearchMode.value ? "正在搜索..." : "正在加载...";
   } else {
-    return '暂无文章'
+    return "暂无文章";
   }
-})
+});
 
 const focusSearchInput = () => {
-  const input = searchInput.value
+  const input = searchInput.value;
 
   if (input) {
-    input.focus()
+    input.focus();
   } else {
-    return
+    return;
   }
-}
+};
 
 watch(
   () => searchQuery.value,
   (value) => {
     if (value.length > 0) {
-      searchKeyword.value = value
+      searchKeyword.value = value;
     } else {
-      searchKeyword.value = ''
+      searchKeyword.value = "";
     }
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
 const performSearch = async () => {
-  const keyword = searchKeyword.value.trim()
+  const keyword = searchKeyword.value.trim();
 
   if (keyword.length > 0) {
-    await applySearch(keyword)
-    hideSearch()
+    await applySearch(keyword);
+    hideSearch();
   } else {
-    hideSearch()
+    hideSearch();
   }
-}
+};
 
 const clearInput = () => {
-  searchKeyword.value = ''
+  searchKeyword.value = "";
   nextTick(() => {
-    focusSearchInput()
-  })
-}
+    focusSearchInput();
+  });
+};
 
 const handleClear = async () => {
-  searchKeyword.value = ''
-  await clearSearch()
-}
+  searchKeyword.value = "";
+  await clearSearch();
+};
 </script>
 
 <style lang="scss" scoped>
@@ -452,7 +450,8 @@ const handleClear = async () => {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 24px;
   padding: 0.875rem 1.25rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15),
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.15),
     0 10px 10px -5px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
@@ -906,4 +905,3 @@ const handleClear = async () => {
   }
 }
 </style>
-

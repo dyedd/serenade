@@ -9,7 +9,7 @@
       </div>
 
       <CardContainer class="info-card no-border-card">
-        <h3 class="card-title">最新博文</h3>
+        <h3 class="card-title">更新日志</h3>
         <Timeline :items="latestPosts" />
       </CardContainer>
     </aside>
@@ -33,33 +33,39 @@
         <p class="intro-emoji">🌈🌈🌈</p>
       </div>
 
-      <div class="github-contribution">
-        <img
-          src="https://ghchart.rshah.org/409ba5/dyedd"
-          alt="GitHub Contribution Chart"
-          class="contribution-chart"
-        />
-      </div>
-
       <div class="social-links">
-        <a href="https://github.com/dyedd" target="_blank" class="social-link">
-          <svg class="icon" aria-hidden="true" width="2rem" height="2rem">
+        <a
+          href="https://github.com/dyedd"
+          target="_blank"
+          class="social-link"
+          title="GitHub"
+        >
+          <svg class="icon" aria-hidden="true" width="1.5rem" height="1.5rem">
             <use xlink:href="#icon-github"></use>
           </svg>
+          <span class="social-text">GitHub</span>
         </a>
-        <a href="mailto:1176996982@qq.com" target="_blank" class="social-link">
-          <svg class="icon" aria-hidden="true" width="2rem" height="2rem">
+        <a
+          href="mailto:1176996982@qq.com"
+          target="_blank"
+          class="social-link"
+          title="Email"
+        >
+          <svg class="icon" aria-hidden="true" width="1.5rem" height="1.5rem">
             <use xlink:href="#icon-youxiang"></use>
           </svg>
+          <span class="social-text">Email</span>
         </a>
         <a
           href="https://qm.qq.com/cgi-bin/qm/qr?k=nLIdzy8UC9VkZ0g2EwnoN1rwnxaYvFx0&jump_from=webapi&authKey=mq2RvfcTQxEgImX+XZv0tBeobeHX+wTaAxOXq7pEKdsUD+a2Hi7mIOBGEj2ZtSDJ"
           target="_blank"
           class="social-link"
+          title="QQ"
         >
-          <svg class="icon" aria-hidden="true" width="2rem" height="2rem">
+          <svg class="icon" aria-hidden="true" width="1.5rem" height="1.5rem">
             <use xlink:href="#icon-QQ"></use>
           </svg>
+          <span class="social-text">QQ</span>
         </a>
       </div>
 
@@ -71,48 +77,57 @@
         <a class="highlight-text" href="/feed">RSS</a>。
       </div>
 
+      <div class="github-contribution">
+        <h3 class="section-title">GitHub Contributions</h3>
+        <img
+          src="https://ghchart.rshah.org/409ba5/dyedd"
+          alt="GitHub Contribution Chart"
+          class="contribution-chart"
+        />
+      </div>
+
       <div class="tech-section">
         <div class="tech-stack">
           <h3 class="section-title">技术栈</h3>
           <div class="tech-badges">
             <img
-              src="https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white"
+              src="https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white&style=flat-square"
               alt="Python"
             />
             <img
-              src="https://img.shields.io/badge/-CUDA-76B900?logo=nvidia&logoColor=white"
+              src="https://img.shields.io/badge/-CUDA-76B900?logo=nvidia&logoColor=white&style=flat-square"
               alt="CUDA"
             />
             <img
-              src="https://img.shields.io/badge/-C++-00599C?logo=cplusplus&logoColor=white"
+              src="https://img.shields.io/badge/-C++-00599C?logo=cplusplus&logoColor=white&style=flat-square"
               alt="C++"
             />
             <img
-              src="https://img.shields.io/badge/-JavaScript-yellow?logo=javascript&logoColor=white"
+              src="https://img.shields.io/badge/-JavaScript-yellow?logo=javascript&logoColor=white&style=flat-square"
               alt="JavaScript"
             />
             <img
-              src="https://img.shields.io/badge/-HTML5-E34F26?logo=html5&logoColor=white"
+              src="https://img.shields.io/badge/-HTML5-E34F26?logo=html5&logoColor=white&style=flat-square"
               alt="HTML5"
             />
             <img
-              src="https://img.shields.io/badge/-Vue-4FC08D?logo=vue.js&logoColor=white"
+              src="https://img.shields.io/badge/-Vue-4FC08D?logo=vue.js&logoColor=white&style=flat-square"
               alt="Vue"
             />
             <img
-              src="https://img.shields.io/badge/-PHP-777BB4?logo=php&logoColor=white"
+              src="https://img.shields.io/badge/-PHP-777BB4?logo=php&logoColor=white&style=flat-square"
               alt="PHP"
             />
             <img
-              src="https://img.shields.io/badge/-Docker-2496ED?logo=docker&logoColor=white"
+              src="https://img.shields.io/badge/-Docker-2496ED?logo=docker&logoColor=white&style=flat-square"
               alt="Docker"
             />
             <img
-              src="https://img.shields.io/badge/-Slurm-1F1F1F?logo=linux&logoColor=white"
+              src="https://img.shields.io/badge/-Slurm-1F1F1F?logo=linux&logoColor=white&style=flat-square"
               alt="Slurm"
             />
             <img
-              src="https://img.shields.io/badge/-Ubuntu-E95420?logo=ubuntu&logoColor=white"
+              src="https://img.shields.io/badge/-Ubuntu-E95420?logo=ubuntu&logoColor=white&style=flat-square"
               alt="Ubuntu"
             />
           </div>
@@ -153,7 +168,7 @@ const latestPosts = computed(() => {
 <style lang="scss" scoped>
 .home-container {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   margin: 0 auto;
   padding: 0;
   width: 100%;
@@ -162,11 +177,11 @@ const latestPosts = computed(() => {
 }
 
 .sidebar {
-  width: 14rem;
+  width: 16rem;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 2rem;
   height: fit-content;
 }
 
@@ -178,39 +193,46 @@ const latestPosts = computed(() => {
 
 .avatar-wrapper {
   position: relative;
-  width: 10rem;
-  height: 10rem;
+  width: 11rem;
+  height: 11rem;
 
   .avatar {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     &:hover {
-      transform: scale(1.05);
+      transform: scale(1.05) rotate(2deg);
     }
   }
 
   .avatar-badge {
     position: absolute;
-    width: 3rem;
-    height: 3rem;
-    line-height: 3rem;
+    width: 3.2rem;
+    height: 3.2rem;
+    line-height: 3.2rem;
     border-radius: 50%;
-    bottom: 0;
-    right: 0;
+    bottom: 0.5rem;
+    right: 0.5rem;
     text-align: center;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     background-color: var(--bg);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: default;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 }
 
 :global(.dark) .avatar-badge {
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background-color: #1e293b;
 }
 
 // 信息卡片
@@ -238,16 +260,24 @@ const latestPosts = computed(() => {
 }
 
 .card-title {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--text-color);
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  position: relative;
+  display: inline-block;
 
-:global(.dark) .card-title {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 2rem;
+    height: 3px;
+    background: var(--color);
+    border-radius: 2px;
+  }
 }
 
 .main-content {
@@ -257,93 +287,126 @@ const latestPosts = computed(() => {
 }
 
 .intro-section {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .intro-title {
-  font-size: 3rem;
+  font-size: 3.2rem;
   font-weight: 800;
   color: var(--text-color);
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .name-gradient {
-  background: linear-gradient(
-    45deg,
-    rgb(118, 170, 227),
-    #826ac9 30%,
-    white 60%
-  );
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-size: 400%;
-  background-position: 0%;
+  background-size: 200%;
+  animation: gradient-flow 5s ease infinite;
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .intro-text {
-  font-size: 1.4rem;
-  line-height: 1.6;
+  font-size: 1.25rem;
+  line-height: 1.8;
   color: var(--text-color);
   margin-bottom: 1rem;
+  opacity: 0.9;
 }
 
 .intro-emoji {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   line-height: 1.6;
-  margin: 1rem 0;
+  margin: 0.8rem 0;
 }
 
 .highlight-text {
   color: var(--color);
-  font-weight: 500;
+  font-weight: 600;
+  padding: 0 0.2rem;
 }
 
 .underline-text {
-  text-decoration: wavy underline;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--color-40);
+  text-underline-offset: 4px;
+}
+
+.link-text {
+  color: var(--color);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-bottom-color: var(--color);
+  }
 }
 
 // 社交链接
 .social-links {
   display: flex;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
 }
 
 .social-link {
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 1.2rem;
   text-decoration: none;
-  border-radius: 0.5rem;
+  border-radius: 2rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-size: 1.3rem;
-  background: rgba(249, 250, 251, 0.6);
-  color: #000;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-  min-height: 3rem;
+  gap: 0.6rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-color);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 
   &:hover {
-    background: rgba(249, 250, 251, 0.9);
-    border-color: var(--color-30);
-    transform: translateY(-1px);
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: transparent;
+    color: var(--color);
   }
 
   .icon {
     flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .icon {
+    transform: scale(1.1);
   }
 }
 
 :global(.dark) .social-link {
-  background: rgba(51, 65, 85, 0.5);
-  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
 
   &:hover {
-    background: rgba(51, 65, 85, 0.7);
-    border-color: var(--color-30);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color);
   }
 }
 
@@ -374,7 +437,7 @@ const latestPosts = computed(() => {
 
 // 技术栈
 .tech-section {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .tech-stack {
@@ -382,39 +445,52 @@ const latestPosts = computed(() => {
 }
 
 .section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: var(--text-color);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--color);
-  display: inline-block;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .tech-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .tech-badges img {
-  height: 30px;
+  height: 28px;
   border-radius: 4px;
-  transition: transform 0.2s ease;
-}
+  transition: all 0.2s ease;
+  opacity: 0.9;
 
-.tech-badges img:hover {
-  transform: translateY(-2px);
+  &:hover {
+    transform: translateY(-2px);
+    opacity: 1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
 // GitHub 贡献热力图
 .github-contribution {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   .contribution-chart {
     width: 100%;
     display: block;
     object-fit: contain;
+    border-radius: 0.5rem;
+    opacity: 0.85;
+    transition: opacity 0.3s;
+
+    &:hover {
+      opacity: 1;
+    }
   }
+}
+:global(.dark) .contribution-chart {
+  filter: invert(1) hue-rotate(180deg);
 }
 
 // ========== 响应式设计 ==========
@@ -423,6 +499,7 @@ const latestPosts = computed(() => {
     flex-direction: column;
     padding: 2rem 1.5rem;
     max-width: 60rem;
+    gap: 2.5rem;
   }
 
   .sidebar {
@@ -430,6 +507,19 @@ const latestPosts = computed(() => {
     position: static;
     max-width: 40rem;
     margin: 0 auto;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 3rem;
+  }
+
+  .avatar-section {
+    margin-bottom: 0;
+  }
+
+  .info-card {
+    flex: 1;
+    min-width: 300px;
   }
 
   .main-content {
@@ -438,58 +528,58 @@ const latestPosts = computed(() => {
   }
 
   .intro-title {
-    font-size: 2.5rem;
-  }
-
-  .intro-text {
-    font-size: 1.3rem;
-  }
-}
-
-@media screen and (max-width: 1024px) {
-  .intro-title {
-    font-size: 2.25rem;
+    font-size: 2.8rem;
   }
 }
 
 @media screen and (max-width: 768px) {
   .home-container {
     padding: 1.5rem 1rem;
+    gap: 2rem;
+  }
+
+  .sidebar {
+    flex-direction: column;
     gap: 1.5rem;
+    align-items: center;
+  }
+
+  .info-card {
+    width: 100%;
   }
 
   .avatar-wrapper {
-    width: 6.5rem;
-    height: 6.5rem;
+    width: 8rem;
+    height: 8rem;
 
     .avatar-badge {
       width: 2.5rem;
       height: 2.5rem;
       line-height: 2.5rem;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
     }
   }
 
   .intro-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 
   .intro-text,
   .intro-emoji {
-    font-size: 1.2rem;
-  }
-
-  .github-contribution {
-    padding: 0.75rem;
-  }
-
-  .tech-section {
-    flex-direction: column;
-    gap: 1.5rem;
+    font-size: 1.1rem;
   }
 
   .tech-badges img {
-    height: 28px;
+    height: 24px;
+  }
+
+  .social-links {
+    gap: 0.8rem;
+  }
+
+  .social-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
   }
 }
 
@@ -498,48 +588,18 @@ const latestPosts = computed(() => {
     padding: 1rem;
   }
 
-  .avatar-wrapper {
-    width: 6rem;
-    height: 6rem;
-
-    .avatar-badge {
-      width: 2.25rem;
-      height: 2.25rem;
-      line-height: 2.25rem;
-      font-size: 1.1rem;
-    }
-  }
-
   .intro-title {
-    font-size: 1.75rem;
-  }
-
-  .intro-text,
-  .intro-emoji {
-    font-size: 1.1rem;
-  }
-
-  .social-links {
-    flex-wrap: wrap;
+    font-size: 2rem;
   }
 
   .social-link {
-    flex: 1 1 45%;
-    min-width: 120px;
+    flex: 1 1 auto;
     justify-content: center;
   }
 
   .statement-box {
-    font-size: 0.9rem;
-    padding: 1rem 1.25rem;
-  }
-
-  .github-contribution {
-    padding: 0.5rem;
-  }
-
-  .tech-badges img {
-    height: 26px;
+    padding: 1.2rem;
+    font-size: 0.95rem;
   }
 }
 </style>

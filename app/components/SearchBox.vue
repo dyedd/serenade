@@ -11,6 +11,11 @@
         @keyup.esc="handleEscape"
         @blur="handleBlur"
       />
+      <!-- Keyboard Shortcut Hint -->
+      <div v-if="!searchKeyword && isExpanded" class="shortcut-hint">
+        <span>Ctrl K</span>
+      </div>
+
       <button
         v-if="!searchKeyword"
         class="search-icon-btn"
@@ -85,6 +90,20 @@ const handleBlur = () => {
     }
   }, 200)
 }
+
+// Global Keyboard Shortcut
+onMounted(() => {
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault()
+      if (!isExpanded.value) {
+        toggleSearch()
+      } else {
+        focusInput()
+      }
+    }
+  })
+})
 </script>
 
 <style lang="scss" scoped>
@@ -133,6 +152,26 @@ const handleBlur = () => {
 
   &::placeholder {
     color: rgb(var(--color-neutral-400));
+  }
+}
+
+.shortcut-hint {
+  position: absolute;
+  right: 40px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  
+  span {
+    font-size: 0.75rem;
+    color: rgb(var(--color-neutral-500));
+    background-color: rgb(var(--color-neutral-200));
+    border: 1px solid rgb(var(--color-neutral-300));
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    line-height: 1;
+    opacity: 0.8;
   }
 }
 
@@ -190,6 +229,12 @@ const handleBlur = () => {
       color: rgb(var(--color-neutral-500));
     }
   }
+  
+  .shortcut-hint span {
+      background-color: rgb(var(--color-neutral-800));
+      border-color: rgb(var(--color-neutral-600));
+      color: rgb(var(--color-neutral-400));
+  }
 
   .search-icon-btn,
   .clear-btn {
@@ -217,6 +262,10 @@ const handleBlur = () => {
   .expanded .search-input {
     width: 180px;
     font-size: 0.85rem;
+  }
+  
+  .shortcut-hint {
+      display: none; /* Hide shortcut hint on mobile */
   }
 }
 

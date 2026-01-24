@@ -22,6 +22,7 @@
     "dayjs": "latest",
     "fast-glob": "latest",
     "gray-matter": "latest",
+    "highlight.js": "^11.11.1",
     "katex": "latest",
     "marked": "latest",
     "marked-katex-extension": "latest",
