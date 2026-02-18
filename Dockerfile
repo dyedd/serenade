@@ -36,7 +36,6 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 
 COPY --from=build /app/.output ./.output
-COPY --from=build /app/content ./content
 
 EXPOSE 3000
 

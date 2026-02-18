@@ -1,11 +1,6 @@
 services:
   serenade:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
-    image: serenade:local
+    image: ghcr.io/dyedd/serenade:latest
     container_name: serenade
     restart: unless-stopped
     ports:
