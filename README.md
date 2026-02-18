@@ -56,19 +56,39 @@ pnpm dev
 
 ## 部署
 
-### 1) Node 部署（推荐：频繁更新）
+### 1) Docker 部署（推荐）
 
-#### 方式 A：Docker Compose（一键）
+#### 方式 A：官方镜像（推荐）
+
+每次 push 到 main 分支会自动构建并推送镜像到 GHCR。
 
 ```bash
-docker compose up -d --build
+# 创建 content 目录并放入你的内容
+mkdir -p content
+
+# 启动
+docker compose up -d
 ```
 
-- 默认监听 `3000`，可用 `SERENADE_PORT=8080 docker compose up -d --build` 映射到其它端口
-- `compose.yml` 默认把宿主机 `./content` 挂载进容器：内容更新后刷新即可生效
-- 如果你修改了代码/依赖，需要重新 `--build` 构建镜像
+更新镜像：
 
-#### 方式 B：裸机（不使用 Docker）
+```bash
+docker compose pull && docker compose up -d
+```
+
+- 默认监听 `3000`，可用 `SERENADE_PORT=8080 docker compose up -d` 映射到其它端口
+- `compose.yml` 把宿主机 `./content` 挂载进容器，内容更新后刷新即可生效
+
+#### 方式 B：本地构建镜像
+
+如果你 fork 了项目或做了自定义修改，可以本地构建：
+
+```bash
+docker build -t serenade:local .
+docker run -d -p 3000:3000 -v ./content:/app/content --name serenade serenade:local
+```
+
+#### 方式 C：裸机（不使用 Docker）
 
 ```bash
 pnpm build
@@ -78,7 +98,7 @@ node .output/server/index.mjs
 
 后续更新内容：只同步 `content/`，无需重新 `build`。
 
-项目内置 `npm run sync`（Windows 使用 `scp`，Linux/Mac 使用 `rsync`）同步 `content/` 与/或 `.output/`。
+项目内置 `npm run sync`（Windows 使用 `scp`，Linux/Mac 使用 `rsync`）同步 `content/`。
 
 ### 2) 静态导出（推荐：0 服务器）
 
