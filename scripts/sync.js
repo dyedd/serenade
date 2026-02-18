@@ -322,67 +322,6 @@ const syncContent = () => {
   }
 };
 
-const syncContentWithoutUpdate = () => {
-  const remoteContentDir = `${SERVER_PATH}/content`;
-  const isCleaned = cleanRemoteDirectory(remoteContentDir, '内容');
-
-  if (isCleaned) {
-    console.log('?? 同步内容到服务器...');
-    const contentPath = path.join(projectRoot, 'content');
-    const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/`;
-
-    return runSyncCommand({
-      windowsCommand: `scp -r "${contentPath}/*" "${target}"`,
-      unixCommand: `rsync -avz --delete "${contentPath}/" "${target}"`,
-      successMessage: '? 内容同步完成',
-      errorMessage: '? 内容同步失败:',
-    });
-  } else {
-    return false;
-  }
-};
-
-const syncOutput = () => {
-  const remoteOutputDir = `${SERVER_PATH}/.output`;
-  const isCleaned = cleanRemoteDirectory(remoteOutputDir, '构建产物');
-
-  if (isCleaned) {
-    console.log('?? 同步构建产物到服务器...');
-    const outputPath = path.join(projectRoot, '.output');
-    const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/.output/`;
-
-    return runSyncCommand({
-      windowsCommand: `scp -r "${outputPath}/*" "${target}"`,
-      unixCommand: `rsync -avz --delete "${outputPath}/" "${target}"`,
-      successMessage: '? 构建产物同步完成',
-      errorMessage: '? 构建产物同步失败:',
-    });
-  } else {
-    return false;
-  }
-};
-
-const syncAll = () => {
-  console.log('?? 同步全部内容到服务器...');
-  console.log('');
-  updateTimestamps();
-  console.log('');
-
-  const contentSuccess = syncContentWithoutUpdate();
-  const outputSuccess = syncOutput();
-  const success = contentSuccess && outputSuccess;
-
-  if (success) {
-    console.log('');
-    console.log('? 全部同步完成！');
-  } else {
-    console.log('');
-    console.log('?? 部分同步失败，请检查错误信息');
-  }
-
-  return success;
-};
-
 const syncPost = (urlName) => {
   const postPath = path.join(projectRoot, 'content', 'posts', urlName);
   const postExists = fs.existsSync(postPath);
@@ -474,12 +413,6 @@ const handleArgsMode = (mode, target) => {
   if (mode === 'content') {
     syncContent();
     return true;
-  } else if (mode === 'output') {
-    syncOutput();
-    return true;
-  } else if (mode === 'all') {
-    syncAll();
-    return true;
   } else if (mode === 'post') {
     if (!target) {
       console.error('? 错误：请指定文章URL名称');
@@ -529,16 +462,10 @@ const handleInteractiveChoice = async (rl, choice) => {
     syncContent();
     rl.close();
   } else if (choice === '2') {
-    syncOutput();
-    rl.close();
-  } else if (choice === '3') {
-    syncAll();
-    rl.close();
-  } else if (choice === '4') {
     const urlName = await requireInput(rl, '?? 请输入文章URL名称: ', '? 错误：URL名称不能为空');
     syncPost(urlName);
     rl.close();
-  } else if (choice === '5') {
+  } else if (choice === '3') {
     const urlName = await selectColumn(rl);
 
     if (!urlName) {
@@ -549,7 +476,7 @@ const handleInteractiveChoice = async (rl, choice) => {
       syncColumn(urlName);
       rl.close();
     }
-  } else if (choice === '6') {
+  } else if (choice === '4') {
     const fileName = await requireInput(
       rl,
       '?? 请输入文件名 (friends.json/projects.json): ',
@@ -579,14 +506,12 @@ async function main() {
     try {
       console.log('请选择同步模式：');
       console.log('1. 同步内容 (content)');
-      console.log('2. 同步构建产物 (.output)');
-      console.log('3. 同步全部');
-      console.log('4. 同步指定文章 (post)');
-      console.log('5. 同步指定专栏 (column)');
-      console.log('6. 同步JSON文件 (json)');
+      console.log('2. 同步指定文章 (post)');
+      console.log('3. 同步指定专栏 (column)');
+      console.log('4. 同步JSON文件 (json)')
       console.log('');
 
-      const choice = await question(rl, '?? 请输入选项 (1-6): ');
+      const choice = await question(rl, '?? 请输入选项 (1-4): ');
       await handleInteractiveChoice(rl, choice);
     } catch (error) {
       if (error instanceof Error) {
