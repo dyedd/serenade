@@ -31,8 +31,9 @@ export default defineNuxtConfig({
       script: [
         { src: "/iconfont.js", defer: true },
         {
-          src: "https://hm.baidu.com/hm.js?a42bb662e1d8e0210358ee50d5b4f2d1",
-          async: true,
+          src: "https://statistics.dyedd.cn/script.js",
+          defer: true,
+          "data-website-id": "11a02a3f-0cdd-452a-bbb8-37f195db86fd",
         },
       ],
       noscript: [{ textContent: "JavaScript is required" }],
