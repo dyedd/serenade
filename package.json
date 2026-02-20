@@ -28,5 +28,10 @@
     "marked-katex-extension": "latest",
     "rss": "latest",
     "rss-parser": "latest"
+  },
+  "pnpm": {
+    "overrides": {
+      "tar": "7.5.8"
+    }
   }
 }
