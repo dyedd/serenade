@@ -13,25 +13,20 @@
     "sync": "node --env-file-if-exists=.env scripts/sync.js"
   },
   "devDependencies": {
-    "@nuxtjs/tailwindcss": "latest",
-    "@tailwindcss/typography": "latest",
-    "nuxt": "latest",
-    "sass": "latest"
+    "@nuxtjs/tailwindcss": "6.14.0",
+    "@tailwindcss/typography": "0.5.19",
+    "nuxt": "4.4.2",
+    "sass": "1.98.0"
   },
   "dependencies": {
-    "dayjs": "latest",
-    "fast-glob": "latest",
-    "gray-matter": "latest",
+    "dayjs": "1.11.20",
+    "fast-glob": "3.3.3",
+    "gray-matter": "4.0.3",
     "highlight.js": "^11.11.1",
-    "katex": "latest",
-    "marked": "latest",
-    "marked-katex-extension": "latest",
-    "rss": "latest",
-    "rss-parser": "latest"
-  },
-  "pnpm": {
-    "overrides": {
-      "tar": "7.5.9"
-    }
+    "katex": "0.16.40",
+    "marked": "17.0.5",
+    "marked-katex-extension": "5.1.7",
+    "rss": "1.2.2",
+    "rss-parser": "3.13.0"
   }
 }
