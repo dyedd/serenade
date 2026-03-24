@@ -31,9 +31,9 @@ export default defineNuxtConfig({
       script: [
         { src: "/iconfont.js", defer: true },
         {
-          src: "https://statistics.dyedd.cn/script.js",
+          src: siteConfig.analytics.script,
           defer: true,
-          "data-website-id": "11a02a3f-0cdd-452a-bbb8-37f195db86fd",
+          "data-website-id": siteConfig.analytics.websiteId,
         },
       ],
       noscript: [{ textContent: "JavaScript is required" }],

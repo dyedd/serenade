@@ -2,22 +2,22 @@
   <footer>
     <div>
       <p class="text-sm text-neutral-500 dark:text-neutral-400">
-        @{{ currentYear }} 染念🤔
+        @{{ currentYear }} {{ siteConfig.footer.copyrightName }}
       </p>
       <a
         class="text-sm text-neutral-500 dark:text-neutral-400"
-        href="https://github.com/dyedd/serenade"
+        :href="siteConfig.footer.poweredBy.url"
         target="_blank"
-        >Powered by serenade</a
+        >{{ siteConfig.footer.poweredBy.label }}</a
       >
       <p class="text-sm text-neutral-500 dark:text-neutral-400">
         本站已运行 {{ runningDays }} 天
       </p>
       <a
         class="text-sm text-neutral-500 dark:text-neutral-400"
-        href="https://beian.miit.gov.cn/"
+        :href="siteConfig.footer.icp.url"
         target="_blank"
-        >备案号:浙ICP备19020194号-1</a
+        >{{ siteConfig.footer.icp.label }}</a
       >
     </div>
     <div
@@ -26,7 +26,7 @@
       <p class="text-sm text-neutral-500 dark:text-neutral-400">找到我</p>
       <a
         class="inline-block p-2 sm:hover:text-link"
-        href="https://github.com/dyedd"
+        :href="siteConfig.socialLinks.github.url"
         target="_blank"
       >
         <svg class="icon" aria-hidden="true" width="2.2rem" height="2.2rem">
@@ -35,7 +35,7 @@
       </a>
       <a
         class="inline-block p-2 sm:hover:text-link"
-        href="mailto:1176996982@qq.com"
+        :href="siteConfig.socialLinks.email.url"
         target="_blank"
       >
         <svg class="icon" aria-hidden="true" width="2.2rem" height="2.2rem">
@@ -44,9 +44,9 @@
       </a>
       <a
         class="inline-block p-2 sm:hover:text-link"
-        href="https://qm.qq.com/cgi-bin/qm/qr?k=nLIdzy8UC9VkZ0g2EwnoN1rwnxaYvFx0&jump_from=webapi&authKey=mq2RvfcTQxEgImX+XZv0tBeobeHX+wTaAxOXq7pEKdsUD+a2Hi7mIOBGEj2ZtSDJ"
+        :href="siteConfig.socialLinks.qq.url"
         target="_blank"
-        title="加入交流群：972781001"
+        :title="siteConfig.socialLinks.qq.title"
       >
         <svg class="icon" aria-hidden="true" width="2.2rem" height="2.2rem">
           <use xlink:href="#icon-QQ"></use>

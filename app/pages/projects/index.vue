@@ -11,7 +11,7 @@
         <blockquote class="text-sm md:text-base">
           <p>
             这里是我的折腾项目。还有些没有整理的项目，可以<a
-              href="https://github.com/dyedd"
+              :href="siteConfig.socialLinks.github.url"
               target="_blank"
               rel="noopener"
               >访问我的 GitHub</a
@@ -239,6 +239,8 @@
 </template>
 
 <script setup>
+import { siteConfig } from '../../../site.config'
+
 definePageMeta({
   layout: 'default'
 })

@@ -32,9 +32,9 @@
           <p class="text-neutral-600 dark:text-neutral-400 mb-4">
             请将你的友链信息按照以下格式发送至
             <a
-              href="mailto:1176996982@qq.com"
+              :href="siteConfig.socialLinks.email.url"
               class="text-primary-500 hover:underline font-medium"
-              >邮箱</a
+              >{{ siteConfig.friends.contactLabel }}</a
             >
           </p>
 
@@ -95,20 +95,13 @@
               <div
                 class="line-numbers flex flex-col items-end px-3 py-3 text-neutral-500 bg-[#282c34] border-r border-neutral-700/30 select-none font-mono text-right min-w-[2.5rem] leading-relaxed"
               >
-                <span>1</span><span>2</span><span>3</span><span>4</span
-                ><span>5</span><span>6</span><span>7</span>
+                <span v-for="line in friendApplicationLineNumbers" :key="line">{{ line }}</span>
               </div>
 
               <pre
                 ref="codeBlock"
                 class="flex-1 !my-0 !p-3 !bg-transparent overflow-x-auto custom-scrollbar"
-              ><code class="hljs json !bg-transparent !p-0 font-mono leading-relaxed block">{
-  "name": "染念",
-  "url": "https://dyedd.cn",
-  "logo": "https://dyedd.cn/logo.jpg",
-  "description": "Writing code, painful and happy",
-  "rss": "https://dyedd.cn/feed"
-}</code></pre>
+              ><code class="hljs json !bg-transparent !p-0 font-mono leading-relaxed block">{{ friendApplicationTemplate }}</code></pre>
             </div>
           </div>
         </div>
@@ -137,6 +130,8 @@
 </template>
 
 <script setup>
+import { siteConfig } from '../../../site.config';
+
 definePageMeta({
   layout: "default",
 });
@@ -179,6 +174,10 @@ const hasError = computed(() => {
 
 const copied = ref(false);
 const codeBlock = ref(null);
+const friendApplicationTemplate = JSON.stringify(siteConfig.friends.applicationTemplate, null, 2);
+const friendApplicationLineNumbers = friendApplicationTemplate
+  .split(String.fromCharCode(10))
+  .map((_, index) => index + 1);
 
 const handleCopy = async () => {
   if (!codeBlock.value) return;

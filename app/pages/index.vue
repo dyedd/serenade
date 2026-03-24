@@ -3,8 +3,8 @@
     <aside class="sidebar">
       <div class="avatar-section">
         <div class="avatar-wrapper">
-          <img src="/logo.jpg" alt="avatar" class="avatar" />
-          <div class="avatar-badge">🐟</div>
+          <img :src="siteConfig.profile.avatar" alt="avatar" class="avatar" />
+          <div class="avatar-badge">{{ siteConfig.profile.badge }}</div>
         </div>
       </div>
 
@@ -17,70 +17,69 @@
     <main class="main-content">
       <div class="intro-section">
         <h1 class="intro-title">
-          Hello, I'm <span class="name-gradient">染念</span>👋
+          Hello, I'm <span class="name-gradient">{{ siteConfig.profile.name }}</span>👋
         </h1>
-        <p class="intro-text">
-          <span class="highlight-text">AI infra</span>研究生，目前研究<span
-            class="underline-text"
-            >大规模分布式训练</span
-          >以及<span class="highlight-text">扩散模型在短临降水领域</span>的应用
+        <p
+          v-for="(line, index) in siteConfig.profile.introduction"
+          :key="'intro-' + index"
+          class="intro-text"
+        >
+          {{ line }}
         </p>
-        <p class="intro-text">
-          过去我也学习过<span class="highlight-text">前后端</span
-          >，所以现在也是不专业的全栈开发者
+        <p
+          v-for="(line, index) in siteConfig.profile.motto"
+          :key="'motto-' + index"
+          class="intro-emoji"
+        >
+          {{ line }}
         </p>
-        <p class="intro-emoji">🐎 马到成功，心想事成</p>
-        <p class="intro-emoji">🌈🌈🌈</p>
       </div>
 
       <div class="social-links">
         <a
-          href="https://github.com/dyedd"
+          :href="siteConfig.socialLinks.github.url"
           target="_blank"
           class="social-link"
-          title="GitHub"
+          :title="siteConfig.socialLinks.github.label"
         >
           <svg class="icon" aria-hidden="true" width="1.5rem" height="1.5rem">
             <use xlink:href="#icon-github"></use>
           </svg>
-          <span class="social-text">GitHub</span>
+          <span class="social-text">{{ siteConfig.socialLinks.github.label }}</span>
         </a>
         <a
-          href="mailto:1176996982@qq.com"
+          :href="siteConfig.socialLinks.email.url"
           target="_blank"
           class="social-link"
-          title="Email"
+          :title="siteConfig.socialLinks.email.label"
         >
           <svg class="icon" aria-hidden="true" width="1.5rem" height="1.5rem">
             <use xlink:href="#icon-youxiang"></use>
           </svg>
-          <span class="social-text">Email</span>
+          <span class="social-text">{{ siteConfig.socialLinks.email.label }}</span>
         </a>
         <a
-          href="https://qm.qq.com/cgi-bin/qm/qr?k=nLIdzy8UC9VkZ0g2EwnoN1rwnxaYvFx0&jump_from=webapi&authKey=mq2RvfcTQxEgImX+XZv0tBeobeHX+wTaAxOXq7pEKdsUD+a2Hi7mIOBGEj2ZtSDJ"
+          :href="siteConfig.socialLinks.qq.url"
           target="_blank"
           class="social-link"
-          title="QQ"
+          :title="siteConfig.socialLinks.qq.label"
         >
           <svg class="icon" aria-hidden="true" width="1.5rem" height="1.5rem">
             <use xlink:href="#icon-QQ"></use>
           </svg>
-          <span class="social-text">QQ</span>
+          <span class="social-text">{{ siteConfig.socialLinks.qq.label }}</span>
         </a>
       </div>
 
       <div class="statement-box">
-        我将在这里分享我的<span class="highlight-text">编程</span>和<span
-          class="highlight-text"
-          >人工智能</span
-        >知识。如果你对这些主题感兴趣，那么恭喜你找到宝藏了。接下来你可以查看内容或订阅
+        {{ siteConfig.profile.statement }}
         <a class="highlight-text" href="/feed">RSS</a>。
       </div>
 
       <div class="github-contribution">
         <h3 class="section-title">GitHub Contributions</h3>
         <img
-          src="https://ghchart.rshah.org/409ba5/dyedd"
+          :src="siteConfig.profile.githubContributionChart"
           alt="GitHub Contribution Chart"
           class="contribution-chart"
         />
@@ -91,44 +90,10 @@
           <h3 class="section-title">技术栈</h3>
           <div class="tech-badges">
             <img
-              src="https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white&style=flat-square"
-              alt="Python"
-            />
-            <img
-              src="https://img.shields.io/badge/-CUDA-76B900?logo=nvidia&logoColor=white&style=flat-square"
-              alt="CUDA"
-            />
-            <img
-              src="https://img.shields.io/badge/-C++-00599C?logo=cplusplus&logoColor=white&style=flat-square"
-              alt="C++"
-            />
-            <img
-              src="https://img.shields.io/badge/-JavaScript-yellow?logo=javascript&logoColor=white&style=flat-square"
-              alt="JavaScript"
-            />
-            <img
-              src="https://img.shields.io/badge/-HTML5-E34F26?logo=html5&logoColor=white&style=flat-square"
-              alt="HTML5"
-            />
-            <img
-              src="https://img.shields.io/badge/-Vue-4FC08D?logo=vue.js&logoColor=white&style=flat-square"
-              alt="Vue"
-            />
-            <img
-              src="https://img.shields.io/badge/-PHP-777BB4?logo=php&logoColor=white&style=flat-square"
-              alt="PHP"
-            />
-            <img
-              src="https://img.shields.io/badge/-Docker-2496ED?logo=docker&logoColor=white&style=flat-square"
-              alt="Docker"
-            />
-            <img
-              src="https://img.shields.io/badge/-Slurm-1F1F1F?logo=linux&logoColor=white&style=flat-square"
-              alt="Slurm"
-            />
-            <img
-              src="https://img.shields.io/badge/-Ubuntu-E95420?logo=ubuntu&logoColor=white&style=flat-square"
-              alt="Ubuntu"
+              v-for="tech in siteConfig.profile.techStack"
+              :key="tech.label"
+              :src="tech.icon"
+              :alt="tech.label"
             />
           </div>
         </div>
@@ -137,6 +102,8 @@
   </div>
 </template>
 <script setup>
+import { siteConfig } from '../../site.config'
+
 definePageMeta({
   layout: "home",
 });
