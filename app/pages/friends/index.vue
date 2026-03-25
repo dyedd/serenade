@@ -34,7 +34,7 @@
             <a
               :href="siteConfig.socialLinks.email.url"
               class="text-primary-500 hover:underline font-medium"
-              >{{ siteConfig.friends.contactLabel }}</a
+              >邮箱</a
             >
           </p>
 
@@ -130,7 +130,8 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../../../site.config';
+
+const siteConfig = useSiteConfig();
 
 definePageMeta({
   layout: "default",

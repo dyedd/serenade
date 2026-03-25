@@ -78,6 +78,7 @@ docker compose pull && docker compose up -d
 
 - 默认监听 `3000`，可用 `SERENADE_PORT=8080 docker compose up -d` 映射到其它端口
 - `docker-compose.yml` 把宿主机 `./content` 挂载进容器，内容更新后刷新即可生效
+- 站点信息通过 `.env` 中的 `SITE_*` 环境变量配置，不再把个人站点配置写死到预构建镜像
 
 #### 方式 B：本地构建镜像
 
@@ -146,7 +147,42 @@ AI 与同步相关配置见 `.env.example`：
 
 ## 站点配置
 
-编辑 `site.config.ts`：
+站点信息通过 `.env` 中的 `SITE_*` 环境变量覆盖。
+
+- 没有 `.env` 时，直接使用 [nuxt.config.ts](./nuxt.config.ts) 里的内置默认值
+- `.env.example` 只是示例，不会被自动加载；需要复制为 `.env` 才会生效
+
+```env
+SITE_TITLE=染念的笔记
+SITE_AUTHOR=染念
+SITE_URL=https://dyedd.cn
+SITE_EMAIL=1176996982@qq.com
+SITE_PROFILE_AVATAR=/logo.jpg
+SITE_PROFILE_INTRO=第一句|第二句
+SITE_PROFILE_MOTTO=第一句|第二句
+SITE_PROFILE_TECH_STACK=Python::https://img.shields.io/...|Vue::https://img.shields.io/...
+```
+
+常用可配置项：
+
+- 站点基础信息：`SITE_TITLE`、`SITE_AUTHOR`、`SITE_DESCRIPTION`、`SITE_KEYWORDS`、`SITE_URL`、`SITE_EMAIL`、`SITE_LANG`、`SITE_START_TIME`
+- 个人资料：`SITE_PROFILE_AVATAR`、`SITE_PROFILE_BADGE`、`SITE_PROFILE_INTRO`、`SITE_PROFILE_MOTTO`、`SITE_PROFILE_STATEMENT`、`SITE_PROFILE_GITHUB_CHART`、`SITE_PROFILE_TECH_STACK`
+- 社交与统计：`SITE_GITHUB_URL`、`SITE_QQ_URL`、`SITE_ANALYTICS_SCRIPT`、`SITE_ANALYTICS_WEBSITE_ID`
+- 备案信息：`SITE_FOOTER_ICP_LABEL`
+
+其中一些值会自动复用，不需要重复配置：
+
+- `profile.name` 复用 `SITE_AUTHOR`
+- 邮箱链接自动由 `SITE_EMAIL` 生成
+- 页脚版权名复用 `SITE_AUTHOR`
+- `poweredBy` 固定为 `Powered by serenade` 和项目仓库地址
+- QQ 图标提示文案固定为 `QQ`
+- 友链申请联系文案固定为 `邮箱`
+- 友链申请模板默认复用 `SITE_AUTHOR`、`SITE_URL`、`SITE_DESCRIPTION`、`SITE_PROFILE_AVATAR`
+- `SITE_PROFILE_INTRO`、`SITE_PROFILE_MOTTO` 用 `|` 分隔多行
+- `SITE_PROFILE_TECH_STACK` 用 `标签::图标URL|标签::图标URL` 配置
+
+默认值直接定义在 `nuxt.config.ts` 中：
 
 ```ts
 export const siteConfig = {

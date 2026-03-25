@@ -102,7 +102,8 @@
   </div>
 </template>
 <script setup>
-import { siteConfig } from '../../site.config'
+
+const siteConfig = useSiteConfig()
 
 definePageMeta({
   layout: "home",

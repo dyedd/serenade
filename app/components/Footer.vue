@@ -57,7 +57,8 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../../site.config'
+
+const siteConfig = useSiteConfig()
 
 const currentYear = new Date().getFullYear()
 

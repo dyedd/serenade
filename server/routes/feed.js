@@ -3,10 +3,9 @@ import fg from 'fast-glob'
 import fs from 'fs-extra'
 import matter from 'gray-matter'
 import RSS from 'rss'
-import { siteConfig } from '../../site.config'
 import { parseAsset, normalizeTags } from '../utils.js'
 
-const resolveSiteBaseUrl = () => {
+const resolveSiteBaseUrl = (siteConfig) => {
   const rawUrl = siteConfig.url
 
   if (typeof rawUrl === 'string') {
@@ -36,6 +35,7 @@ const extractPostSlug = (filePath) => {
 }
 
 export default defineEventHandler(async (event) => {
+  const siteConfig = useRuntimeConfig(event).public.siteConfig
   const files = await fg('content/posts/*/*.md')
 
   if (!files.length) {
@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
         setResponseHeaders(event, { 'Last-Modified': lastModified, 'ETag': etag })
         return null
       } else {
-        const baseUrl = resolveSiteBaseUrl()
+        const baseUrl = resolveSiteBaseUrl(siteConfig)
         const feed = new RSS({
           title: siteConfig.title,
           description: siteConfig.description,

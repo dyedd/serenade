@@ -1,7 +1,7 @@
-import { siteConfig } from '../../site.config'
 import redirectsData from '../middleware/redirects.json'
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
+    const siteConfig = useSiteConfig()
     const routeTitle = getRouteTitle(to.path)
 
     useHead({
@@ -28,6 +28,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
 // 根据路由路径自动生成页面标题
 function getRouteTitle(path) {
+    const siteConfig = useSiteConfig()
     const routeMap = {
         '/posts': '所有文章',
         '/columns': '专栏',
