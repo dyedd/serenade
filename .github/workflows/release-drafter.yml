@@ -21,7 +21,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -212,10 +212,27 @@ jobs:
           echo "release_name=${next_tag}" >> "$GITHUB_OUTPUT"
           echo "body_path=${body_path}" >> "$GITHUB_OUTPUT"
 
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.prepare.outputs.tag_name }}
-          name: ${{ steps.prepare.outputs.release_name }}
-          body_path: ${{ steps.prepare.outputs.body_path }}
-          target_commitish: ${{ github.sha }}
-          draft: true
+      - name: Create or update draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.prepare.outputs.tag_name }}
+          RELEASE_NAME: ${{ steps.prepare.outputs.release_name }}
+          BODY_PATH: ${{ steps.prepare.outputs.body_path }}
+          TARGET_COMMITISH: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release edit "$TAG_NAME" \
+              --title "$RELEASE_NAME" \
+              --notes-file "$BODY_PATH" \
+              --target "$TARGET_COMMITISH" \
+              --draft
+          else
+            gh release create "$TAG_NAME" \
+              --title "$RELEASE_NAME" \
+              --notes-file "$BODY_PATH" \
+              --target "$TARGET_COMMITISH" \
+              --draft
+          fi
