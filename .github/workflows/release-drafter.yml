@@ -1,0 +1,112 @@
+name: Release Drafter
+
+on:
+  workflow_dispatch:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+
+jobs:
+  ensure_labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'feat', color: '1f883d', description: 'New user-facing functionality' },
+              { name: 'fix', color: 'd1242f', description: 'Bug fix' },
+              { name: 'refactor', color: '5319e7', description: 'Internal refactor without behavior change' },
+              { name: 'docs', color: '0e8a16', description: 'Documentation update' },
+              { name: 'chore', color: '6e7781', description: 'Maintenance task' },
+              { name: 'style', color: 'fbca04', description: 'Code style only' },
+              { name: 'test', color: 'bfdadc', description: 'Test coverage or test fixes' },
+              { name: 'ci', color: '1d76db', description: 'CI or workflow changes' },
+              { name: 'build', color: '0052cc', description: 'Build or packaging changes' },
+              { name: 'perf', color: 'c2e0c6', description: 'Performance improvement' },
+              { name: 'major', color: 'b60205', description: 'Breaking change' },
+              { name: 'skip-changelog', color: 'ffffff', description: 'Exclude from release notes' },
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                });
+
+                await github.rest.issues.updateLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description,
+                });
+              }
+            }
+
+  autolabel:
+    needs: ensure_labels
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: release-drafter/release-drafter/autolabeler@v7
+
+  update_release_draft:
+    needs: ensure_labels
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - id: drafter
+        uses: release-drafter/release-drafter@v7
+
+      - uses: actions/github-script@v7
+        env:
+          RELEASE_ID: ${{ steps.drafter.outputs.id }}
+          RELEASE_BODY: ${{ steps.drafter.outputs.body }}
+        with:
+          script: |
+            const shortSha = context.sha.slice(0, 7);
+            const image = `ghcr.io/${context.repo.owner}/${context.repo.repo}`;
+            const imageSection = [
+              '## Image',
+              '',
+              `- \`${image}:sha-${shortSha}\``,
+              '',
+              `拉取示例：\`docker pull ${image}:sha-${shortSha}\``,
+              '',
+            ].join('\n');
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: Number(process.env.RELEASE_ID),
+              body: `${imageSection}${process.env.RELEASE_BODY}`,
+            });

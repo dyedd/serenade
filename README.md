@@ -77,7 +77,7 @@ docker compose pull && docker compose up -d
 ```
 
 - 默认监听 `3000`，可用 `SERENADE_PORT=8080 docker compose up -d` 映射到其它端口
-- `compose.yml` 把宿主机 `./content` 挂载进容器，内容更新后刷新即可生效
+- `docker-compose.yml` 把宿主机 `./content` 挂载进容器，内容更新后刷新即可生效
 
 #### 方式 B：本地构建镜像
 
