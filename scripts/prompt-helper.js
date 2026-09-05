@@ -13,18 +13,56 @@ const question = (rl, query) =>
     });
   });
 
+const closeInterface = (rl) => {
+  if (rl && typeof rl.close === 'function') {
+    rl.close();
+  }
+};
+
+const exitWithError = (message, { rl = null, usage = null } = {}) => {
+  console.error(message);
+
+  if (usage) {
+    console.log(usage);
+  }
+
+  closeInterface(rl);
+  process.exit(1);
+};
+
+const exitIfFailed = (success) => {
+  if (!success) {
+    process.exit(1);
+  }
+};
+
+const finishCliAction = (rl, success) => {
+  closeInterface(rl);
+  exitIfFailed(success);
+};
+
+const promptRequired = async (rl, prompt, emptyMessage) => {
+  const value = await question(rl, prompt);
+
+  if (!value) {
+    exitWithError(emptyMessage, { rl });
+  }
+
+  return value;
+};
+
 const normalizeYesNoAnswer = (answer) => {
   const normalized = String(answer ?? '').trim().toLowerCase();
 
-  if (normalized.length === 0) {
+  if (normalized.length === 0 || normalized === 'y' || normalized === 'yes') {
     return true;
-  } else if (normalized === 'y' || normalized === 'yes') {
-    return true;
-  } else if (normalized === 'n' || normalized === 'no') {
-    return false;
-  } else {
-    return null;
   }
+
+  if (normalized === 'n' || normalized === 'no') {
+    return false;
+  }
+
+  return null;
 };
 
 const confirmQuestion = async (rl, query) => {
@@ -36,9 +74,9 @@ const confirmQuestion = async (rl, query) => {
 
     if (result !== null) {
       return result;
-    } else {
-      console.log('?? 输入无效，请输入 y 或 n（回车默认 Y）');
     }
+
+    console.log('❌ 输入无效，请输入 y 或 n（回车默认 Y）');
   }
 };
 
@@ -47,34 +85,44 @@ const isSafeUrl = (url) => {
 
   if (normalizedUrl.length === 0) {
     return { valid: false, reason: 'URL不能为空' };
-  } else {
-    const hasTraversal =
-      normalizedUrl.includes('..') ||
-      normalizedUrl.includes('/') ||
-      normalizedUrl.includes('\\');
-
-    if (hasTraversal) {
-      return { valid: false, reason: 'URL不能包含路径遍历字符（.. / \\）' };
-    } else {
-      const hasControlChars =
-        normalizedUrl.includes('\0') ||
-        normalizedUrl.includes('\n') ||
-        normalizedUrl.includes('\r');
-
-      if (hasControlChars) {
-        return { valid: false, reason: 'URL不能包含控制字符' };
-      } else {
-        const dangerousChars = ['<', '>', ':', '"', '|', '?', '*'];
-        const invalidChar = dangerousChars.find((char) => normalizedUrl.includes(char));
-
-        if (invalidChar) {
-          return { valid: false, reason: `URL不能包含特殊字符：${invalidChar}` };
-        } else {
-          return { valid: true };
-        }
-      }
-    }
   }
+
+  const hasTraversal =
+    normalizedUrl.includes('..') ||
+    normalizedUrl.includes('/') ||
+    normalizedUrl.includes('\\');
+
+  if (hasTraversal) {
+    return { valid: false, reason: 'URL不能包含路径遍历字符（.. / \\）' };
+  }
+
+  const hasControlChars =
+    normalizedUrl.includes('\0') ||
+    normalizedUrl.includes('\n') ||
+    normalizedUrl.includes('\r');
+
+  if (hasControlChars) {
+    return { valid: false, reason: 'URL不能包含控制字符' };
+  }
+
+  const dangerousChars = ['<', '>', ':', '"', '|', '?', '*'];
+  const invalidChar = dangerousChars.find((char) => normalizedUrl.includes(char));
+
+  if (invalidChar) {
+    return { valid: false, reason: `URL不能包含特殊字符：${invalidChar}` };
+  }
+
+  return { valid: true };
 };
 
-export { createInterface, question, confirmQuestion, isSafeUrl };
+export {
+  createInterface,
+  question,
+  confirmQuestion,
+  isSafeUrl,
+  closeInterface,
+  exitWithError,
+  exitIfFailed,
+  finishCliAction,
+  promptRequired,
+};

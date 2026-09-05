@@ -1,21 +1,28 @@
-.git
-.gitignore
-
-node_modules
-.nuxt
-.output
-dist
-.data
-.nitro
+.react-router
+build
 .cache
+.output
+.nuxt
+node_modules
 
-logs
-*.log
-
+# Editor / OS
 .DS_Store
-.fleet
+Thumbs.db
+.vscode
 .idea
 
+# Env / secrets (keep .env.example for documentation)
 .env
 .env.*
 !.env.example
+
+# Legacy code (kept in repo for reference, not shipped in image)
+legacy
+
+# Git metadata
+.git
+.gitignore
+
+# Dev-only docs that bloat context
+*.md
+!README.md

@@ -1,18 +1,27 @@
 import { execSync, execFileSync } from 'child_process';
-import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { createInterface, question } from './prompt-helper.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {
+  closeInterface,
+  createInterface,
+  exitIfFailed,
+  exitWithError,
+  finishCliAction,
+  promptRequired,
+  question,
+} from './prompt-helper.js';
+import {
+  columnsDir,
+  postsDir,
+  projectRoot,
+  selectColumn,
+} from './content-helper.js';
 
 const SERVER_HOST = process.env.SERVER_HOST;
 const SERVER_USER = process.env.SERVER_USER;
 const SERVER_PATH = process.env.SERVER_PATH;
 
-const projectRoot = path.join(__dirname, '..');
 const args = process.argv.slice(2);
 const isWindows = os.platform() === 'win32';
 
@@ -20,17 +29,19 @@ const checkConfig = () => {
   const hasConfig = [SERVER_HOST, SERVER_USER, SERVER_PATH].every(Boolean);
 
   if (!hasConfig) {
-    console.error('? 错误：未配置服务器信息');
-    console.log('请在 .env 文件中配置以下变量：');
-    console.log('  SERVER_HOST - 服务器地址');
-    console.log('  SERVER_USER - 服务器用户名');
-    console.log('  SERVER_PATH - 服务器目标路径');
-    process.exit(1);
+    exitWithError('❌ 错误：未配置服务器信息', {
+      usage: [
+        '请在 .env 文件中配置以下变量：',
+        '  SERVER_HOST - 服务器地址',
+        '  SERVER_USER - 服务器用户名',
+        '  SERVER_PATH - 服务器目标路径',
+      ].join('\n'),
+    });
   } else {
     if (isWindows) {
-      console.log('?? 检测到 Windows 系统，将使用 scp 命令（不支持增量同步）');
+      console.log('ℹ️ 检测到 Windows 系统，将使用 scp 命令（不支持增量同步）');
     } else {
-      console.log('?? 检测到 Unix 系统，将使用 rsync 命令（支持增量同步）');
+      console.log('ℹ️ 检测到 Unix 系统，将使用 rsync 命令（支持增量同步）');
     }
   }
 };
@@ -66,109 +77,120 @@ const runRemoteCommand = (command) => {
         return true;
       } catch (error) {
         if (error instanceof Error) {
-          console.error('? 远程命令执行失败:', error.message);
+          console.error('❌ 远程命令执行失败:', error.message);
         } else {
-          console.error('? 远程命令执行失败: 未知错误');
+          console.error('❌ 远程命令执行失败: 未知错误');
         }
         return false;
       }
     } else {
-      console.error('? 错误：远程命令为空');
+      console.error('❌ 错误：远程命令为空');
       return false;
     }
   } else {
-    console.error('? 错误：远程命令无效');
+    console.error('❌ 错误：远程命令无效');
     return false;
   }
 };
 
-const cleanRemoteDirectory = (remoteDir, label) => {
+const ensureRemoteDirectory = (remoteDir, label) => {
   const quotedPath = quoteRemotePath(remoteDir);
 
   if (quotedPath) {
-    console.log(`?? 清理远程${label}目录...`);
-    const removed = runRemoteCommand(`rm -rf ${quotedPath}`);
+    console.log(`🔧 确保远程${label}目录存在...`);
+    const created = runRemoteCommand(`mkdir -p ${quotedPath}`);
 
-    if (removed) {
-      const created = runRemoteCommand(`mkdir -p ${quotedPath}`);
-
-      if (created) {
-        console.log(`? 远程${label}目录已清理`);
-        return true;
-      } else {
-        console.error(`? 创建远程${label}目录失败`);
-        return false;
-      }
+    if (created) {
+      return true;
     } else {
-      console.error(`? 清理远程${label}目录失败`);
+      console.error(`❌ 创建远程${label}目录失败`);
       return false;
     }
   } else {
-    console.error('? 错误：远程目录路径无效');
+    console.error('❌ 错误：远程目录路径无效');
     return false;
   }
 };
 
-const getExistingColumns = () => {
-  const columnsDir = path.join(projectRoot, 'content', 'columns');
+const cleanRemoteDirectoryContents = (remoteDir, label) => {
+  const quotedPath = quoteRemotePath(remoteDir);
 
-  if (!fs.existsSync(columnsDir)) {
-    return [];
+  if (quotedPath) {
+    console.log(`🧹 清空远程${label}目录内容...`);
+    const cleaned = runRemoteCommand(`find ${quotedPath} -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +`);
+
+    if (cleaned) {
+      return true;
+    } else {
+      console.error(`❌ 清空远程${label}目录内容失败`);
+      return false;
+    }
   } else {
-    return fs
-      .readdirSync(columnsDir)
-      .filter((name) => {
-        const fullPath = path.join(columnsDir, name);
-        return fs.statSync(fullPath).isDirectory();
-      });
+    console.error('❌ 错误：远程目录路径无效');
+    return false;
   }
 };
 
-const selectColumn = async (rl) => {
-  const columns = getExistingColumns();
-
-  if (columns.length === 0) {
-    console.error('? 错误：没有找到任何专栏');
-    return null;
-  } else {
-    console.log('\n?? 可用的专栏：');
-    columns.forEach((col, index) => {
-      const readmePath = path.join(projectRoot, 'content', 'columns', col, 'README.md');
-      let title = col;
-
-      if (fs.existsSync(readmePath)) {
-        const content = fs.readFileSync(readmePath, 'utf8');
-        const titleMatch = content.match(/^title:\s*(.+)$/m);
-
-        if (titleMatch) {
-          title = titleMatch[1];
-        } else {
-          title = col;
-        }
-      } else {
-        title = col;
-      }
-
-      console.log(`  ${index + 1}. ${title} (${col})`);
-    });
-
-    const answer = await question(rl, '\n?? 请选择专栏（输入序号或专栏路径）: ');
-
-    if (!answer) {
-      return null;
-    } else {
-      const index = parseInt(answer, 10) - 1;
-
-      if (!Number.isNaN(index) && index >= 0 && index < columns.length) {
-        return columns[index];
-      } else if (columns.includes(answer)) {
-        return answer;
-      } else {
-        console.error('? 错误：无效的选择');
-        return null;
-      }
-    }
+const prepareRemoteDirectory = (remoteDir, label, shouldCleanContents = false) => {
+  if (!ensureRemoteDirectory(remoteDir, label)) {
+    return false;
   }
+
+  if (shouldCleanContents) {
+    return cleanRemoteDirectoryContents(remoteDir, label);
+  }
+
+  return true;
+};
+
+const normalizeContentEntryName = (value, label) => {
+  if (typeof value !== 'string') {
+    console.error(`❌ 错误：${label}URL名称无效`);
+    return null;
+  }
+
+  const name = value.trim();
+
+  if (name.length === 0) {
+    console.error(`❌ 错误：${label}URL名称不能为空`);
+    return null;
+  }
+
+  const hasPathSeparator = /[\\/]/.test(name);
+  const isDotPath = name === '.' || name === '..';
+  const hasInvalidCharacter = !/^[A-Za-z0-9._-]+$/.test(name);
+
+  if (hasPathSeparator || isDotPath || path.isAbsolute(name) || hasInvalidCharacter) {
+    console.error(`❌ 错误：${label}URL名称只能包含字母、数字、点号、短横线或下划线`);
+    return null;
+  }
+
+  return name;
+};
+
+const resolveContentEntryDirectory = (type, rawName, label) => {
+  const urlName = normalizeContentEntryName(rawName, label);
+
+  if (!urlName) {
+    return null;
+  }
+
+  const baseDir = path.resolve(projectRoot, 'content', type);
+  const entryPath = path.resolve(baseDir, urlName);
+  const relativePath = path.relative(baseDir, entryPath);
+  const isInsideBase = relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
+
+  if (!isInsideBase) {
+    console.error(`❌ 错误：${label}路径越界`);
+    return null;
+  }
+
+  if (!fs.existsSync(entryPath) || !fs.statSync(entryPath).isDirectory()) {
+    console.error(`❌ 错误：${label} "${urlName}" 不存在`);
+    return null;
+  }
+
+  return { urlName, entryPath };
 };
 
 const getCurrentTimestamp = () => {
@@ -216,7 +238,7 @@ const updateReadmeFiles = (dir, timestamp) => {
             if (result.updated) {
               fs.writeFileSync(readmePath, result.content, 'utf8');
               const relativePath = path.relative(projectRoot, readmePath);
-              console.log(`  ?? ${relativePath}`);
+              console.log(`  📝 ${relativePath}`);
               return count + 1;
             } else {
               return count;
@@ -235,20 +257,17 @@ const updateReadmeFiles = (dir, timestamp) => {
 };
 
 const updateTimestamps = () => {
-  console.log('?? 检查并添加缺失的时间戳...');
+  console.log('🔍 检查并添加缺失的时间戳...');
   const timestamp = getCurrentTimestamp();
-
-  const postsDir = path.join(projectRoot, 'content', 'posts');
-  const columnsDir = path.join(projectRoot, 'content', 'columns');
 
   const updatedPosts = updateReadmeFiles(postsDir, timestamp);
   const updatedColumns = updateReadmeFiles(columnsDir, timestamp);
   const updatedCount = updatedPosts + updatedColumns;
 
   if (updatedCount > 0) {
-    console.log(`? 已为 ${updatedCount} 个文件添加时间戳: ${timestamp}`);
+    console.log(`✅ 已为 ${updatedCount} 个文件添加时间戳: ${timestamp}`);
   } else {
-    console.log('? 所有文件都已有时间戳');
+    console.log('✅ 所有文件都已有时间戳');
   }
 
   return true;
@@ -256,14 +275,14 @@ const updateTimestamps = () => {
 
 const ensureReadmeTimestamp = (readmePath) => {
   if (!fs.existsSync(readmePath)) {
-    console.log('?? 未找到 README.md，跳过时间戳');
+    console.log('ℹ️ 未找到 README.md，跳过时间戳');
     return false;
   } else {
     const content = fs.readFileSync(readmePath, 'utf8');
     const hasDate = /^date:\s*.+$/m.test(content);
 
     if (hasDate) {
-      console.log('?? 已存在时间戳，保持不变');
+      console.log('ℹ️ 已存在时间戳，保持不变');
       return false;
     } else {
       const timestamp = getCurrentTimestamp();
@@ -271,10 +290,10 @@ const ensureReadmeTimestamp = (readmePath) => {
 
       if (result.updated) {
         fs.writeFileSync(readmePath, result.content, 'utf8');
-        console.log(`? 已添加时间戳: ${timestamp}`);
+        console.log(`✅ 已添加时间戳: ${timestamp}`);
         return true;
       } else {
-        console.log('?? 未找到可插入的位置，跳过时间戳');
+        console.log('ℹ️ 未找到可插入的位置，跳过时间戳');
         return false;
       }
     }
@@ -304,106 +323,78 @@ const syncContent = () => {
   updateTimestamps();
   console.log('');
   const remoteContentDir = `${SERVER_PATH}/content`;
-  const isCleaned = cleanRemoteDirectory(remoteContentDir, '内容');
+  const isReady = prepareRemoteDirectory(remoteContentDir, '内容');
 
-  if (isCleaned) {
-    console.log('?? 同步内容到服务器...');
+  if (isReady) {
+    console.log('📤 同步内容到服务器...');
     const contentPath = path.join(projectRoot, 'content');
     const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/`;
 
     return runSyncCommand({
       windowsCommand: `scp -r "${contentPath}/*" "${target}"`,
       unixCommand: `rsync -avz --delete "${contentPath}/" "${target}"`,
-      successMessage: '? 内容同步完成',
-      errorMessage: '? 内容同步失败:',
+      successMessage: '✅ 内容同步完成',
+      errorMessage: '❌ 内容同步失败:',
     });
   } else {
     return false;
   }
 };
 
-const syncPost = (urlName) => {
-  const postPath = path.join(projectRoot, 'content', 'posts', urlName);
-  const postExists = fs.existsSync(postPath);
+const syncContentEntry = ({ type, urlName, label }) => {
+  const entry = resolveContentEntryDirectory(type, urlName, label);
 
-  if (postExists) {
-    const readmePath = path.join(postPath, 'README.md');
-    ensureReadmeTimestamp(readmePath);
-
-    const remotePostDir = `${SERVER_PATH}/content/posts/${urlName}`;
-    const isCleaned = cleanRemoteDirectory(remotePostDir, '文章');
-
-    if (isCleaned) {
-      console.log('');
-      console.log(`?? 同步文章 "${urlName}" 到服务器...`);
-      const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/posts/${urlName}/`;
-
-      return runSyncCommand({
-        windowsCommand: `scp -r "${postPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/posts/"`,
-        unixCommand: `rsync -avz --delete "${postPath}/" "${target}"`,
-        successMessage: '? 文章同步完成',
-        errorMessage: '? 文章同步失败:',
-      });
-    } else {
-      return false;
-    }
-  } else {
-    console.error(`? 错误：文章 "${urlName}" 不存在`);
+  if (!entry) {
     return false;
   }
-};
 
-const syncColumn = (urlName) => {
-  const columnPath = path.join(projectRoot, 'content', 'columns', urlName);
-  const columnExists = fs.existsSync(columnPath);
+  const readmePath = path.join(entry.entryPath, 'README.md');
+  ensureReadmeTimestamp(readmePath);
 
-  if (columnExists) {
-    const readmePath = path.join(columnPath, 'README.md');
-    ensureReadmeTimestamp(readmePath);
+  const remoteDir = `${SERVER_PATH}/content/${type}/${entry.urlName}`;
+  const isReady = prepareRemoteDirectory(remoteDir, label, isWindows);
 
-    const remoteColumnDir = `${SERVER_PATH}/content/columns/${urlName}`;
-    const isCleaned = cleanRemoteDirectory(remoteColumnDir, '专栏');
-
-    if (isCleaned) {
-      console.log(`?? 同步专栏 "${urlName}" 到服务器...`);
-      const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/columns/${urlName}/`;
-
-      return runSyncCommand({
-        windowsCommand: `scp -r "${columnPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/columns/"`,
-        unixCommand: `rsync -avz --delete "${columnPath}/" "${target}"`,
-        successMessage: '? 专栏同步完成',
-        errorMessage: '? 专栏同步失败:',
-      });
-    } else {
-      return false;
-    }
-  } else {
-    console.error(`? 错误：专栏 "${urlName}" 不存在`);
+  if (!isReady) {
     return false;
   }
+
+  console.log('');
+  console.log(`📤 同步${label} "${entry.urlName}" 到服务器...`);
+  const target = `${SERVER_USER}@${SERVER_HOST}:${remoteDir}/`;
+
+  return runSyncCommand({
+    windowsCommand: `scp -r "${entry.entryPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/${type}/"`,
+    unixCommand: `rsync -avz --delete "${entry.entryPath}/" "${target}"`,
+    successMessage: `✅ ${label}同步完成`,
+    errorMessage: `❌ ${label}同步失败:`,
+  });
 };
+
+const syncPost = (urlName) => syncContentEntry({ type: 'posts', urlName, label: '文章' });
+
+const syncColumn = (urlName) => syncContentEntry({ type: 'columns', urlName, label: '专栏' });
 
 const syncJsonFile = (fileName) => {
   const validFiles = ['friends.json', 'projects.json'];
 
   if (!validFiles.includes(fileName)) {
-    console.error(`? 错误：只支持同步 ${validFiles.join(', ')}`);
+    console.error(`❌ 错误：只支持同步 ${validFiles.join(', ')}`);
     return false;
   } else {
     const filePath = path.join(projectRoot, 'content', fileName);
 
     if (!fs.existsSync(filePath)) {
-      console.error(`? 错误：文件 "${fileName}" 不存在`);
+      console.error(`❌ 错误：文件 "${fileName}" 不存在`);
       return false;
     } else {
-      console.log(`?? 同步 ${fileName} 到服务器...`);
+      console.log(`📤 同步 ${fileName} 到服务器...`);
       const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/${fileName}`;
 
       return runSyncCommand({
         windowsCommand: `scp "${filePath}" "${target}"`,
         unixCommand: `rsync -avz "${filePath}" "${target}"`,
-        successMessage: '? 文件同步完成',
-        errorMessage: '? 文件同步失败:',
+        successMessage: '✅ 文件同步完成',
+        errorMessage: '❌ 文件同步失败:',
       });
     }
   }
@@ -411,33 +402,27 @@ const syncJsonFile = (fileName) => {
 
 const handleArgsMode = (mode, target) => {
   if (mode === 'content') {
-    syncContent();
+    exitIfFailed(syncContent());
     return true;
   } else if (mode === 'post') {
     if (!target) {
-      console.error('? 错误：请指定文章URL名称');
-      console.log('用法: npm run sync post <url-name>');
-      process.exit(1);
+      exitWithError('❌ 错误：请指定文章URL名称', { usage: '用法: npm run sync post <url-name>' });
     } else {
-      syncPost(target);
+      exitIfFailed(syncPost(target));
     }
     return true;
   } else if (mode === 'column') {
     if (!target) {
-      console.error('? 错误：请指定专栏URL名称');
-      console.log('用法: npm run sync column <url-name>');
-      process.exit(1);
+      exitWithError('❌ 错误：请指定专栏URL名称', { usage: '用法: npm run sync column <url-name>' });
     } else {
-      syncColumn(target);
+      exitIfFailed(syncColumn(target));
     }
     return true;
   } else if (mode === 'json') {
     if (!target) {
-      console.error('? 错误：请指定JSON文件名');
-      console.log('用法: npm run sync json <friends.json|projects.json>');
-      process.exit(1);
+      exitWithError('❌ 错误：请指定JSON文件名', { usage: '用法: npm run sync json <friends.json|projects.json>' });
     } else {
-      syncJsonFile(target);
+      exitIfFailed(syncJsonFile(target));
     }
     return true;
   } else {
@@ -445,49 +430,29 @@ const handleArgsMode = (mode, target) => {
   }
 };
 
-const requireInput = async (rl, prompt, emptyMessage) => {
-  const value = await question(rl, prompt);
-
-  if (!value) {
-    console.error(emptyMessage);
-    rl.close();
-    process.exit(1);
-  } else {
-    return value;
-  }
-};
-
 const handleInteractiveChoice = async (rl, choice) => {
   if (choice === '1') {
-    syncContent();
-    rl.close();
+    finishCliAction(rl, syncContent());
   } else if (choice === '2') {
-    const urlName = await requireInput(rl, '?? 请输入文章URL名称: ', '? 错误：URL名称不能为空');
-    syncPost(urlName);
-    rl.close();
+    const urlName = await promptRequired(rl, '👉 请输入文章URL名称: ', '❌ 错误：URL名称不能为空');
+    finishCliAction(rl, syncPost(urlName));
   } else if (choice === '3') {
     const urlName = await selectColumn(rl);
 
     if (!urlName) {
-      console.error('? 错误：未选择专栏');
-      rl.close();
-      process.exit(1);
+      exitWithError('❌ 错误：未选择专栏', { rl });
     } else {
-      syncColumn(urlName);
-      rl.close();
+      finishCliAction(rl, syncColumn(urlName));
     }
   } else if (choice === '4') {
-    const fileName = await requireInput(
+    const fileName = await promptRequired(
       rl,
-      '?? 请输入文件名 (friends.json/projects.json): ',
-      '? 错误：文件名不能为空'
+      '👉 请输入文件名 (friends.json/projects.json): ',
+      '❌ 错误：文件名不能为空'
     );
-    syncJsonFile(fileName);
-    rl.close();
+    finishCliAction(rl, syncJsonFile(fileName));
   } else {
-    console.error('? 无效的选项');
-    rl.close();
-    process.exit(1);
+    exitWithError('❌ 无效的选项', { rl });
   }
 };
 
@@ -511,15 +476,15 @@ async function main() {
       console.log('4. 同步JSON文件 (json)')
       console.log('');
 
-      const choice = await question(rl, '?? 请输入选项 (1-4): ');
+      const choice = await question(rl, '👉 请输入选项 (1-4): ');
       await handleInteractiveChoice(rl, choice);
     } catch (error) {
       if (error instanceof Error) {
-        console.error('? 发生错误:', error.message);
+        console.error('❌ 发生错误:', error.message);
       } else {
-        console.error('? 发生错误: 未知错误');
+        console.error('❌ 发生错误: 未知错误');
       }
-      rl.close();
+      closeInterface(rl);
       process.exit(1);
     }
   }

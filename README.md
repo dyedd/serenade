@@ -1,217 +1,218 @@
-# Serenade · 动静结合的 Markdown 博客与 AI 写作助手
+# Serenade · 动静结合的 Markdown 博客
 
-Serenade 是一个基于 Nuxt 的博客 / 知识库 / 朋友圈系统：内容用 Markdown（与少量 JSON）保存，页面可以静态导出，也可以用 Node 运行；同时也提供一套可选的 AI 写作脚手架，用来生成 URL slug 与封面图。
+基于 **Vite + React Router v7 + shadcn/ui** 的博客 / 知识库 / 朋友圈系统。
+内容用 Markdown(与少量 JSON)保存,支持**静态导出**与 **Node SSR**两种部署形态,运行时读取 `content/` 热更新。
 
-## 动静结合：把「内容」与「发布」分开
+## 技术栈
 
-很多争论其实都混在一起：要不要服务器、要不要数据库、要不要反复编译。
-
-Serenade 的选择很明确：
-
-- **静**：内容永远是文件（`content/`），不依赖数据库
-- **动**：在 Node 运行时读取这些文件，SSR 渲染页面，并提供搜索、RSS 等能力
-- **合**：同一套内容结构，既能 `build` 跑服务，也能 `generate` 导出静态
-
-## 两种部署方式
-
-| 你在乎的事 | 静态导出（`nuxt generate`） | Node 运行（`nuxt build`） |
-| ---------- | --------------------------- | ------------------------- |
-| 服务器     | 不需要（静态托管即可）      | 需要（Node 进程）         |
-| 数据库     | 不需要                      | 不需要                    |
-| 内容更新   | 重新 generate               | 同步 `content/` 即可      |
-| 运行时能力 | 受限                        | 完整                      |
-| 适合场景   | 低维护、纯静态              | 频繁更新、需要动态能力    |
-
-你可以把它理解成一句宣传语：
-
-> 内容是静的，发布是自由的。
-
-## 可以主打的亮点
-
-- **构建一次，内容常新（Node 模式）**：文章/友链/项目更新只需要同步 `content/`
-- **0 数据库**：Markdown 天然适合 Git 管理，迁移与备份都轻
-- **博客 + 知识库 + 朋友圈**：文章、VuePress 风格专栏、友链与 RSS 订阅聚合、项目展示
-- **AI 写作脚手架（可选）**：生成 URL slug、生成文章封面，把重复劳动交给机器
-- **同构体验**：既可静态托管，也可 SSR 运行
-
-## 功能概览
-
-- 文章系统：`content/posts/<slug>/README.md`
-- 专栏/知识库：`content/columns/<slug>/`
-- 标签聚合：从 front-matter 统计
-- 全文搜索：服务端搜索 API
-- 友链 / 朋友圈：`content/friends.json` + RSS 拉取
-- 项目展示：`content/projects.json`
-- 数学公式：KaTeX
-- UI：TailwindCSS、暗黑模式、响应式布局
+| 层        | 技术                                                                |
+| --------- | ------------------------------------------------------------------- |
+| 构建      | Vite 8                                                              |
+| 框架      | React Router v7(App Router、Turbopack dev)                          |
+| UI        | React 19 + Tailwind v4 + shadcn/ui(Nova preset,Radix 基座)         |
+| 字体      | Geist Variable + Geist Mono Variable + Noto Serif SC Variable       |
+| 内容      | `marked` + `marked-katex-extension` + `highlight.js` + `gray-matter` |
+| 数据源    | `content/`(纯文件,无数据库)                                         |
+| 脚本      | Node CLI: `tsx`,AI helper 直连 OpenAI 兼容 API                       |
 
 ## 快速开始
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev        # http://127.0.0.1:5173
 ```
 
-访问：`http://localhost:3000`
+需要 Node ≥ 22、pnpm ≥ 10。
 
-## 部署
+## 命令
 
-### 1) Docker 部署（推荐）
+| 命令                | 作用                                                          |
+| ------------------- | ------------------------------------------------------------- |
+| `pnpm dev`          | 启动 dev server(Vite + HMR,Turbopack)                        |
+| `pnpm typecheck`    | `react-router typegen && tsc` 全量类型检查                     |
+| `pnpm tsx app/lib/content/__check.ts` | 内容读取层自检(18 项)                       |
+| `pnpm build`        | SSR 构建(默认:`ssr: true`)                                   |
+| `pnpm build:static` | 静态导出:prerender 所有可发现路由到 `build/client/*.html`     |
+| `pnpm start`        | 启动生产服务:`react-router-serve ./build/server/index.js`     |
+| `pnpm new:post`     | 创建新文章(支持 AI 生成 slug/封面)                            |
+| `pnpm new:column`   | 创建新专栏                                                    |
+| `pnpm sync`         | 同步 `content/` 到服务器(Windows scp / Linux rsync)           |
 
-#### 方式 A：官方镜像（推荐）
+## 两种部署方式
 
-每次 push 到 main 分支会自动构建并推送镜像到 GHCR。
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ 客户端                                                               │
+│ 浏览器(SSR HTML 或预渲染 HTML)                                       │
+└───────────────────────────────┬──────────────────────────────────────┘
+                                ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│ Node 模式(SSR + 动态)                                                │
+│  - pnpm build → node build/server/index.js                            │
+│  - pnpm start → react-router-serve                                    │
+│  - 内容改动:容器重启后挂载的 content/ 即生效                          │
+│  - /api/friends:运行时拉取 RSS                                        │
+└───────────────────────────────┬──────────────────────────────────────┘
+                                ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│ 静态模式(prerender + CDN)                                             │
+│  - pnpm build:static → 198 个 HTML + assets + feed.xml 写入 build/client │
+│  - 任何静态服务器都能托管:`python -m http.server 4173 --directory`    │
+│  - /api/friends:构建时一次性拉取并嵌入(朋友圈为构建快照)             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Docker(推荐 Node 模式)
 
 ```bash
-# 创建 content 目录并放入你的内容
-mkdir -p content
-
-# 启动
+mkdir -p content && cp -r /path/to/your/content/* content/
 docker compose up -d
 ```
 
-更新镜像：
+默认 `http://localhost:3000`。镜像名 `ghcr.io/dyedd/serenade:latest`,
+`content/` 通过 volume 挂载(`./content:/app/content`),改文章后无需重建。
+
+### 静态导出
 
 ```bash
-docker compose pull && docker compose up -d
+pnpm build:static
+# 输出 build/client/ —— 部署到任意 CDN / Nginx / GitHub Pages / COS
 ```
 
-- 默认监听 `3000`，可用 `SERENADE_PORT=8080 docker compose up -d` 映射到其它端口
-- `docker-compose.yml` 把宿主机 `./content` 挂载进容器，内容更新后刷新即可生效
-- 站点信息通过 `.env` 中的 `SITE_*` 环境变量配置，不再把个人站点配置写死到预构建镜像
-
-#### 方式 B：本地构建镜像
-
-如果你 fork 了项目或做了自定义修改，可以本地构建：
-
-```bash
-docker build -t serenade:local .
-docker run -d -p 3000:3000 -v ./content:/app/content --name serenade serenade:local
-```
-
-#### 方式 C：裸机（不使用 Docker）
-
-```bash
-pnpm build
-# 上传 .output/ 与 content/ 到服务器
-node .output/server/index.mjs
-```
-
-后续更新内容：只同步 `content/`，无需重新 `build`。
-
-项目内置 `npm run sync`（Windows 使用 `scp`，Linux/Mac 使用 `rsync`）同步 `content/`。
-
-### 2) 静态导出（推荐：0 服务器）
-
-```bash
-pnpm generate
-# 部署 .output/public 到任意静态托管
-```
-
-本地静态调试：
-
-```bash
-py -m http.server 4173 --directory .output/public
-```
-
-访问：`http://localhost:4173/feed`
-
-- 更新内容需要重新 `generate`（可交给 CI 自动化）
-
-## 内容结构
-
-```
-content/
-  posts/
-    <post-slug>/
-      README.md
-      cover.png (可选)
-  columns/
-    <column-slug>/
-      README.md
-      <chapter>.md
-  friends.json
-  projects.json
-```
-
-## 脚本工具
-
-- `npm run new:post`：创建文章（可选 AI 生成 URL / 配图）
-- `npm run new:column`：创建专栏
-- `npm run sync`：同步到服务器（支持同步 `content/`、`.output/`、指定文章/专栏）
-
-AI 与同步相关配置见 `.env.example`：
-
-- 生成 URL slug：配置 `OPENAI_API_KEY`
-- 生成封面图：配置 `IMAGE_API_KEY`
+> 静态模式下,友链朋友圈是**构建时刻的快照**。如需实时,请用 Node 模式。
 
 ## 站点配置
 
-站点信息通过 `.env` 中的 `SITE_*` 环境变量覆盖。
-
-- 没有 `.env` 时，直接使用 [nuxt.config.ts](./nuxt.config.ts) 里的内置默认值
-- `.env.example` 只是示例，不会被自动加载；需要复制为 `.env` 才会生效
+通过 `.env` 中的 `SITE_*` 环境变量覆盖,默认值定义在 `app/lib/site-config.ts`。
 
 ```env
 SITE_TITLE=染念的笔记
 SITE_AUTHOR=染念
 SITE_URL=https://dyedd.cn
 SITE_EMAIL=1176996982@qq.com
-SITE_PROFILE_AVATAR=/logo.jpg
 SITE_PROFILE_INTRO=第一句|第二句
 SITE_PROFILE_MOTTO=第一句|第二句
-SITE_PROFILE_TECH_STACK=Python::https://img.shields.io/...|Vue::https://img.shields.io/...
+SITE_PROFILE_TECH_STACK=Python::https://img.shields.io/...|Vue::https://...
 ```
 
-常用可配置项：
+完整可配置项见 `.env.example`。
+没有 `.env` 时,使用 `site-config.ts` 中的内置默认值。
 
-- 站点基础信息：`SITE_TITLE`、`SITE_AUTHOR`、`SITE_DESCRIPTION`、`SITE_KEYWORDS`、`SITE_URL`、`SITE_EMAIL`、`SITE_LANG`、`SITE_START_TIME`
-- 个人资料：`SITE_PROFILE_AVATAR`、`SITE_PROFILE_BADGE`、`SITE_PROFILE_INTRO`、`SITE_PROFILE_MOTTO`、`SITE_PROFILE_STATEMENT`、`SITE_PROFILE_GITHUB_CHART`、`SITE_PROFILE_TECH_STACK`
-- 社交与统计：`SITE_GITHUB_URL`、`SITE_QQ_URL`、`SITE_ANALYTICS_SCRIPT`、`SITE_ANALYTICS_WEBSITE_ID`
-- 备案信息：`SITE_FOOTER_ICP_LABEL`
+## 内容结构
 
-其中一些值会自动复用，不需要重复配置：
-
-- `profile.name` 复用 `SITE_AUTHOR`
-- 邮箱链接自动由 `SITE_EMAIL` 生成
-- 页脚版权名复用 `SITE_AUTHOR`
-- `poweredBy` 固定为 `Powered by serenade` 和项目仓库地址
-- QQ 图标提示文案固定为 `QQ`
-- 友链申请联系文案固定为 `邮箱`
-- 友链申请模板默认复用 `SITE_AUTHOR`、`SITE_URL`、`SITE_DESCRIPTION`、`SITE_PROFILE_AVATAR`
-- `SITE_PROFILE_INTRO`、`SITE_PROFILE_MOTTO` 用 `|` 分隔多行
-- `SITE_PROFILE_TECH_STACK` 用 `标签::图标URL|标签::图标URL` 配置
-
-默认值直接定义在 `nuxt.config.ts` 中：
-
-```ts
-export const siteConfig = {
-  author: "染念",
-  title: "染念的笔记",
-  description: "Writing code, painful and happy",
-  keywords: "染念,染念的笔记,染念の笔记,染念的博客,博客,blog",
-  url: "https://dyedd.cn",
-  email: "1...2@qq.com",
-  lang: "zh-CN",
-  startTime: "2017-02-11",
-};
+```
+content/
+├── posts/
+│   └── <post-slug>/
+│       ├── README.md       # front-matter + markdown
+│       └── cover.png       # 可选
+├── columns/
+│   └── <column-slug>/
+│       ├── README.md       # 专栏说明(可仅含 front-matter)
+│       └── <chapter>.md    # 章节,文件名按字典序排序
+├── friends.json            # 友链列表
+└── projects.json           # 项目 + 分类
 ```
 
-## API
+## 路由
 
-接口位于 `server/api/`，常用如下：
+| 路由                                  | 类型 | 说明                                          |
+| ------------------------------------- | ---- | --------------------------------------------- |
+| `/`                                   | SSR  | 首页                                          |
+| `/posts`                              | SSR  | 文章列表(分页)                                |
+| `/posts/:slug`                        | SSR  | 文章详情                                      |
+| `/columns`                            | SSR  | 专栏列表                                      |
+| `/columns/:path`                      | SSR  | 专栏详情 + 章节侧栏                           |
+| `/columns/:path/:chapter`             | SSR  | 章节内容                                      |
+| `/tags`                               | SSR  | 标签云                                        |
+| `/tags/:tag`                          | SSR  | 该标签下的文章                                |
+| `/projects`                           | SSR  | 项目展示                                      |
+| `/friends`                            | SSR  | 友链                                          |
+| `/moments`                            | SSR  | 朋友圈(客户端拉取 RSS)                       |
+| `/feed.xml`                           | SSR  | RSS,带 ETag/304                               |
+| `/<id>.html`                          | 301  | 旧 URL → `/posts/<slug>` 重定向                |
+| `/api/posts[?page=]`                  | JSON | 文章列表                                      |
+| `/api/posts/:slug`                    | JSON | 文章详情                                      |
+| `/api/posts/search?keyword=`          | JSON | 全文搜索                                      |
+| `/api/columns[?page=]`                | JSON | 专栏列表                                      |
+| `/api/columns/:path`                  | JSON | 专栏详情                                      |
+| `/api/columns/:path/:chapter`         | JSON | 章节内容                                      |
+| `/api/tags`                           | JSON | 标签统计                                      |
+| `/api/tags/:tag`                      | JSON | 该标签下的文章                                |
+| `/api/projects[?category=]`           | JSON | 项目列表                                      |
+| `/api/projects/categories`            | JSON | 项目分类                                      |
+| `/api/friends[?url=]`                 | JSON | 友链 + 单站 RSS 拉取                          |
+| `/api/assets/:type/:slug/:file`       | 二进制 | content 内图片/附件流式回传                  |
 
-- `GET /api/posts?page=&pageSize=`：文章列表（按日期倒序）
-- `GET /api/posts/<path>`：单篇文章（meta + html + prev/next）
-- `GET /api/posts/search?keyword=&page=&pageSize=`：全文搜索
-- `GET /api/columns` / `GET /api/columns/<path>`：专栏与章节
-- `GET /api/tags` / `GET /api/tags/<tag>`：标签统计 / 标签文章
-- `GET /api/projects` / `GET /api/projects/categories`：项目
-- `GET /api/friends`：友链 / RSS 朋友圈（需联网）
+## 脚本工具
 
-## 贡献
+- `pnpm new:post` — 创建文章,可选用 AI 生成 URL slug(`OPENAI_*`)和封面图(`IMAGE_*`)
+- `pnpm new:column` — 创建专栏
+- `pnpm sync` — 同步 `content/` 到服务器,支持单篇同步
 
-欢迎提交 Issue 和 Pull Request。
+`OPENAI_BASE_URL` 使用 OpenAI 兼容 API base URL(如 `https://api.openai.com/v1`),脚本固定请求 `/chat/completions`。
+`IMAGE_BASE_URL` 同上;`IMAGE_API_MODE=images` 请求 `/images/generations`,`=chat` 请求 `/chat/completions`。
+
+## 项目结构
+
+```
+my-blog/
+├── app/
+│   ├── root.tsx                       # HTML shell + favicon + fonts
+│   ├── routes.ts                      # 路由声明
+│   ├── app.css                        # Tailwind v4 + Geist/Noto Serif SC + shadcn tokens
+│   ├── routes/
+│   │   ├── _layout.tsx                # 全局 Nav + Footer + BackToTop
+│   │   ├── home.tsx                   # 首页(渐变名字、社交、最新文章)
+│   │   ├── posts._index.tsx           # 文章列表
+│   │   ├── posts.$slug.tsx            # 文章详情
+│   │   ├── columns._index.tsx
+│   │   ├── columns.$path._index.tsx
+│   │   ├── columns.$path.$chapter.tsx
+│   │   ├── tags._index.tsx
+│   │   ├── tags.$tag.tsx
+│   │   ├── projects.tsx
+│   │   ├── friends.tsx
+│   │   ├── moments.tsx
+│   │   ├── feed[.]xml.tsx             # /feed.xml(SSR,带 ETag/304)
+│   │   ├── $.tsx                      # splat:旧 .html 重定向 + 404 兜底
+│   │   └── api.*.tsx                  # 12 个 API 路由
+│   ├── components/
+│   │   ├── Nav.tsx                    # shadcn DropdownMenu
+│   │   ├── Footer.tsx
+│   │   ├── BackToTop.tsx
+│   │   ├── DarkModeToggle.tsx
+│   │   ├── Pagination.tsx
+│   │   ├── ui/                        # shadcn primitives
+│   │   └── friends/RSSAggregator.tsx
+│   ├── hooks/useTheme.ts
+│   ├── lib/
+│   │   ├── site-config.ts             # SITE_* env 读取
+│   │   ├── utils.ts                   # shadcn cn()
+│   │   ├── redirects.ts + .json       # 180 条旧 URL
+│   │   └── content/                   # 内容读取层
+│   │       ├── posts.ts columns.ts tags.ts projects.ts friends.ts
+│   │       ├── markdown.ts            # marked + katex + hljs
+│   │       ├── assets.ts reading-time.ts
+│   │       └── __check.ts             # 自检
+│   └── rss.d.ts                       # rss 包类型声明
+├── components.json                    # shadcn 配置
+├── content/                           # 内容(项目仓库保留)
+├── public/                            # 静态资源(logo.jpg / iconfont.js / favicon)
+├── scripts/                           # Node CLI(new-post / sync / AI helpers)
+├── react-router.config.ts             # ssr + prerender 配置
+├── vite.config.ts                     # Vite 8 + tailwindcss + reactRouter 插件
+├── Dockerfile                         # 多阶段 pnpm 构建
+├── docker-compose.yml                 # SITE_* env + content/ volume
+└── package.json
+```
+
+## 致谢
+
+- [React Router](https://reactrouter.com/) — 框架
+- [shadcn/ui](https://ui.shadcn.com/) — UI 基座
+- [Tailwind CSS](https://tailwindcss.com/) — 样式
+- [marked](https://marked.js.org/) + [KaTeX](https://katex.org/) + [highlight.js](https://highlightjs.org/) — Markdown 渲染
 
 ## License
 

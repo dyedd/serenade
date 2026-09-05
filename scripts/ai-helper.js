@@ -5,8 +5,27 @@ const BASE_URL = process.env.OPENAI_BASE_URL ?? 'https://aiping.cn/api/v1';
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
 
 const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
-const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL ?? 'https://aiping.cn/api/v1';
-const IMAGE_MODEL = process.env.IMAGE_MODEL ?? 'Doubao-Seedream-4.5';
+const IMAGE_API_MODE = String(process.env.IMAGE_API_MODE ?? 'images').trim().toLowerCase();
+const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL ?? 'https://api.openai.com/v1';
+const IMAGE_MODEL = process.env.IMAGE_MODEL ?? 'gpt-image-2';
+
+const SLUG_RESPONSE_FORMAT = {
+  type: 'json_schema',
+  json_schema: {
+    name: 'slug_response',
+    strict: true,
+    schema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['slug'],
+      properties: {
+        slug: {
+          type: 'string',
+        },
+      },
+    },
+  },
+};
 
 const normalizeCoverKindByTargetPath = (targetPath) => {
   if (typeof targetPath !== 'string') {
@@ -38,11 +57,13 @@ const getCoverAspectHint = (coverKind) => {
     column: {
       kind: 'column',
       layoutHint: '9:16 竖图（portrait）',
+      size: '1024x1536',
       promptSuffix: 'aspect ratio 9:16, portrait, vertical composition, clean safe area for title',
     },
     post: {
       kind: 'post',
       layoutHint: '16:9 横图（landscape）',
+      size: '1536x1024',
       promptSuffix: 'aspect ratio 16:9, landscape, wide composition, clean safe area for title',
     },
   };
@@ -54,51 +75,81 @@ const getCoverAspectHint = (coverKind) => {
   }
 };
 
-const appendPromptSuffix = (prompt, suffix) => {
-  const normalizedPrompt = String(prompt ?? '').trim();
-  const normalizedSuffix = String(suffix ?? '').trim();
-
-  if (!normalizedPrompt && !normalizedSuffix) {
-    return '';
-  } else if (!normalizedPrompt) {
-    return normalizedSuffix;
-  } else if (!normalizedSuffix) {
-    return normalizedPrompt;
-  } else if (normalizedPrompt.includes(normalizedSuffix)) {
-    return normalizedPrompt;
-  } else {
-    return `${normalizedPrompt}, ${normalizedSuffix}`;
-  }
-};
-
 const buildHeaders = (apiKey) => ({
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${apiKey}`,
 });
 
-const parseResponseErrorMessage = async (response) => {
-  const bodyText = await response.text();
+const normalizeBaseUrl = (baseUrl) => String(baseUrl ?? '').trim().replace(/\/+$/, '');
 
-  if (bodyText) {
-    try {
-      const parsed = JSON.parse(bodyText);
-      const message = parsed?.error?.message;
+const chatCompletionsUrl = () => `${normalizeBaseUrl(BASE_URL)}/chat/completions`;
 
-      if (message) {
-        return message;
-      } else {
-        return bodyText;
-      }
-    } catch (error) {
-      if (error instanceof SyntaxError) {
-        return bodyText;
-      } else {
-        throw error;
-      }
+const imageGenerationUrl = () => {
+  if (IMAGE_API_MODE === 'images') {
+    return `${normalizeBaseUrl(IMAGE_BASE_URL)}/images/generations`;
+  }
+
+  if (IMAGE_API_MODE === 'chat') {
+    return `${normalizeBaseUrl(IMAGE_BASE_URL)}/chat/completions`;
+  }
+
+  throw new Error(`不支持的图片API模式: ${IMAGE_API_MODE}`);
+};
+
+const summarizeBodyText = (bodyText, maxLength = 240) => {
+  const normalizedText = String(bodyText ?? '').replace(/\s+/g, ' ').trim();
+
+  if (!normalizedText) {
+    return '';
+  }
+
+  if (normalizedText.length <= maxLength) {
+    return normalizedText;
+  }
+
+  return `${normalizedText.slice(0, maxLength)}…`;
+};
+
+const parseJsonText = (bodyText) => {
+  const trimmedText = String(bodyText ?? '').trim();
+
+  if (!trimmedText) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(trimmedText);
+  } catch {
+    return null;
+  }
+};
+
+const getResponseErrorMessage = (response, bodyText) => {
+  const parsed = parseJsonText(bodyText);
+
+  if (parsed) {
+    const message = parsed?.error?.message ?? parsed?.message;
+
+    if (message) {
+      return message;
     }
-  } else {
+  }
+
+  const bodyPreview = summarizeBodyText(bodyText);
+
+  if (bodyPreview) {
+    const contentType = response.headers.get('content-type') ?? '';
+    const responseUrl = response.url ? `；URL: ${response.url}` : '';
+    const contentTypeInfo = contentType ? `；Content-Type: ${contentType}` : '';
+
+    return `${bodyPreview}${responseUrl}${contentTypeInfo}`;
+  }
+
+  if (response.statusText) {
     return response.statusText;
   }
+
+  return `HTTP ${response.status}`;
 };
 
 const requestJson = async (url, body, apiKey, errorPrefix) => {
@@ -108,105 +159,231 @@ const requestJson = async (url, body, apiKey, errorPrefix) => {
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) {
-    const errorMessage = await parseResponseErrorMessage(response);
-    throw new Error(`${errorPrefix}: ${errorMessage}`);
-  } else {
-    return response.json();
+  const responseText = await response.text();
+  const parsed = parseJsonText(responseText);
+
+  if (response.ok) {
+    if (parsed) {
+      return parsed;
+    }
+
+    const bodyPreview = summarizeBodyText(responseText);
+    const contentType = response.headers.get('content-type') ?? '';
+    const contentTypeInfo = contentType ? `；Content-Type: ${contentType}` : '';
+    const previewInfo = bodyPreview ? `；响应预览: ${bodyPreview}` : '';
+
+    throw new Error(`${errorPrefix}: 返回内容不是有效JSON${contentTypeInfo}${previewInfo}`);
   }
+
+  const errorMessage = getResponseErrorMessage(response, responseText);
+
+  throw new Error(`${errorPrefix}: ${errorMessage}`);
+};
+
+const normalizeSlug = (slug) =>
+  String(slug ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const readSlugResponse = (data) => {
+  const content = data?.choices?.[0]?.message?.content;
+  const parsed = typeof content === 'string' ? parseJsonText(content) : null;
+  const firstLine = typeof content === 'string' ? content.split(/\r?\n/)[0] : '';
+  const firstLineJson = parseJsonText(firstLine);
+  const slug = normalizeSlug(parsed?.slug ?? firstLineJson?.slug ?? firstLine);
+
+  if (!slug) {
+    throw new Error('API返回的slug为空或格式无效');
+  }
+
+  return slug;
+};
+
+const buildCoverPrompt = (title, coverAspect) => `Create a modern technical blog cover image for the article titled "${title}".
+Use a clean, professional, minimal composition with visual metaphors related to the title.
+Do not render readable title text, UI mockups, watermarks, logos, or captions.
+Use soft but distinct colors, strong focal structure, and enough negative space for blog layout cropping.
+Output composition: ${coverAspect.layoutHint}; ${coverAspect.promptSuffix}.`;
+
+const buildImageRequestBody = (prompt, coverAspect) => {
+  if (IMAGE_API_MODE === 'images') {
+    return {
+      model: IMAGE_MODEL,
+      prompt,
+      size: coverAspect.size,
+    };
+  }
+
+  if (IMAGE_API_MODE === 'chat') {
+    return {
+      model: IMAGE_MODEL,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    };
+  }
+
+  throw new Error(`不支持的图片API模式: ${IMAGE_API_MODE}`);
+};
+
+const parseImageDataUrl = (value) => {
+  const match = String(value ?? '').match(/^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$/);
+
+  return match?.[1] ?? null;
+};
+
+const findFirstUrl = (value) => {
+  const match = String(value ?? '').match(/https?:\/\/[^\s"'<>)]*/);
+
+  return match?.[0] ?? null;
+};
+
+const imagePayloadFromValue = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === 'object') {
+    return imagePayloadFromValue(value.url);
+  }
+
+  const dataUrlBase64 = parseImageDataUrl(value);
+
+  if (dataUrlBase64) {
+    return { kind: 'base64', value: dataUrlBase64 };
+  }
+
+  const normalizedValue = String(value).trim();
+  const url = normalizedValue.startsWith('http') ? normalizedValue : findFirstUrl(normalizedValue);
+
+  if (url) {
+    return { kind: 'url', value: url };
+  }
+
+  return null;
+};
+
+const imagePayloadFromBase64 = (value) => {
+  const normalizedValue = String(value ?? '').trim();
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const dataUrlBase64 = parseImageDataUrl(normalizedValue);
+
+  return {
+    kind: 'base64',
+    value: dataUrlBase64 ?? normalizedValue,
+  };
+};
+
+const extractImagePayloadFromObject = (value) => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  return (
+    imagePayloadFromBase64(value.b64_json) ??
+    imagePayloadFromValue(value.url) ??
+    imagePayloadFromValue(value.image_url) ??
+    imagePayloadFromBase64(value.result) ??
+    imagePayloadFromValue(value.result)
+  );
+};
+
+const extractChatContent = (messageContent) => {
+  if (typeof messageContent === 'string') {
+    return messageContent;
+  }
+
+  if (Array.isArray(messageContent)) {
+    const textPart = messageContent.find((part) => typeof part?.text === 'string');
+    const imagePart = messageContent.find(
+      (part) => typeof part?.image_url?.url === 'string' || typeof part?.image_url === 'string'
+    );
+    const imageValue =
+      typeof imagePart?.image_url === 'string' ? imagePart.image_url : imagePart?.image_url?.url;
+
+    return imageValue ?? textPart?.text ?? '';
+  }
+
+  return '';
+};
+
+const extractImagePayload = (data) => {
+  const imageApiPayload = extractImagePayloadFromObject(data?.data?.[0]);
+
+  if (imageApiPayload) {
+    return imageApiPayload;
+  }
+
+  const chatContent = extractChatContent(data?.choices?.[0]?.message?.content);
+  const parsedContent = parseJsonText(chatContent);
+
+  return extractImagePayloadFromObject(parsedContent) ?? imagePayloadFromValue(chatContent);
+};
+
+const writeImageFile = async (payload, targetPath) => {
+  const { writeFileSync } = await import('fs');
+
+  if (payload.kind === 'base64') {
+    writeFileSync(targetPath, Buffer.from(payload.value, 'base64'));
+    return;
+  }
+
+  if (payload.kind === 'url') {
+    const imageResponse = await fetch(payload.value);
+
+    if (!imageResponse.ok) {
+      throw new Error(`下载图片失败: ${imageResponse.status} ${imageResponse.statusText}`);
+    }
+
+    const buffer = await imageResponse.arrayBuffer();
+    writeFileSync(targetPath, Buffer.from(buffer));
+    return;
+  }
+
+  throw new Error(`不支持的图片返回类型: ${payload.kind}`);
 };
 
 const generateUrlWithAI = async (title) => {
   if (!API_KEY) {
-    console.error('? 错误：未找到API密钥');
+    console.error('❌ 错误：未找到API密钥');
     console.log('请在项目根目录创建 .env 文件，并配置 OPENAI_API_KEY');
     console.log('参考 .env.example 文件');
     return null;
   } else {
-    const prompt = `你是一个URL生成助手。基于以下博客内容的URL命名规律，为新标题生成一个合适的URL路径。
-
-## URL命名规律总结
-
-### 核心规则：
-1. **格式风格**：主要使用kebab-case（小写字母+短横线分隔）
-   - 示例：django-jwt-login, axios-cancel-request-js, vue3-reactivity-deep-dive
-
-2. **中文转英文**：将中文标题转换为简洁、有意义的英文关键词
-   - "Django实现jwt方式登录" → django-jwt-login
-   - "使用axios取消请求" → axios-cancel-request-js
-   - "2024年总结" → 2024summary
-
-3. **技术术语保留**：技术相关词汇保留英文缩写或原名
-   - 常见技术词：js, vue, react, django, python, c, cpp, rust, docker, git, jwt, api
-   - 示例：django-vue-403-solution, intel-arc-wsl-oneapi-guide
-
-4. **特殊字符处理**：删除所有特殊符号和表情符号
-   - "2024年总结??" → 2024summary
-
-5. **长度要求**：简洁但有描述性，通常2-6个单词
-   - 避免过长：? how-to-implement-user-authentication-system-in-django-with-jwt
-   - 合适长度：? django-jwt-auth
-
-6. **数字处理**：年份、版本号可以保留
-   - 2024summary, vue3-composition-api, python-3-12-features
-
-### 真实示例参考：
-- "Django实现jwt方式登录" → django-jwt-login
-- "使用axios取消请求 - 原生JavaScript" → axios-cancel-request-js
-- "2024年总结" → 2024summary
-- "CSS常见单位" → css-common-units
-- "C++中的vector用法" → cpp-vector-usage
-- "LeetCode 509 斐波那契数" → leetcode-509-fibonacci
-
-### 重要提醒：
-- 不要过度翻译，保持技术词汇原样
-- 不要添加无意义的词（如：article, post, blog）
-- 保持一致性风格
-
----
-
-现在请为以下标题生成URL路径：
-标题："${title}"
-
-要求：
-1. 只返回URL路径本身，不要任何解释
-2. 使用kebab-case格式
-3. 保持简洁有意义
-4. 技术词保留原样`;
-
     try {
       const body = {
         model: MODEL,
+        response_format: SLUG_RESPONSE_FORMAT,
         messages: [
           {
             role: 'system',
-            content: '你是一个URL生成专家，擅长根据文章标题生成简洁、有意义、符合规范的URL路径。',
+            content:
+              '你负责生成技术博客 URL slug。必须只返回一个 JSON 对象，格式为 {"slug":"english-kebab-case"}，不要 Markdown，不要解释，不要多余文本。slug 使用英文 kebab-case，保留常见技术词和数字，不要包含 article、post、blog 等泛词。',
           },
           {
             role: 'user',
-            content: prompt,
+            content: `标题：${title}`,
           },
         ],
       };
 
-      const data = await requestJson(
-        `${BASE_URL}/chat/completions`,
-        body,
-        API_KEY,
-        'API请求失败'
-      );
-      const suggestedUrl = data?.choices?.[0]?.message?.content;
-
-      if (suggestedUrl) {
-        return suggestedUrl.trim();
-      } else {
-        throw new Error('API返回内容为空');
-      }
+      const data = await requestJson(chatCompletionsUrl(), body, API_KEY, 'API请求失败');
+      return readSlugResponse(data);
     } catch (error) {
       if (error instanceof Error) {
-        console.error('? AI生成URL失败:', error.message);
+        console.error('❌ AI生成URL失败:', error.message);
       } else {
-        console.error('? AI生成URL失败: 未知错误');
+        console.error('❌ AI生成URL失败: 未知错误');
       }
       return null;
     }
@@ -221,92 +398,28 @@ const generateImageWithAI = async (title, targetPath) => {
     const coverAspect = getCoverAspectHint(coverKind);
 
     try {
-      const fallbackPrompt = `Blog cover image for "${title}", modern minimalist style, soft colors, tech-themed`;
-      let imagePrompt = fallbackPrompt;
+      const finalPrompt = buildCoverPrompt(title, coverAspect);
 
-      if (API_KEY) {
-        console.log('?? 分析标题，生成配图描述...');
-        try {
-          const responseData = await requestJson(
-            `${BASE_URL}/chat/completions`,
-            {
-              model: MODEL,
-              messages: [
-                {
-                  role: 'system',
-                  content: '你是一个图片描述生成专家。根据博客文章标题，生成适合作为配图的详细描述。描述要具体、视觉化，符合技术博客风格。',
-                },
-                {
-                  role: 'user',
-                  content: `请为标题"${title}"生成一个配图的详细描述。要求：
-1. 提取标题中的关键技术词汇和主题
-2. 描述要具体、有画面感
-3. 风格：现代、简约、专业
-4. 色彩：柔和、舒适
-5. 构图比例：${coverAspect.layoutHint}
-6. 只返回图片描述本身，不要解释
-
-示例：
-标题："Vue3响应式原理深入解析"
-描述：A modern tech illustration showing Vue.js logo with flowing reactive data streams, abstract nodes connecting in a network pattern, soft gradient background in green and blue tones, minimalist style, clean composition, aspect ratio 16:9, landscape
-
-现在请为"${title}"生成描述：`,
-                },
-              ],
-            },
-            API_KEY,
-            'API请求失败'
-          );
-          const generatedPrompt = responseData?.choices?.[0]?.message?.content;
-
-          if (generatedPrompt) {
-            imagePrompt = generatedPrompt.trim();
-            console.log(`?? 配图描述: ${imagePrompt}`);
-          } else {
-            imagePrompt = fallbackPrompt;
-          }
-        } catch (error) {
-          imagePrompt = fallbackPrompt;
-        }
-      } else {
-        imagePrompt = fallbackPrompt;
-      }
-
-      const finalPrompt = appendPromptSuffix(imagePrompt, coverAspect.promptSuffix);
-
-      console.log('?? 开始生成图片...');
+      console.log('🎨 开始生成图片...');
       const imageData = await requestJson(
-        IMAGE_BASE_URL,
-        {
-          model: IMAGE_MODEL,
-          input: {
-            prompt: finalPrompt,
-          },
-        },
+        imageGenerationUrl(),
+        buildImageRequestBody(finalPrompt, coverAspect),
         IMAGE_API_KEY,
         '图片生成API请求失败'
       );
-      const imageUrl = imageData?.data?.[0]?.url;
+      const imagePayload = extractImagePayload(imageData);
 
-      if (!imageUrl) {
-        throw new Error('图片生成返回空URL');
+      if (!imagePayload) {
+        throw new Error('图片生成返回空图片数据');
       } else {
-        const imageResponse = await fetch(imageUrl);
-
-        if (!imageResponse.ok) {
-          throw new Error(`下载图片失败: ${imageResponse.status} ${imageResponse.statusText}`);
-        } else {
-          const buffer = await imageResponse.arrayBuffer();
-          const { writeFileSync } = await import('fs');
-          writeFileSync(targetPath, Buffer.from(buffer));
-          return true;
-        }
+        await writeImageFile(imagePayload, targetPath);
+        return true;
       }
     } catch (error) {
       if (error instanceof Error) {
-        console.error('? AI生成配图失败:', error.message);
+        console.error('❌ AI生成配图失败:', error.message);
       } else {
-        console.error('? AI生成配图失败: 未知错误');
+        console.error('❌ AI生成配图失败: 未知错误');
       }
       return null;
     }
