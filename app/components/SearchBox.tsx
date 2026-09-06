@@ -1,17 +1,16 @@
-// Search dialog: shadcn Command (cmdk) over /api/posts/search.
-// Triggered from a search button in the nav; opens a modal with debounced query.
+// Search dialog over /api/posts/search. Opened from the nav button or Ctrl/⌘+Shift+K.
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Search as SearchIcon } from 'lucide-react';
 import { Spinner } from '~/components/ui/spinner';
 import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '~/components/ui/command';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog';
+import { Input } from '~/components/ui/input';
 
 interface Hit {
   path: string;
@@ -29,8 +28,17 @@ export function SearchBox({ open, onOpenChange }: { open: boolean; onOpenChange:
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!query.trim()) {
+    if (!open) {
+      setQuery('');
       setHits([]);
+      setLoading(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !query.trim()) {
+      setHits([]);
+      setLoading(false);
       return;
     }
     let cancelled = false;
@@ -51,54 +59,70 @@ export function SearchBox({ open, onOpenChange }: { open: boolean; onOpenChange:
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query]);
+  }, [open, query]);
+
+  const go = (path: string) => {
+    onOpenChange(false);
+    navigate(`/posts/${path}`);
+  };
 
   return (
-    <CommandDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="搜索文章"
-      description="输入关键词搜索文章标题、正文和标签"
-    >
-      <CommandInput
-        placeholder="搜索文章..."
-        value={query}
-        onValueChange={setQuery}
-      />
-      <CommandList>
-        {loading ? (
-          <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-            <Spinner /> 搜索中…
-          </div>
-        ) : hits.length === 0 ? (
-          <CommandEmpty>
-            {query.trim() ? `没有匹配 “${query}” 的文章` : '输入关键词开始搜索'}
-          </CommandEmpty>
-        ) : (
-          <CommandGroup heading="文章">
-            {hits.map((h) => (
-              <CommandItem
-                key={h.path}
-                value={`${h.path} ${h.title} ${h.tags.join(' ')}`}
-                onSelect={() => {
-                  onOpenChange(false);
-                  navigate(`/posts/${h.path}`);
-                }}
-              >
-                <SearchIcon className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                <div className="flex flex-col min-w-0">
-                  <span className="font-medium truncate">{h.title}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {h.date}
-                    {h.readingTime ? ` · ${h.readingTime}` : ''}
-                    {h.tags.length > 0 ? ` · ${h.tags.map((t) => `#${t}`).join(' ')}` : ''}
-                  </span>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        )}
-      </CommandList>
-    </CommandDialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="top-[20%] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-lg"
+        showCloseButton={false}
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>搜索文章</DialogTitle>
+          <DialogDescription>输入关键词搜索文章标题、正文和标签</DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center gap-2 border-b border-border px-3">
+          <span className="font-mono text-xs font-semibold text-(--brand)" aria-hidden>
+            $
+          </span>
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="find posts, tags…"
+            className="h-11 border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+            autoComplete="off"
+            autoFocus
+          />
+        </div>
+        <div className="max-h-72 overflow-y-auto p-1">
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+              <Spinner /> 搜索中…
+            </div>
+          ) : hits.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {query.trim() ? `没有匹配 “${query}” 的文章` : '输入关键词开始搜索'}
+            </p>
+          ) : (
+            <ul>
+              {hits.map((h) => (
+                <li key={h.path}>
+                  <button
+                    type="button"
+                    onClick={() => go(h.path)}
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-muted"
+                  >
+                    <SearchIcon className="h-4 w-4 shrink-0 opacity-50" />
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate font-medium">{h.title}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {h.date}
+                        {h.readingTime ? ` · ${h.readingTime}` : ''}
+                        {h.tags.length > 0 ? ` · ${h.tags.map((t) => `#${t}`).join(' ')}` : ''}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

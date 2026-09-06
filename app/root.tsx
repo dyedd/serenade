@@ -36,7 +36,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Meta />
         <Links />
@@ -79,8 +81,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 py-24 text-center">
-      <p className="eyebrow mb-3">{is404 ? "not found" : "error"}</p>
+      <p className="eyebrow mb-3">{is404 ? "lost" : "error"}</p>
       <h1 className="font-heading mb-3 text-6xl font-bold tracking-tight">{message}</h1>
+      <p className="tty-prompt mb-2">{is404 ? "exit 1" : "exit 2"}</p>
       <p className="text-muted-foreground mb-8">{details}</p>
       <Link
         to="/"

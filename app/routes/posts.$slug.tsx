@@ -3,7 +3,7 @@
 // output is trusted: written by the author via git, not user input).
 // A delegated click handler powers the renderer's .copy-btn buttons.
 import { Link } from 'react-router';
-import { ArrowLeft, ArrowRight, Calendar, Clock, FolderOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import type { Route } from './+types/posts.$slug';
 import { getPost } from '~/lib/content/posts';
 import { extractHeadings } from '~/lib/content/extract-headings';
@@ -11,15 +11,6 @@ import { pageMeta } from '~/lib/meta';
 import { useCodeCopy } from '~/hooks/useCodeCopy';
 import { TableOfContents } from '~/components/TableOfContents';
 import { MobileDocNav } from '~/components/MobileDocNav';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '~/components/ui/breadcrumb';
-import { Separator } from '~/components/ui/separator';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const post = loaderData?.post;
@@ -48,74 +39,50 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <article className="py-8">
-      <Breadcrumb className="mono-meta mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/">首页</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/posts">文章</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage className="line-clamp-1">{post.title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <nav className="eyebrow mb-8" aria-label="breadcrumb">
+        <Link to="/posts" className="transition-colors hover:text-foreground">
+          posts
+        </Link>
+        /<span className="text-foreground">{post.path}</span>
+      </nav>
 
-      {post.cover ? (
-        <img
-          src={post.cover}
-          alt={post.title}
-          className="w-full aspect-[21/9] object-cover rounded-xl mb-8 shadow-md"
-        />
-      ) : null}
-
-      <header className="mb-10">
-        <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight mb-4 leading-tight">
+      <header className="mb-8">
+        <h1 className="font-heading text-3xl font-bold leading-tight tracking-tight md:text-4xl">
           {post.title}
         </h1>
-        {post.abstract ? (
-          <p className="text-muted-foreground mb-4 text-base leading-relaxed">{post.abstract}</p>
-        ) : null}
-        <div className="mono-meta flex flex-wrap items-center gap-x-4 gap-y-2 !text-[13px]">
-          <span className="inline-flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5" aria-hidden />
-            <time dateTime={post.date}>{post.date}</time>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" aria-hidden />
-            {post.readingTime}
-          </span>
-          {post.tags.length > 0 ? (
-            <span className="inline-flex items-center gap-1.5 flex-wrap">
-              <FolderOpen className="h-3.5 w-3.5" aria-hidden />
-              {post.tags.map((tag) => (
-                <Link
-                  key={tag}
-                  to={`/tags/${encodeURIComponent(tag)}`}
-                  className="hover:text-(--brand) transition-colors"
-                >
-                  #{tag}
-                </Link>
-              ))}
-            </span>
-          ) : null}
+        {post.abstract ? <p className="page-lead mt-4">{post.abstract}</p> : null}
+        <div className="mono-meta mt-5 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <time dateTime={post.date}>{post.date}</time>
+          <span aria-hidden>·</span>
+          <span>{post.readingTime}</span>
+          {post.tags.map((tag) => (
+            <Link
+              key={tag}
+              to={`/tags/${encodeURIComponent(tag)}`}
+              className="transition-colors hover:text-(--brand)"
+            >
+              #{tag}
+            </Link>
+          ))}
         </div>
       </header>
-      <Separator className="mb-10" />
+
+      {post.cover ? (
+        <figure className="mb-10">
+          <img
+            src={post.cover}
+            alt=""
+            className="mx-auto max-h-[32rem] w-full object-contain"
+          />
+        </figure>
+      ) : null}
 
       <MobileDocNav toc={headings} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_14rem] gap-10">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_14rem]">
         <div className="min-w-0">
           <div
-            className="prose prose-neutral dark:prose-invert prose-blog max-w-none prose-headings:scroll-mt-24 prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
+            className="prose-blog prose prose-neutral dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-headings:font-heading prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
             dangerouslySetInnerHTML={{ __html: post.html }}
           />
 
@@ -128,7 +95,7 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
                 <span className="mono-meta flex items-center gap-1.5">
                   <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> 上一篇
                 </span>
-                <span className="font-semibold text-foreground group-hover:text-(--brand) transition-colors line-clamp-2">
+                <span className="font-heading font-semibold text-foreground transition-colors group-hover:text-(--brand) line-clamp-2">
                   {post.prev.title}
                 </span>
                 {post.prev.date ? <span className="mono-meta">{post.prev.date}</span> : null}
@@ -144,7 +111,7 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
                 <span className="mono-meta flex items-center justify-end gap-1.5">
                   下一篇 <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </span>
-                <span className="font-semibold text-foreground group-hover:text-(--brand) transition-colors line-clamp-2">
+                <span className="font-heading font-semibold text-foreground transition-colors group-hover:text-(--brand) line-clamp-2">
                   {post.next.title}
                 </span>
                 {post.next.date ? <span className="mono-meta">{post.next.date}</span> : null}

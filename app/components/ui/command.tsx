@@ -15,7 +15,7 @@ import {
   InputGroup,
   InputGroupAddon,
 } from "~/components/ui/input-group"
-import { SearchIcon, CheckIcon } from "lucide-react"
+import { CheckIcon } from "lucide-react"
 
 function Command({
   className,
@@ -85,7 +85,9 @@ function CommandInput({
           {...props}
         />
         <InputGroupAddon>
-          <SearchIcon className="size-4 shrink-0 opacity-50" />
+          <span className="font-mono text-xs font-semibold text-(--brand)" aria-hidden>
+            $
+          </span>
         </InputGroupAddon>
       </InputGroup>
     </div>

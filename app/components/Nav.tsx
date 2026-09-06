@@ -26,6 +26,7 @@ import {
 } from '~/components/ui/sheet';
 import { DarkModeToggle } from './DarkModeToggle';
 import { SearchBox } from './SearchBox';
+import { SearchHotkey, SEARCH_HOTKEY } from './SearchHotkey';
 import { siteConfig } from '~/lib/site-config';
 import { cn } from '~/lib/utils';
 
@@ -68,10 +69,9 @@ export function Nav() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setSearchOpen((v) => !v);
-      }
+      if (!SEARCH_HOTKEY.isMatch(e)) return;
+      e.preventDefault();
+      setSearchOpen((v) => !v);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -80,12 +80,16 @@ export function Nav() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-2.5 sm:px-6">
-          <Link to="/" className="flex shrink-0 items-center gap-2.5">
+        <div className="mx-auto flex max-w-5xl items-center gap-2 px-6 py-2.5">
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-2.5"
+            aria-label={siteConfig.title}
+          >
             <img
               src={siteConfig.profile.avatar}
               alt=""
-              className="size-8 rounded-lg object-cover ring-1 ring-border"
+              className="size-8 shrink-0 rounded-lg object-cover ring-1 ring-border"
             />
             <span className="font-heading hidden text-sm font-semibold tracking-tight sm:inline">
               {siteConfig.title}
@@ -124,20 +128,20 @@ export function Nav() {
             </DropdownMenu>
           </nav>
 
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setSearchOpen(true)}
               aria-label="搜索"
-              className="rounded-full text-muted-foreground"
+              className="relative z-50 rounded-full text-muted-foreground"
             >
               <SearchIcon data-icon="inline-start" />
-              <span className="hidden sm:inline">搜索</span>
-              <kbd className="hidden h-4 items-center rounded border border-border bg-muted px-1 font-mono text-[10px] sm:inline-flex">
-                ⌘K
-              </kbd>
+              <span className="hidden font-mono text-xs sm:inline">
+                <span className="mr-1 text-(--brand)">$</span>find
+              </span>
+              <SearchHotkey className="hidden sm:inline-flex" />
             </Button>
             <DarkModeToggle />
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -154,7 +158,14 @@ export function Nav() {
               </SheetTrigger>
               <SheetContent side="left" className="w-72 p-0">
                 <SheetHeader>
-                  <SheetTitle>{siteConfig.title}</SheetTitle>
+                  <SheetTitle className="flex items-center gap-2.5">
+                    <img
+                      src={siteConfig.profile.avatar}
+                      alt=""
+                      className="size-8 shrink-0 rounded-lg object-cover ring-1 ring-border"
+                    />
+                    {siteConfig.title}
+                  </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-1 px-3 pb-6" aria-label="移动导航">
                   {[...primaryLinks, ...friendLinks].map((link) => (

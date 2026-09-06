@@ -24,8 +24,9 @@ export default function CatchAll() {
 export function ErrorBoundary() {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center py-24 text-center">
-      <p className="eyebrow mb-3">not found</p>
+      <p className="eyebrow mb-3">lost</p>
       <h1 className="font-heading mb-3 text-6xl font-bold tracking-tight">404</h1>
+      <p className="tty-prompt mb-2">exit 1</p>
       <p className="mb-8 text-muted-foreground">页面不存在或已被移除。</p>
       <Link
         to="/"

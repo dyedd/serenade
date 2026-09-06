@@ -88,17 +88,14 @@ export function PostsHeatmap({ posts, totalCount }: PostsHeatmapProps) {
 
   return (
     <div>
-      {/* 头部：标题居左，年度统计居右两行 */}
-      <div className="flex items-start justify-between gap-2 mb-4">
-        <h3 className="inline-flex items-center gap-2 text-[1.05rem] font-semibold text-foreground">
-          <BarChart3 className="h-4 w-4 text-(--brand)" aria-hidden />
-          统计
-        </h3>
-        <div className="mono-meta text-right leading-relaxed">
-          <span className="block">共 {totalCount} 篇文章</span>
-          <span className="block">过去一年 {yearActiveDays} 天有更新</span>
-        </div>
-      </div>
+      <h3 className="mb-1.5 inline-flex items-center gap-2 text-[1.05rem] font-semibold text-foreground">
+        <BarChart3 className="h-4 w-4 text-(--brand)" aria-hidden />
+        统计
+      </h3>
+      <p className="mono-meta mb-4 leading-relaxed">
+        <span className="block tabular-nums">共 {totalCount} 篇文章</span>
+        <span className="block tabular-nums">过去一年 {yearActiveDays} 天有更新</span>
+      </p>
 
       <div className="grid grid-cols-[38px_1fr] pt-1">
         <div className="grid grid-rows-[repeat(7,14px)] gap-[2px] pr-1.5">

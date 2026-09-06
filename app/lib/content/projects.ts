@@ -12,6 +12,8 @@ export interface ProjectEntry {
   tags?: string[];
   techStack?: string[];
   date: string;
+  featured?: boolean;
+  featuredOrder?: number;
   [key: string]: unknown;
 }
 
@@ -35,6 +37,22 @@ async function readProjects(): Promise<ProjectsData> {
     }
     throw error;
   }
+}
+
+export async function listFeaturedProjects() {
+  const data = await readProjects();
+  return Object.entries(data.categories)
+    .flatMap(([categoryKey, cat]) =>
+      cat.projects
+        .filter((p) => p.featured)
+        .map((p) => ({ ...p, categoryKey, categoryName: cat.name }))
+    )
+    .sort((a, b) => {
+      const ao = a.featuredOrder ?? Number.MAX_SAFE_INTEGER;
+      const bo = b.featuredOrder ?? Number.MAX_SAFE_INTEGER;
+      if (ao !== bo) return ao - bo;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 }
 
 export async function listProjectCategories() {

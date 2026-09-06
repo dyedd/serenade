@@ -1,13 +1,9 @@
 // Site footer: copyright, uptime counter, powered-by, ICP + "找到我" social
 // icon row (iconfont), styled as a quiet terminal status line.
 import { siteConfig } from '~/lib/site-config';
+import { formatUptime } from '~/lib/content/reading-time';
 
-// Computed once per request; server/client agree within the same day.
-const runningDays = (() => {
-  const start = new Date(siteConfig.startTime);
-  if (Number.isNaN(start.getTime())) return 0;
-  return Math.floor((Date.now() - start.getTime()) / (1000 * 60 * 60 * 24));
-})();
+const uptime = formatUptime(siteConfig.startTime);
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -17,6 +13,11 @@ export function Footer() {
     <footer>
       <div className="mx-auto max-w-5xl px-6 py-8 flex flex-col items-center gap-4">
         <div className="mono-meta flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+          <span>
+            <span className="text-(--brand)">$</span> uptime{' '}
+            <span title={`${uptime.days} 天`}>{uptime.text}</span>
+          </span>
+          <span aria-hidden className="text-border">|</span>
           <span>@{year} {footer.copyrightName}</span>
           <span aria-hidden className="text-border">|</span>
           <a
@@ -27,8 +28,6 @@ export function Footer() {
           >
             {footer.poweredBy.label}
           </a>
-          <span aria-hidden className="text-border">|</span>
-          <span>本站已运行 {runningDays} 天</span>
           <span aria-hidden className="text-border">|</span>
           <a
             href={footer.icp.url}
@@ -41,7 +40,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-x-2">
-          <span className="mono-meta mr-1">找到我</span>
+          <span className="tty-prompt mr-1">contact</span>
           {Object.values(socialLinks).map((link) => (
             <a
               key={link.label}

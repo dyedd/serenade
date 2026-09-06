@@ -55,7 +55,7 @@ export function ColumnSidebar({
           专栏概览
         </Link>
 
-        <p className="eyebrow mt-5 mb-2 px-3">章节目录</p>
+        <p className="eyebrow eyebrow-comment mt-5 mb-2 px-3">toc</p>
         <ol className="space-y-0.5">
           {chapters.map((ch, i) => {
             const active = ch.fileName === activeFile;

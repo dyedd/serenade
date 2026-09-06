@@ -1,152 +1,242 @@
 import { Link } from 'react-router';
 import type { Route } from './+types/home';
 import { listPosts } from '~/lib/content/posts';
+import { loadCareer } from '~/lib/content/career';
+import { listFeaturedProjects, type ProjectEntry } from '~/lib/content/projects';
 import { siteConfig } from '~/lib/site-config';
 import { pageMeta } from '~/lib/meta';
-import { Button } from '~/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
+import { CareerTrack } from '~/components/CareerTrack';
+import { TechChip } from '~/components/TechChip';
 
 export function meta(_: Route.MetaArgs) {
   return pageMeta({ path: '/', description: siteConfig.description });
 }
 
 export async function loader() {
-  const recent = await listPosts({ page: 1, pageSize: 5 });
-  return { posts: recent.data };
+  const [recent, career, projects] = await Promise.all([
+    listPosts({ page: 1, pageSize: 5 }),
+    loadCareer(),
+    listFeaturedProjects(),
+  ]);
+  return {
+    posts: recent.data,
+    career,
+    projects,
+  };
 }
 
-const formatZhDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
-};
+function projectHref(p: ProjectEntry): string | undefined {
+  const raw = p.link ?? p.url ?? p.github;
+  return typeof raw === 'string' && raw.length > 0 ? raw : undefined;
+}
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { profile, socialLinks } = siteConfig;
-  const posts = loaderData.posts;
+  const { posts, career, projects } = loaderData;
+  const [role, ...restIntro] = profile.introduction;
 
   return (
-    <div className="flex w-full max-w-full flex-col gap-10 box-border lg:flex-row lg:gap-12">
-      <aside className="flex h-fit w-full shrink-0 flex-col items-center gap-8 lg:w-64 lg:items-stretch">
-        <div className="flex justify-center">
-          <div className="relative size-36 sm:size-44">
-            <Avatar className="size-full shadow-lg ring-2 ring-background">
-              <AvatarImage
-                src={profile.avatar}
-                alt={profile.name}
-                className="object-cover transition-transform duration-400 hover:scale-105 hover:rotate-2"
-                style={{ transitionTimingFunction: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}
-              />
-              <AvatarFallback className="text-3xl">{profile.name.slice(0, 1)}</AvatarFallback>
-            </Avatar>
-            <div className="absolute bottom-2 right-2 flex size-12 cursor-default items-center justify-center rounded-full border-2 border-background bg-card text-2xl shadow-md transition-transform duration-300 hover:scale-110">
-              {profile.badge}
-            </div>
+    <div className="py-8">
+      <section className="mb-14">
+        <p className="eyebrow mb-6">home</p>
+        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:gap-10">
+          <img
+            src={profile.avatar}
+            alt={profile.name}
+            className="aspect-[4/5] w-32 shrink-0 rounded-lg object-cover ring-1 ring-border sm:w-40"
+          />
+          <div className="min-w-0 flex-1">
+            <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
+              {profile.name}
+            </h1>
+            {role ? (
+              <p className="mt-2 font-heading text-lg text-foreground/80">{role}</p>
+            ) : null}
+            {restIntro.map((line, i) => (
+              <p key={`intro-${i}`} className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                {line}
+              </p>
+            ))}
+            <p className="mt-4 text-sm leading-relaxed text-foreground/85 sm:text-[0.95rem]">
+              {profile.statement}
+            </p>
+            <p className="mono-meta mt-5 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a
+                href={socialLinks.github.url}
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors hover:text-(--brand)"
+              >
+                GitHub
+              </a>
+              <span aria-hidden>·</span>
+              <a href={socialLinks.email.url} className="transition-colors hover:text-(--brand)">
+                Email
+              </a>
+              <span aria-hidden>·</span>
+              <Link to="/feed.xml" className="transition-colors hover:text-(--brand)">
+                RSS
+              </Link>
+            </p>
           </div>
         </div>
+      </section>
 
-        <div className="w-full max-w-md">
-          <p className="eyebrow mb-4">更新日志</p>
-          {posts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无最新文章</p>
-          ) : (
-            <ol className="relative pl-5 before:absolute before:top-3 before:bottom-0 before:left-[5px] before:w-0.5 before:bg-gradient-to-b before:from-(--brand) before:to-transparent before:opacity-30">
-              {posts.map((p) => (
-                <li key={p.path} className="relative mb-6 last:mb-0">
-                  <span
-                    aria-hidden
-                    className="absolute top-2 -left-[15px] size-2.5 rounded-full border-2 border-background bg-(--brand) shadow-[0_0_0_2px_rgba(30,144,255,0.2)]"
-                  />
-                  <Link to={`/posts/${p.path}`} className="group block">
-                    <div className="mb-1.5 text-xs text-muted-foreground tabular-nums">
-                      {formatZhDate(p.date)}
-                    </div>
-                    <div className="text-sm font-semibold leading-[1.4] text-foreground line-clamp-2 transition-colors group-hover:text-(--brand)">
-                      {p.title}
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-      </aside>
+      <section id="career" className="mb-14" aria-labelledby="career-heading">
+        <p className="eyebrow mb-2">career</p>
+        <h2 id="career-heading" className="font-heading mb-6 text-2xl font-bold tracking-tight">
+          职业轨迹
+        </h2>
+        <CareerTrack items={career} />
+      </section>
 
-      <div className="min-w-0 flex-1 max-w-full">
-        <section className="mb-10">
-          <h1 className="font-heading mb-6 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl">
-            Hello, I&apos;m <span className="name-gradient">{profile.name}</span>
-          </h1>
-          {profile.introduction.map((line, i) => (
-            <p key={`intro-${i}`} className="mb-4 text-lg leading-relaxed text-foreground/90 sm:text-xl">
-              {line}
-            </p>
-          ))}
-          {profile.motto.map((line, i) => (
-            <p key={`motto-${i}`} className="my-3 text-lg leading-relaxed sm:text-xl">
-              {line}
-            </p>
-          ))}
-        </section>
-
-        <section className="mb-10 flex flex-wrap gap-3">
-          {Object.values(socialLinks).map((link) => (
-            <Button
-              key={link.label}
-              variant="outline"
-              size="lg"
-              asChild
-              title={link.label}
-              className="rounded-full"
-            >
-              <a href={link.url} target="_blank" rel="noreferrer">
-                <svg className="size-5 shrink-0" aria-hidden="true">
-                  <use href={`#icon-${link.icon}`} />
-                </svg>
-                <span>{link.label}</span>
-              </a>
-            </Button>
-          ))}
-        </section>
-
-        <section className="note-card relative mb-10 rounded-lg px-6 py-5 text-base leading-relaxed">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -top-8 left-0 select-none text-[2rem]"
-            style={{ fontFamily: 'var(--font-emoji)' }}
-          >
-            ✍
-          </span>
-          {profile.statement}
-          <Link to="/feed.xml" className="px-1 font-semibold text-(--brand)">
-            RSS
+      <section className="mb-14" aria-labelledby="projects-heading">
+        <p className="eyebrow mb-2">projects</p>
+        <div className="mb-6 flex items-baseline justify-between gap-4">
+          <h2 id="projects-heading" className="font-heading text-2xl font-bold tracking-tight">
+            项目
+          </h2>
+          <Link to="/projects" className="mono-meta transition-colors hover:text-(--brand)">
+            全部项目 →
           </Link>
-          。
-        </section>
+        </div>
+        {projects.length === 0 ? (
+          <p className="text-sm text-muted-foreground">暂无项目</p>
+        ) : (
+          <ol>
+            {projects.map((p) => {
+              const href = projectHref(p);
+              const year = typeof p.date === 'string' ? p.date.slice(0, 4) : '';
+              const tech = Array.isArray(p.techStack)
+                ? p.techStack.filter((t): t is string => typeof t === 'string').slice(0, 4)
+                : [];
+              const name = (
+                <span className="font-heading text-base font-semibold transition-colors group-hover:text-(--brand)">
+                  {p.name}
+                </span>
+              );
+              const cover = typeof p.cover === 'string' ? p.cover : '';
+              return (
+                <li key={`${p.name}-${p.date}`} className="border-b border-border py-4 first:border-t">
+                  <div className="group flex gap-4">
+                    {cover ? (
+                      <img
+                        src={cover}
+                        alt=""
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        className="h-16 w-28 shrink-0 rounded-md object-cover ring-1 ring-border sm:h-[4.5rem] sm:w-32"
+                      />
+                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-4">
+                        {href ? (
+                          href.startsWith('/') ? (
+                            <Link to={href} className="min-w-0">
+                              {name}
+                            </Link>
+                          ) : (
+                            <a href={href} target="_blank" rel="noreferrer" className="min-w-0">
+                              {name}
+                            </a>
+                          )
+                        ) : (
+                          name
+                        )}
+                        {year ? <span className="mono-meta shrink-0">{year}</span> : null}
+                      </div>
+                      {p.description ? (
+                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2">
+                          {p.description}
+                        </p>
+                      ) : null}
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        {p.categoryName ? (
+                          <span className="mono-meta mr-1">{p.categoryName}</span>
+                        ) : null}
+                        {tech.map((t) => (
+                          <TechChip key={t} label={t} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
 
-        <section className="mb-10">
-          <h3 className="font-heading mb-5 text-lg font-bold text-foreground">GitHub Contributions</h3>
+      <section className="mb-14" aria-labelledby="stack-heading">
+        <p className="eyebrow mb-2">stack</p>
+        <h2 id="stack-heading" className="font-heading mb-6 text-2xl font-bold tracking-tight">
+          技术栈
+        </h2>
+        <ul className="flex flex-wrap gap-2">
+          {profile.techStack.map((tech) => (
+            <li key={tech.label}>
+              <TechChip label={tech.label} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mb-14" aria-labelledby="recent-heading">
+        <p className="eyebrow mb-2">writing</p>
+        <div className="mb-6 flex items-baseline justify-between gap-4">
+          <h2 id="recent-heading" className="font-heading text-2xl font-bold tracking-tight">
+            最近写作
+          </h2>
+          <Link to="/posts" className="mono-meta transition-colors hover:text-(--brand)">
+            全部文章 →
+          </Link>
+        </div>
+        {posts.length === 0 ? (
+          <p className="text-sm text-muted-foreground">暂无最新文章</p>
+        ) : (
+          <ol>
+            {posts.map((p) => (
+              <li key={p.path} className="border-b border-border first:border-t">
+                <Link
+                  to={`/posts/${p.path}`}
+                  className="group flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6"
+                >
+                  <time className="mono-meta shrink-0 sm:w-28" dateTime={p.date}>
+                    {p.date}
+                  </time>
+                  <span className="font-heading font-semibold leading-snug text-foreground transition-colors group-hover:text-(--brand)">
+                    {p.title}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <section aria-labelledby="github-heading">
+        <p className="eyebrow mb-2">github</p>
+        <div className="mb-6 flex items-baseline justify-between gap-4">
+          <h2 id="github-heading" className="font-heading text-2xl font-bold tracking-tight">
+            GitHub 贡献
+          </h2>
+          <a
+            href={socialLinks.github.url}
+            target="_blank"
+            rel="noreferrer"
+            className="mono-meta transition-colors hover:text-(--brand)"
+          >
+            主页 →
+          </a>
+        </div>
+        <a href={socialLinks.github.url} target="_blank" rel="noreferrer" className="block">
           <img
             src={profile.githubContributionChart}
-            alt="GitHub Contribution Chart"
-            className="block w-full rounded-lg object-contain opacity-85 transition-opacity duration-300 hover:opacity-100 dark:invert dark:[filter:invert(1)_hue-rotate(180deg)]"
+            alt="GitHub 贡献图"
+            className="block min-h-20 w-full rounded-lg object-contain opacity-90 dark:invert dark:[filter:invert(1)_hue-rotate(180deg)]"
           />
-        </section>
-
-        <section className="mb-10">
-          <h3 className="font-heading mb-5 text-lg font-bold text-foreground">技术栈</h3>
-          <div className="flex flex-wrap gap-2">
-            {profile.techStack.map((tech) => (
-              <img
-                key={tech.label}
-                src={tech.icon}
-                alt={tech.label}
-                className="h-7 rounded opacity-90 transition-all duration-200 hover:-translate-y-0.5 hover:opacity-100 hover:shadow-md"
-              />
-            ))}
-          </div>
-        </section>
-      </div>
+        </a>
+      </section>
     </div>
   );
 }

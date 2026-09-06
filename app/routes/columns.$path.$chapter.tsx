@@ -8,14 +8,6 @@ import { getChapter, getColumn } from '~/lib/content/columns';
 import { extractHeadings } from '~/lib/content/extract-headings';
 import { pageMeta } from '~/lib/meta';
 import { useCodeCopy } from '~/hooks/useCodeCopy';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '~/components/ui/breadcrumb';
 import { Separator } from '~/components/ui/separator';
 import { TableOfContents } from '~/components/TableOfContents';
 import { ColumnSidebar } from '~/components/columns/ColumnSidebar';
@@ -77,25 +69,16 @@ export default function ChapterDetail({ loaderData }: Route.ComponentProps) {
         <MobileDocNav toc={headings} sidebar={sidebar} />
 
         <div className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border/80 pb-4">
-          <Breadcrumb className="mono-meta">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/columns">专栏</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to={`/columns/${path}`}>{columnTitle}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="line-clamp-1">{chapter.meta.title}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <nav className="eyebrow" aria-label="breadcrumb">
+            <Link to="/columns" className="transition-colors hover:text-foreground">
+              columns
+            </Link>
+            /
+            <Link to={`/columns/${path}`} className="transition-colors hover:text-foreground">
+              {path}
+            </Link>
+            /<span className="text-foreground">{chapter.fileName}</span>
+          </nav>
           {columnDate ? (
             <span className="mono-meta inline-flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" aria-hidden />
@@ -109,7 +92,7 @@ export default function ChapterDetail({ loaderData }: Route.ComponentProps) {
         </h1>
 
         <div
-          className="prose prose-neutral dark:prose-invert prose-blog max-w-none prose-headings:scroll-mt-24 prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
+          className="prose-blog prose prose-neutral dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-headings:font-heading prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
           dangerouslySetInnerHTML={{ __html: chapter.html }}
         />
 

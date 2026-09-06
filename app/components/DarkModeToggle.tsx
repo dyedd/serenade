@@ -20,7 +20,7 @@ export function DarkModeToggle() {
       size="icon"
       onClick={toggle}
       aria-label={dark ? '切换到亮色' : '切换到暗色'}
-      className="hover:text-(--brand)"
+      className="relative z-10 shrink-0 hover:text-(--brand)"
     >
       {dark ? (
         <Sun key="sun" className="h-4 w-4 animate-in fade-in zoom-in-50 duration-300" />

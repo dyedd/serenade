@@ -7,6 +7,7 @@ import { Pagination } from '~/components/Pagination';
 import { pageMeta } from '~/lib/meta';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
 import { FileText } from 'lucide-react';
+import { PageHeader } from '~/components/PageHeader';
 
 export function meta({ params }: Route.MetaArgs) {
   const tag = decodeURIComponent(params.tag);
@@ -25,15 +26,15 @@ export default function TagPosts({ loaderData }: Route.ComponentProps) {
   const { tag, posts } = loaderData;
   return (
     <section className="py-8">
-      <header className="mb-8">
-        <p className="eyebrow mb-2">
+      <PageHeader
+        eyebrow={
           <Link to="/tags" className="transition-colors hover:text-(--brand)">
             tags
           </Link>
-        </p>
-        <h1 className="font-heading text-3xl font-bold tracking-tight">#{tag}</h1>
-        <p className="mono-meta mt-2">共 {posts.totalItems} 篇</p>
-      </header>
+        }
+        title={`#${tag}`}
+        meta={`共 ${posts.totalItems} 篇`}
+      />
 
       {posts.data.length === 0 ? (
         <Empty>
@@ -64,7 +65,7 @@ export default function TagPosts({ loaderData }: Route.ComponentProps) {
                   </Link>
                 ) : null}
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold mb-2 leading-snug">
+                  <h2 className="font-heading mb-2 text-lg font-bold leading-snug">
                     <Link
                       to={`/posts/${post.path}`}
                       className="text-foreground hover:text-(--brand) transition-colors"

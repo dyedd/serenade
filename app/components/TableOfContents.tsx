@@ -44,14 +44,14 @@ export function TableOfContents({
 
   return (
     <nav className="text-sm" aria-label="目录">
-      <p className="eyebrow mb-3">本页目录</p>
+      <p className="eyebrow eyebrow-comment mb-3">toc</p>
       <ul className="flex flex-col gap-1.5 border-l border-border">
         {entries.map((e) => (
           <li
             key={e.id}
             className={[
               e.level === 3 ? 'pl-5' : e.level === 4 ? 'pl-8' : 'pl-3',
-              'border-l-2 -ml-px transition-colors font-mono text-[13px] leading-snug',
+              'border-l-2 -ml-px transition-colors font-heading text-sm leading-snug',
               active === e.id
                 ? 'border-(--brand) text-(--brand)'
                 : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',

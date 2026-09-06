@@ -9,17 +9,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 全站正文字体：LXGW 文楷 */
-@font-face {
-  font-family: 'LXGWWenKai';
-  src: url('./assets/fonts/LXGWWenKaiGBScreen.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme {
-  --font-sans: 'LXGWWenKai', 'Consolas', ui-sans-serif, system-ui, sans-serif,
+  --font-sans: 'Noto Serif SC Variable', 'Noto Serif SC', ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
     "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif;
@@ -27,7 +18,7 @@
 
 @theme inline {
   --font-heading: 'Noto Serif SC Variable', 'Noto Serif SC', serif;
-  --font-sans: 'LXGWWenKai', 'Consolas', 'Apple Color Emoji', 'Segoe UI Emoji',
+  --font-sans: 'Noto Serif SC Variable', 'Noto Serif SC', 'Apple Color Emoji', 'Segoe UI Emoji',
     'Noto Color Emoji', sans-serif;
   --font-mono: 'Geist Mono Variable', 'Consolas', ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -166,8 +157,9 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   html {
-    @apply font-sans;
+    @apply font-sans antialiased;
     scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
   }
   ::selection {
     background: var(--brand-soft);
@@ -188,16 +180,20 @@
 
 /* ---------- 签名元素：终端元信息层 ---------- */
 
-/* 注释式小节眉标，如 `// 最新文章`（配合 <span className="eyebrow">） */
+/* 路径式眉标：~/posts ；文内目录仍用 .eyebrow-comment → // */
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: var(--muted-foreground);
 }
 .eyebrow::before {
-  content: '//';
+  content: '~/';
   color: var(--brand);
+  margin-right: 0.05em;
+}
+.eyebrow-comment::before {
+  content: '//';
   margin-right: 0.4em;
 }
 
@@ -365,24 +361,190 @@
   animation: page-fade-in 0.35s ease both;
 }
 
-@keyframes gradient-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-.name-gradient {
-  background-image: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
-  background-size: 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-flow 5s ease infinite;
+.page-lead {
+  border-left: 2px solid var(--brand);
+  padding-left: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--muted-foreground);
 }
 
-.note-card {
-  background: var(--note);
-  color: var(--note-foreground);
+/* 归档年份：相对路径 ./2026 + 虚线标尺，和职业轨迹的虚线同一套语言 */
+.year-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  margin-bottom: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--foreground);
+}
+.year-mark-dot {
+  color: var(--brand);
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.year-mark::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--brand-line) 0 3px,
+    transparent 3px 8px
+  );
+}
+
+.tty-prompt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  letter-spacing: 0.02em;
+}
+.tty-prompt::before {
+  content: '$';
+  color: var(--brand);
+  margin-right: 0.5em;
+  font-weight: 600;
+}
+.tty-cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 0.65em;
+  margin-left: 0.22em;
+  vertical-align: 0.05em;
+  background: var(--brand);
+  opacity: 0.55;
+  animation: tty-blink 2s ease-in-out infinite;
+}
+@keyframes tty-blink {
+  0%, 55% { opacity: 0.55; }
+  60%, 100% { opacity: 0; }
+}
+
+.pkg {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-line);
+  border-radius: 0.25rem;
+  padding: 0.2rem 0.55rem;
+}
+.tech-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--chip, var(--brand)) 12%, var(--background));
+  border: 1px solid color-mix(in oklab, var(--chip, var(--brand)) 38%, var(--border));
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem 0.22rem 0.4rem;
+}
+.tech-chip img {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+.tech-chip-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--chip, var(--brand));
+}
+
+.career-track-wrap,
+.career-track,
+.career-track text {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.career-track {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.career-rail {
+  stroke: var(--brand-line);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 5;
+  stroke-linecap: round;
+}
+.career-dot {
+  fill: var(--brand);
+  stroke: var(--background);
+  stroke-width: 2;
+}
+.career-dot-slot {
+  fill: var(--background);
+  stroke: var(--brand);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+.career-copy {
+  padding-left: 0.15rem;
+  color: var(--foreground);
+}
+.career-org-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.career-org {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--foreground);
+}
+.career-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--brand);
+  border: 1px solid var(--brand-line);
+  background: var(--brand-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem 0.1rem 0.35rem;
+  line-height: 1.4;
+}
+.career-type svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.career-role {
+  margin-top: 0.1rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--foreground);
+}
+.career-period {
+  margin-top: 0.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+  line-height: 1.3;
+}
+.career-note {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
 }
 
 /* ---------- 细滚动条 ---------- */

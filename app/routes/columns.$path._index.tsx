@@ -5,14 +5,6 @@ import type { Route } from './+types/columns.$path._index';
 import { getColumn } from '~/lib/content/columns';
 import { pageMeta } from '~/lib/meta';
 import { Badge } from '~/components/ui/badge';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '~/components/ui/breadcrumb';
 import { ColumnSidebar } from '~/components/columns/ColumnSidebar';
 import { MobileDocNav } from '~/components/MobileDocNav';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
@@ -58,19 +50,12 @@ export default function ColumnDetail({ loaderData }: Route.ComponentProps) {
       <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">{sidebar}</aside>
 
       <div className="min-w-0">
-        <Breadcrumb className="mono-meta mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/columns">专栏</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="line-clamp-1">{title}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <nav className="eyebrow mb-6" aria-label="breadcrumb">
+          <Link to="/columns" className="transition-colors hover:text-foreground">
+            columns
+          </Link>
+          /<span className="text-foreground">{path}</span>
+        </nav>
 
         <MobileDocNav toc={[]} sidebar={sidebar} />
 
@@ -96,7 +81,7 @@ export default function ColumnDetail({ loaderData }: Route.ComponentProps) {
         <article className="min-w-0">
           {column.html.length > 0 ? (
             <div
-              className="prose prose-neutral dark:prose-invert prose-blog max-w-none prose-headings:scroll-mt-24 prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
+              className="prose-blog prose prose-neutral dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-headings:font-heading prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
               dangerouslySetInnerHTML={{ __html: column.html }}
             />
           ) : column.chapters.length > 0 ? (

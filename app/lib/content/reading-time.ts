@@ -31,3 +31,28 @@ export function calculateReadingTime(content: string): { minutes: number; text: 
 export function sortByDateDesc<T extends { date: string }>(a: T, b: T): number {
   return new Date(b.date).getTime() - new Date(a.date).getTime();
 }
+
+// Calendar uptime: "9 年 7 个月" / "3 个月" / "12 天".
+export function formatUptime(startIso: string, now = new Date()): { text: string; days: number } {
+  const start = new Date(startIso);
+  if (Number.isNaN(start.getTime()) || now.getTime() < start.getTime()) {
+    return { text: '0 天', days: 0 };
+  }
+  const days = Math.floor((now.getTime() - start.getTime()) / 86_400_000);
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  let d = now.getDate() - start.getDate();
+  if (d < 0) {
+    months -= 1;
+    d += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} 年`);
+  if (months > 0) parts.push(`${months} 个月`);
+  if (years === 0 && months === 0) parts.push(`${d} 天`);
+  return { text: parts.join(' ') || '0 天', days };
+}

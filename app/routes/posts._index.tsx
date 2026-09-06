@@ -2,14 +2,14 @@
 //   left  : posts grouped by year, paginated (numbered pager)
 //   right : 统计 (heatmap) + 标签 cloud + "查看全部 →"
 import { Link } from 'react-router';
-import { FileText, Rss, Tags } from 'lucide-react';
+import { FileText, Tags } from 'lucide-react';
+import { PageHeader } from '~/components/PageHeader';
 import type { Route } from './+types/posts._index';
 import { listPostDates, listPosts, type PostSummary } from '~/lib/content/posts';
 import { listTags } from '~/lib/content/tags';
 import { PostsHeatmap } from '~/components/PostsHeatmap';
 import { Pagination } from '~/components/Pagination';
 import { Badge } from '~/components/ui/badge';
-import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
 import { pageMeta } from '~/lib/meta';
 
@@ -64,24 +64,15 @@ export default function PostsIndex({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="py-8">
-      <header className="mb-10">
-        <p className="eyebrow mb-2">archive</p>
-        <h1 className="font-heading text-3xl font-bold tracking-tight mb-3">文章</h1>
-        <Alert className="border-(--brand-line) bg-(--brand-soft)">
-          <Rss data-icon="inline-start" />
-          <AlertDescription>
-            你可以通过{' '}
-            <Link to="/feed.xml" className="font-medium text-(--brand) hover:underline">
-              RSS
-            </Link>{' '}
-            订阅所有文章，也可以按{' '}
-            <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted font-mono text-xs">
-              ⌘K
-            </kbd>{' '}
-            搜索全文。
-          </AlertDescription>
-        </Alert>
-      </header>
+      <PageHeader
+        eyebrow="posts"
+        title="文章"
+        actions={
+          <Link to="/feed.xml" className="transition-colors hover:text-(--brand)">
+            feed.xml
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_18rem] gap-10">
         {/* Left: posts grouped by year */}
@@ -100,10 +91,13 @@ export default function PostsIndex({ loaderData }: Route.ComponentProps) {
             <div className="flex flex-col gap-10">
               {groups.map((g) => (
                 <section key={g.year}>
-                  <h2 className="text-2xl font-bold mb-6 inline-flex items-center gap-3 w-full">
-                    <span className="font-mono">{g.year}</span>
-                    <span className="h-px flex-1 bg-border min-w-[3rem]" />
-                    <span className="mono-meta">{g.posts.length} 篇</span>
+                  <h2 className="year-mark">
+                    <span>
+                      <span className="year-mark-dot" aria-hidden>
+                        ./
+                      </span>
+                      <time dateTime={String(g.year)}>{g.year}</time>
+                    </span>
                   </h2>
                   <ul className="divide-y divide-border">
                     {g.posts.map((p) => (
@@ -123,7 +117,7 @@ export default function PostsIndex({ loaderData }: Route.ComponentProps) {
                             </Link>
                           ) : null}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold mb-2 leading-snug">
+                            <h3 className="font-heading mb-2 text-lg font-bold leading-snug">
                               <Link
                                 to={`/posts/${p.path}`}
                                 className="text-foreground hover:text-(--brand) transition-colors"

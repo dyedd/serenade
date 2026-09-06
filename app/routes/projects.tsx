@@ -10,6 +10,7 @@ import { Badge } from '~/components/ui/badge';
 import { Card } from '~/components/ui/card';
 import { Pagination } from '~/components/Pagination';
 import { cn } from '~/lib/utils';
+import { PageHeader } from '~/components/PageHeader';
 
 export function meta(_: Route.MetaArgs) {
   return pageMeta({ title: '项目', path: '/projects', description: '折腾过的项目' });
@@ -35,22 +36,18 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="py-8">
-      <header className="mb-8">
-        <p className="eyebrow mb-2">projects</p>
-        <h1 className="font-heading text-3xl font-bold tracking-tight">项目</h1>
-        <p className="mt-2 border-l-2 border-(--brand) pl-3 text-sm text-muted-foreground">
-          这里是我的折腾项目。还有些没有整理的项目，可以
-          <a
-            href={siteConfig.socialLinks.github.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-(--brand) hover:underline"
-          >
-            {' '}访问我的 GitHub{' '}
-          </a>
-          查看/关注。
-        </p>
-      </header>
+      <PageHeader eyebrow="projects" title="项目">
+        这里是我的折腾项目。还有些没有整理的项目，可以
+        <a
+          href={siteConfig.socialLinks.github.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-(--brand) hover:underline"
+        >
+          {' '}访问我的 GitHub{' '}
+        </a>
+        查看/关注。
+      </PageHeader>
 
       <nav className="mb-8 flex flex-wrap gap-2" aria-label="项目分类">
         <Link
@@ -121,7 +118,7 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
                       <Badge variant="brand">{p.categoryName}</Badge>
                     </div>
                   ) : null}
-                  <h2 className="text-lg font-bold leading-snug group-hover:text-(--brand) transition-colors">
+                  <h2 className="font-heading text-lg font-bold leading-snug transition-colors group-hover:text-(--brand)">
                     {link ? (
                       <a
                         href={link}

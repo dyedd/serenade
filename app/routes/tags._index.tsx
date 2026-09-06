@@ -4,6 +4,7 @@ import type { Route } from './+types/tags._index';
 import { listTags } from '~/lib/content/tags';
 import { pageMeta } from '~/lib/meta';
 import { Badge } from '~/components/ui/badge';
+import { PageHeader } from '~/components/PageHeader';
 
 export function meta(_: Route.MetaArgs) {
   return pageMeta({ title: '标签', path: '/tags', description: '按标签浏览文章' });
@@ -19,14 +20,9 @@ export default function TagsIndex({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="py-8">
-      <header className="mb-10">
-        <p className="eyebrow mb-2">tags</p>
-        <h1 className="font-heading text-3xl font-bold tracking-tight">标签</h1>
-        <p className="mono-meta mt-2">共 {tags.length} 个标签</p>
-        <p className="mt-2 border-l-2 border-(--brand) pl-3 text-sm text-muted-foreground">
-          你可以通过标签快速查找你需要的文章。
-        </p>
-      </header>
+      <PageHeader eyebrow="tags" title="标签" meta={`共 ${tags.length} 个标签`}>
+        你可以通过标签快速查找你需要的文章。
+      </PageHeader>
 
       {tags.length === 0 ? (
         <p className="text-muted-foreground">暂无标签。</p>

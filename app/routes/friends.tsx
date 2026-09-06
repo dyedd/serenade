@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Badge } from '~/components/ui/badge';
 import { Card } from '~/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
+import { PageHeader } from '~/components/PageHeader';
 
 export function meta(_: Route.MetaArgs) {
   return pageMeta({ title: '友情链接', path: '/friends', description: '交换友情链接' });
@@ -57,11 +58,7 @@ export default function FriendsPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="py-8">
-      <header className="mb-10">
-        <p className="eyebrow mb-2">friend links</p>
-        <h1 className="font-heading text-3xl font-bold tracking-tight">友情链接</h1>
-        <p className="mono-meta mt-2">共 {friends.length} 位朋友</p>
-      </header>
+      <PageHeader eyebrow="friends" title="友情链接" meta={`共 ${friends.length} 位朋友`} />
 
       {/* 申请友链前必读 */}
       <Alert className="mb-10 border-(--brand-line) bg-(--brand-soft)">
