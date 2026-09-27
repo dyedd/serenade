@@ -12,9 +12,12 @@ export interface TocEntry {
 export function TableOfContents({
   entries,
   onNavigate,
+  labels = 'hover',
 }: {
   entries: TocEntry[];
   onNavigate?: () => void;
+  /** hover：平时只显示短线，移上去再展开标题。always：抽屉里直接显示文字。 */
+  labels?: 'hover' | 'always';
 }) {
   const [active, setActive] = useState<string | null>(entries[0]?.id ?? null);
 
@@ -42,24 +45,16 @@ export function TableOfContents({
 
   if (entries.length === 0) return null;
 
+  const showLabels = labels === 'always';
+
   return (
-    <nav className="text-sm" aria-label="目录">
-      <p className="eyebrow eyebrow-comment mb-3">toc</p>
-      <ul className="flex flex-col gap-1.5 border-l border-border">
+    <nav className="group/toc text-sm" aria-label="目录">
+      <ul className="flex flex-col gap-2.5">
         {entries.map((e) => (
-          <li
-            key={e.id}
-            className={[
-              e.level === 3 ? 'pl-5' : e.level === 4 ? 'pl-8' : 'pl-3',
-              'border-l-2 -ml-px transition-colors font-heading text-sm leading-snug',
-              active === e.id
-                ? 'border-(--brand) text-(--brand)'
-                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
-            ].join(' ')}
-          >
+          <li key={e.id}>
             <a
               href={`#${e.id}`}
-              className="block py-0.5"
+              className="group/item flex items-center"
               onClick={(ev) => {
                 ev.preventDefault();
                 const el = document.getElementById(e.id);
@@ -70,7 +65,30 @@ export function TableOfContents({
                 onNavigate?.();
               }}
             >
-              {e.text}
+              <span
+                aria-hidden
+                className={[
+                  'shrink-0 rounded-sm transition-all duration-200 ease',
+                  showLabels ? 'hidden' : 'group-hover/toc:w-0 group-hover/toc:opacity-0',
+                  active === e.id ? 'h-[3px] w-16 bg-black' : 'h-px w-12 bg-black/20',
+                ].join(' ')}
+              />
+              <span
+                className={[
+                  'overflow-hidden whitespace-nowrap font-heading text-sm leading-snug transition-all duration-200 ease',
+                  showLabels
+                    ? 'max-w-56 opacity-100'
+                    : 'max-w-0 opacity-0 group-hover/toc:max-w-56 group-hover/toc:opacity-100',
+                  e.level === 3 ? 'group-hover/toc:pl-3' : e.level === 4 ? 'group-hover/toc:pl-6' : '',
+                  showLabels && e.level === 3 ? 'pl-3' : '',
+                  showLabels && e.level === 4 ? 'pl-6' : '',
+                  active === e.id
+                    ? 'font-semibold text-black'
+                    : 'text-black/70 group-hover/item:font-semibold group-hover/item:text-black',
+                ].join(' ')}
+              >
+                {e.text}
+              </span>
             </a>
           </li>
         ))}

@@ -8,6 +8,7 @@ import matter from 'gray-matter';
 import { parseAsset } from './assets';
 import { calculateReadingTime, formatDate, sortByDateDesc } from './reading-time';
 import { parseMarkdown } from './markdown';
+import { parsePostFrontMatter } from './validation';
 
 export interface PostSummary {
   path: string;
@@ -34,12 +35,15 @@ export interface Paginated<T> {
 }
 
 const POST_PATTERN = 'content/posts/*/*.md';
-const SLUG_RE = /content\/posts\/([^/]+)\//;
+const SLUG_RE = /content[\\/]posts[\\/]([^\\/]+)[\\/]/;
 
-function normalizeTags(tags: unknown): string[] {
-  if (typeof tags === 'string') return [tags];
-  if (Array.isArray(tags)) return tags.filter((t): t is string => typeof t === 'string');
-  return [];
+function getSlug(file: string): string | null {
+  return file.match(SLUG_RE)?.[1] ?? null;
+}
+
+function readFrontMatter(raw: string, file: string, fallbackTitle?: string) {
+  const parsed = matter(raw);
+  return { meta: parsePostFrontMatter(parsed.data, file, fallbackTitle), content: parsed.content };
 }
 
 export function paginate<T>(items: T[], page: number, pageSize: number): Paginated<T> {
@@ -58,14 +62,59 @@ async function loadPostFiles(): Promise<string[]> {
   return fg(POST_PATTERN, { caseSensitiveMatch: false });
 }
 
+function openingExcerpt(content: string): string {
+  const chunks: string[] = [];
+  let buf: string[] = [];
+  const flush = () => {
+    const text = buf.join(' ').replace(/\s+/g, ' ').trim();
+    buf = [];
+    if (text) chunks.push(text);
+  };
+  for (const line of content.replace(/\r\n/g, '\n').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('```') || trimmed.startsWith('!')) {
+      flush();
+      continue;
+    }
+    buf.push(trimmed);
+  }
+  flush();
+  const first = chunks.find((chunk) => chunk.length >= 12);
+  if (!first) return '';
+  const plain = first
+    .replace(/!\[[^\]]*]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)]\([^)]*\)/g, '$1')
+    .replace(/[*_`]/g, '')
+    .trim();
+  return plain.length > 160 ? `${plain.slice(0, 160)}…` : plain;
+}
+
+export async function openingExcerpts(slugs: string[]): Promise<Record<string, string>> {
+  const wanted = new Set(slugs);
+  const files = await loadPostFiles();
+  const chosen = new Map<string, string>();
+  for (const file of files) {
+    const slug = getSlug(file);
+    if (!slug || !wanted.has(slug)) continue;
+    if (!/[/\\](README|readme)\.md$/i.test(file)) continue;
+    const current = chosen.get(slug);
+    if (!current || file.replaceAll('\\', '/').endsWith('/README.md')) chosen.set(slug, file);
+  }
+  const out: Record<string, string> = {};
+  await Promise.all([...chosen.entries()].map(async ([slug, file]) => {
+    const raw = await fs.readFile(file, 'utf-8');
+    const { content } = readFrontMatter(raw, file, slug);
+    out[slug] = openingExcerpt(content);
+  }));
+  return out;
+}
+
 async function buildSummary(file: string): Promise<PostSummary | null> {
-  const slugMatch = file.match(SLUG_RE);
-  const slug = slugMatch?.[1];
+  const slug = getSlug(file);
   if (!slug) return null;
 
   const raw = await fs.readFile(file, 'utf-8');
-  const { data: meta, content } = matter(raw);
-  const tags = normalizeTags(meta.tags);
+  const { meta, content } = readFrontMatter(raw, file, slug);
   const readingTime = calculateReadingTime(content);
 
   return {
@@ -74,7 +123,7 @@ async function buildSummary(file: string): Promise<PostSummary | null> {
     date: formatDate(meta.date),
     cover: meta.cover ? parseAsset(slug, meta.cover) : '',
     abstract: meta.abstract ?? '',
-    tags,
+    tags: meta.tags,
     readingTime: readingTime.text,
   };
 }
@@ -95,6 +144,10 @@ async function getIndex(): Promise<PostSummary[]> {
   return summaries;
 }
 
+export async function listPostIndex(): Promise<PostSummary[]> {
+  return getIndex();
+}
+
 export async function listPosts(options: { page?: number; pageSize?: number } = {}): Promise<Paginated<PostSummary>> {
   const page = options.page ?? 1;
   const pageSize = options.pageSize ?? 10;
@@ -109,13 +162,12 @@ export async function listPostDates(): Promise<string[]> {
 
 export async function getPost(slug: string): Promise<PostDetail | null> {
   const files = await fg('content/posts/*/{README,readme}.md', { caseSensitiveMatch: false });
-  const matches = files.filter((f) => f.includes(slug));
+  const matches = files.filter((file) => getSlug(file) === slug);
   if (matches.length === 0) return null;
 
-  const target = matches.find((f) => f.endsWith('/README.md')) ?? matches[0];
+  const target = matches.find((f) => f.replaceAll('\\', '/').endsWith('/README.md')) ?? matches[0];
   const raw = await fs.readFile(target, 'utf-8');
-  const { data: meta, content } = matter(raw);
-  const tags = normalizeTags(meta.tags);
+  const { meta, content } = readFrontMatter(raw, target, slug);
   const html = parseMarkdown(content, slug, { enableKatex: true, assetType: 'posts' });
   const readingTime = calculateReadingTime(content);
 
@@ -130,7 +182,7 @@ export async function getPost(slug: string): Promise<PostDetail | null> {
     date: formatDate(meta.date),
     cover: meta.cover ? parseAsset(slug, meta.cover) : '',
     abstract: meta.abstract ?? '',
-    tags,
+    tags: meta.tags,
     readingTime: readingTime.text,
     html,
     prev,
@@ -155,16 +207,14 @@ export async function searchPosts(options: {
   const matched = (
     await Promise.all(
       files.map(async (file) => {
-        const slugMatch = file.match(SLUG_RE);
-        const slug = slugMatch?.[1];
+        const slug = getSlug(file);
         if (!slug) return null;
         const raw = await fs.readFile(file, 'utf-8');
-        const { data: meta, content } = matter(raw);
-        const tags = normalizeTags(meta.tags);
+        const { meta, content } = readFrontMatter(raw, file, slug);
         const titleMatch = typeof meta.title === 'string' && meta.title.toLowerCase().includes(keyword);
         const abstractMatch =
           typeof meta.abstract === 'string' && meta.abstract.toLowerCase().includes(keyword);
-        const tagsMatch = tags.some((t) => t.toLowerCase().includes(keyword));
+        const tagsMatch = meta.tags.some((t) => t.toLowerCase().includes(keyword));
         const contentMatch = content.toLowerCase().includes(keyword);
         if (!(titleMatch || abstractMatch || tagsMatch || contentMatch)) return null;
         return {
@@ -173,7 +223,7 @@ export async function searchPosts(options: {
           date: formatDate(meta.date),
           cover: meta.cover ? parseAsset(slug, meta.cover) : '',
           abstract: meta.abstract ?? '',
-          tags,
+          tags: meta.tags,
           readingTime: calculateReadingTime(content).text,
         };
       })

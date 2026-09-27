@@ -77,13 +77,11 @@ export function SearchBox({ open, onOpenChange }: { open: boolean; onOpenChange:
           <DialogDescription>输入关键词搜索文章标题、正文和标签</DialogDescription>
         </DialogHeader>
         <div className="flex items-center gap-2 border-b border-border px-3">
-          <span className="font-mono text-xs font-semibold text-(--brand)" aria-hidden>
-            $
-          </span>
+          <SearchIcon className="size-4 shrink-0 text-black/60" aria-hidden />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="find posts, tags…"
+            placeholder="搜索文章、标签…"
             className="h-11 border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
             autoComplete="off"
             autoFocus
@@ -105,9 +103,9 @@ export function SearchBox({ open, onOpenChange }: { open: boolean; onOpenChange:
                   <button
                     type="button"
                     onClick={() => go(h.path)}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-muted"
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors duration-200 ease hover:bg-muted"
                   >
-                    <SearchIcon className="h-4 w-4 shrink-0 opacity-50" />
+                    <SearchIcon className="h-4 w-4 shrink-0 text-black/40" />
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate font-medium">{h.title}</span>
                       <span className="text-xs text-muted-foreground">

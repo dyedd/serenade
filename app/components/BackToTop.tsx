@@ -21,8 +21,8 @@ export function BackToTop() {
       aria-label="回到顶部"
       className={[
         'fixed bottom-8 right-8 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full',
-        'bg-primary text-primary-foreground shadow-lg shadow-primary/20',
-        'transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl',
+        'bg-primary text-primary-foreground',
+        'transition-opacity duration-200 ease hover:opacity-90',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         visible ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 translate-y-4',
       ].join(' ')}

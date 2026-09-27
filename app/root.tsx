@@ -32,11 +32,12 @@ const themeScript = `
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang={siteConfig.lang} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <meta name="theme-color" content="#f6f5f4" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
@@ -81,13 +82,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 py-24 text-center">
-      <p className="eyebrow mb-3">{is404 ? "lost" : "error"}</p>
-      <h1 className="font-heading mb-3 text-6xl font-bold tracking-tight">{message}</h1>
-      <p className="tty-prompt mb-2">{is404 ? "exit 1" : "exit 2"}</p>
+      <h1 className="font-heading mb-3 text-5xl font-semibold tracking-tight">{message}</h1>
       <p className="text-muted-foreground mb-8">{details}</p>
       <Link
         to="/"
-        className="bg-primary text-primary-foreground inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
+        className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity duration-200 ease hover:opacity-90"
       >
         回到首页
       </Link>

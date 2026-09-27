@@ -1,6 +1,7 @@
 // Projects: read content/projects.json, paginate by category or "all".
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { asOptionalString, asRecord, asString, asStringArray, parseJson } from './validation';
 
 export interface ProjectEntry {
   name: string;
@@ -29,14 +30,41 @@ const PROJECTS_FILE = path.join(process.cwd(), 'content', 'projects.json');
 
 async function readProjects(): Promise<ProjectsData> {
   const fileContent = await fs.readFile(PROJECTS_FILE, 'utf-8');
-  try {
-    return JSON.parse(fileContent) as ProjectsData;
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new Error('项目数据解析失败');
-    }
-    throw error;
-  }
+  return parseJson(fileContent, PROJECTS_FILE, (value, filePath) => {
+    const root = asRecord(value, filePath, '项目数据');
+    const categories = asRecord(root.categories, filePath, '项目 categories');
+    return {
+      categories: Object.fromEntries(Object.entries(categories).map(([key, rawCategory]) => {
+        const category = asRecord(rawCategory, filePath, `项目分类 ${key}`);
+        const rawProjects = category.projects;
+        if (!Array.isArray(rawProjects)) throw new Error(`${filePath}: 项目分类 ${key}.projects 必须是数组`);
+        const projects = rawProjects.map((rawProject, index) => {
+          const project = asRecord(rawProject, filePath, `项目分类 ${key}.projects[${index}]`);
+          const entry = {
+            ...project,
+            name: asString(project.name, filePath, `项目分类 ${key}.projects[${index}].name`),
+            description: asOptionalString(project.description, filePath, `项目分类 ${key}.projects[${index}].description`),
+            url: asOptionalString(project.url, filePath, `项目分类 ${key}.projects[${index}].url`),
+            github: asOptionalString(project.github, filePath, `项目分类 ${key}.projects[${index}].github`),
+            link: asOptionalString(project.link, filePath, `项目分类 ${key}.projects[${index}].link`),
+            cover: asOptionalString(project.cover, filePath, `项目分类 ${key}.projects[${index}].cover`),
+            tags: project.tags === undefined ? undefined : asStringArray(project.tags, filePath, `项目分类 ${key}.projects[${index}].tags`),
+            techStack: project.techStack === undefined ? undefined : asStringArray(project.techStack, filePath, `项目分类 ${key}.projects[${index}].techStack`),
+            date: asString(project.date, filePath, `项目分类 ${key}.projects[${index}].date`),
+          } satisfies ProjectEntry;
+          if (Number.isNaN(new Date(entry.date).getTime())) {
+            throw new Error(`${filePath}: 项目分类 ${key}.projects[${index}].date 无效`);
+          }
+          return entry;
+        });
+        return [key, {
+          name: asString(category.name, filePath, `项目分类 ${key}.name`),
+          icon: asString(category.icon, filePath, `项目分类 ${key}.icon`, true),
+          projects,
+        } satisfies ProjectCategory];
+      })),
+    };
+  });
 }
 
 export async function listFeaturedProjects() {

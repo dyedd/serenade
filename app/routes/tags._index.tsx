@@ -16,38 +16,27 @@ export async function loader() {
 
 export default function TagsIndex({ loaderData }: Route.ComponentProps) {
   const tags = Object.entries(loaderData).sort((a, b) => b[1] - a[1]);
-  const max = Math.max(1, ...tags.map(([, c]) => c));
 
   return (
     <section className="py-8">
-      <PageHeader eyebrow="tags" title="标签" meta={`共 ${tags.length} 个标签`}>
+      <PageHeader title="标签" meta={`共 ${tags.length} 个标签`}>
         你可以通过标签快速查找你需要的文章。
       </PageHeader>
 
       {tags.length === 0 ? (
-        <p className="text-muted-foreground">暂无标签。</p>
+        <p className="paper-card p-6 text-sm text-black/60 shadow-none">暂无标签。</p>
       ) : (
-        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {tags.map(([tag, count]) => {
-            const scale = 0.85 + (count / max) * 0.4;
-            return (
-              <li key={tag}>
-                <Badge
-                  variant="outline"
-                  asChild
-                  className="h-auto w-full justify-between px-3 py-2 [a]:hover:border-(--brand-line) [a]:hover:text-(--brand)"
-                  style={{ fontSize: `${scale}em` }}
-                >
-                  <Link to={`/tags/${encodeURIComponent(tag)}`}>
-                    <span className="font-medium">#{tag}</span>
-                    <span className="font-mono text-[0.7em] text-muted-foreground tabular-nums">
-                      {count}
-                    </span>
-                  </Link>
-                </Badge>
-              </li>
-            );
-          })}
+        <ul className="paper-card card-lift flex flex-wrap gap-2 p-6 shadow-none">
+          {tags.map(([tag, count]) => (
+            <li key={tag}>
+              <Badge variant="outline" asChild className="h-auto px-3 py-1.5">
+                <Link to={`/tags/${encodeURIComponent(tag)}`}>
+                  <span className="font-medium">{tag}</span>
+                  <span className="text-[0.7em] text-black/40 tabular-nums">{count}</span>
+                </Link>
+              </Badge>
+            </li>
+          ))}
         </ul>
       )}
     </section>

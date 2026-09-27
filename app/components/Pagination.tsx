@@ -45,7 +45,7 @@ export function Pagination({ page, totalPages, basePath, pageParam = 'page' }: P
   const next = Math.min(totalPages, page + 1);
 
   return (
-    <ShadcnPagination className="mt-12">
+    <ShadcnPagination className="mt-20">
       <PaginationContent>
         <PaginationItem>
           <Button asChild variant="ghost" size="sm" disabled={page <= 1} className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}>
@@ -68,14 +68,14 @@ export function Pagination({ page, totalPages, basePath, pageParam = 'page' }: P
                 aria-current="page"
                 data-slot="pagination-link"
                 data-active
-                className="inline-flex size-8 items-center justify-center rounded-md border border-(--brand-line) bg-(--brand-soft) font-mono text-sm text-(--brand)"
+                className="inline-flex size-8 items-center justify-center rounded-[8px] border border-transparent bg-secondary text-sm font-medium text-secondary-foreground"
               >
                 {p}
               </Link>
             </PaginationItem>
           ) : (
             <PaginationItem key={p}>
-              <Button asChild variant="ghost" size="icon" className="font-mono text-sm">
+              <Button asChild variant="ghost" size="icon" className="text-sm">
                 <Link to={pageHref(basePath, p, pageParam)} aria-label={`第 ${p} 页`}>
                   {p}
                 </Link>

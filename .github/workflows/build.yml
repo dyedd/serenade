@@ -1,6 +1,7 @@
-name: Build and Push Docker Image
+name: Verify and Publish
 
 on:
+  pull_request:
   push:
     branches: [main]
 
@@ -9,7 +10,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,23 +19,57 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - uses: docker/login-action@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Prepare program fixture
+        run: |
+          mkdir -p content/posts/ci-smoke
+          printf '%s\n' '---' 'title: CI smoke post' 'date: 2025-01-01' 'tags: [CI]' '---' '' '# Smoke test' > content/posts/ci-smoke/README.md
+          printf '%s\n' '[]' > content/career.json
+          printf '%s\n' '[]' > content/friends.json
+          printf '%s\n' '{"categories": {}}' > content/projects.json
+          printf '%s\n' '{}' > content/collections.json
+
+      - run: pnpm verify
+
+      - name: Remove program fixture
+        if: always()
+        run: rm -rf content
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/metadata-action@v5
+      - name: Extract Docker metadata
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: meta
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha
             type=raw,value=latest
 
-      - uses: docker/build-push-action@v6
+      - name: Set up Docker Buildx
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true

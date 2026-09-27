@@ -6,6 +6,8 @@ interface PageMeta {
   path?: string;
   image?: string;
   type?: 'website' | 'article';
+  publishedTime?: string;
+  tags?: string[];
 }
 
 function absoluteUrl(path = ''): string {
@@ -21,6 +23,8 @@ export function pageMeta({
   path = '/',
   image,
   type = 'website',
+  publishedTime,
+  tags = [],
 }: PageMeta = {}) {
   const fullTitle = title ? `${title} - ${siteConfig.title}` : siteConfig.title;
   const desc = description || siteConfig.description;
@@ -38,11 +42,17 @@ export function pageMeta({
     { property: 'og:type', content: type },
     { property: 'og:url', content: url },
     { property: 'og:image', content: ogImage },
+    { property: 'og:image:alt', content: title ? `${title} 封面` : siteConfig.title },
     { property: 'og:locale', content: siteConfig.lang === 'zh-CN' ? 'zh_CN' : siteConfig.lang },
+    ...(type === 'article' && publishedTime
+      ? [{ property: 'article:published_time', content: publishedTime }]
+      : []),
+    ...tags.map((tag) => ({ property: 'article:tag', content: tag })),
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: fullTitle },
     { name: 'twitter:description', content: desc },
     { name: 'twitter:image', content: ogImage },
+    { name: 'twitter:url', content: url },
     { tagName: 'link', rel: 'canonical', href: url },
     { tagName: 'link', rel: 'alternate', type: 'application/rss+xml', title: siteConfig.title, href: absoluteUrl('/feed.xml') },
   ];

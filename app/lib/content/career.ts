@@ -1,6 +1,7 @@
 // Career entries: content/career.json. Homepage only reads this list.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { asRecord, asString, parseJson } from './validation';
 
 export type CareerType = '实习' | '全职' | '在读' | '业余';
 
@@ -16,14 +17,21 @@ const CAREER_FILE = path.join(process.cwd(), 'content', 'career.json');
 
 export async function loadCareer(): Promise<CareerItem[]> {
   const raw = await fs.readFile(CAREER_FILE, 'utf-8');
-  try {
-    const data = JSON.parse(raw) as CareerItem[];
-    if (!Array.isArray(data)) throw new Error('职业轨迹数据必须是数组');
-    return data;
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new Error('职业轨迹数据解析失败');
-    }
-    throw error;
-  }
+  return parseJson(raw, CAREER_FILE, (value, filePath) => {
+    if (!Array.isArray(value)) throw new Error(`${filePath}: 职业轨迹数据必须是数组`);
+    return value.map((item, index) => {
+      const entry = asRecord(item, filePath, `职业轨迹第 ${index + 1} 项`);
+      const type = asString(entry.type, filePath, `职业轨迹第 ${index + 1} 项.type`, true) as CareerType;
+      if (!['实习', '全职', '在读', '业余', ''].includes(type)) {
+        throw new Error(`${filePath}: 职业轨迹第 ${index + 1} 项.type 不受支持`);
+      }
+      return {
+        period: asString(entry.period, filePath, `职业轨迹第 ${index + 1} 项.period`),
+        org: asString(entry.org, filePath, `职业轨迹第 ${index + 1} 项.org`),
+        role: asString(entry.role, filePath, `职业轨迹第 ${index + 1} 项.role`),
+        type,
+        note: asString(entry.note, filePath, `职业轨迹第 ${index + 1} 项.note`),
+      };
+    });
+  });
 }

@@ -24,10 +24,10 @@ export function ColumnSidebar({
   activeFile: string | null;
 }) {
   return (
-    <div className="max-h-[calc(100vh-7rem)] overflow-y-auto rounded-xl border border-border bg-card p-5">
+    <div className="max-h-[calc(100vh-7rem)] overflow-y-auto paper-card p-6 shadow-none">
       <Link
         to="/columns"
-        className="mono-meta group inline-flex items-center gap-1.5 transition-colors hover:text-(--brand)"
+        className="mono-meta group inline-flex items-center gap-1.5 transition-colors duration-200 ease hover:text-(--brand)"
       >
         <ArrowLeft
           className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"
@@ -45,7 +45,7 @@ export function ColumnSidebar({
         <Link
           to={`/columns/${path}`}
           className={[
-            'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors',
+            'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-200 ease',
             activeFile === null
               ? 'bg-(--brand-soft) font-semibold text-(--brand)'
               : 'text-muted-foreground hover:bg-(--brand-soft) hover:text-(--brand)',
@@ -55,7 +55,7 @@ export function ColumnSidebar({
           专栏概览
         </Link>
 
-        <p className="eyebrow eyebrow-comment mt-5 mb-2 px-3">toc</p>
+        <p className="mt-5 mb-2 px-3 text-sm text-black/60">目录</p>
         <ol className="space-y-0.5">
           {chapters.map((ch, i) => {
             const active = ch.fileName === activeFile;
@@ -65,7 +65,7 @@ export function ColumnSidebar({
                   to={`/columns/${path}/${ch.fileName}`}
                   aria-current={active ? 'page' : undefined}
                   className={[
-                    'flex items-start gap-2.5 rounded-lg px-3 py-2 text-sm leading-snug transition-colors',
+                    'flex items-start gap-2.5 rounded-lg px-3 py-2 text-sm leading-snug transition-colors duration-200 ease',
                     active
                       ? 'bg-(--brand-soft) font-semibold text-(--brand)'
                       : 'text-muted-foreground hover:bg-(--brand-soft) hover:text-(--brand)',
@@ -74,7 +74,7 @@ export function ColumnSidebar({
                   <span
                     className={[
                       'mt-px shrink-0 font-mono text-xs tabular-nums',
-                      active ? 'text-(--brand)' : 'text-muted-foreground/70',
+                      active ? 'text-(--brand)' : 'text-black/40',
                     ].join(' ')}
                   >
                     {String(i + 1).padStart(2, '0')}

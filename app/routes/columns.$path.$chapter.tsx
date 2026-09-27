@@ -8,7 +8,6 @@ import { getChapter, getColumn } from '~/lib/content/columns';
 import { extractHeadings } from '~/lib/content/extract-headings';
 import { pageMeta } from '~/lib/meta';
 import { useCodeCopy } from '~/hooks/useCodeCopy';
-import { Separator } from '~/components/ui/separator';
 import { TableOfContents } from '~/components/TableOfContents';
 import { ColumnSidebar } from '~/components/columns/ColumnSidebar';
 import { MobileDocNav } from '~/components/MobileDocNav';
@@ -62,76 +61,77 @@ export default function ChapterDetail({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <div className="grid grid-cols-1 py-2 lg:grid-cols-[17rem_1fr_14rem] lg:gap-10">
+    <div className="doc-rail grid grid-cols-1 py-2 lg:grid-cols-[17rem_1fr_14rem] lg:gap-10">
       <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">{sidebar}</aside>
-
       <article className="min-w-0">
-        <MobileDocNav toc={headings} sidebar={sidebar} />
+      <MobileDocNav toc={headings} sidebar={sidebar} />
 
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border/80 pb-4">
-          <nav className="eyebrow" aria-label="breadcrumb">
-            <Link to="/columns" className="transition-colors hover:text-foreground">
-              columns
-            </Link>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border pb-4">
+        <nav className="text-sm text-black/60" aria-label="breadcrumb">
+          <Link to="/columns" className="transition-colors duration-200 ease hover:text-black">
+            专栏
+          </Link>
+          <span className="mx-1.5" aria-hidden>
             /
-            <Link to={`/columns/${path}`} className="transition-colors hover:text-foreground">
-              {path}
-            </Link>
-            /<span className="text-foreground">{chapter.fileName}</span>
-          </nav>
-          {columnDate ? (
-            <span className="mono-meta inline-flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" aria-hidden />
-              更新于 <time dateTime={columnDate}>{columnDate}</time>
-            </span>
-          ) : null}
-        </div>
-
-        <h1 className="font-heading mb-8 text-3xl font-bold leading-tight tracking-tight">
-          {chapter.meta.title}
-        </h1>
-
-        <div
-          className="prose-blog prose prose-neutral dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-headings:font-heading prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
-          dangerouslySetInnerHTML={{ __html: chapter.html }}
-        />
-
-        {/* 上一篇/下一篇章节卡片 */}
-        <Separator className="mt-12" />
-        <nav className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {prev ? (
-            <Link
-              to={`/columns/${path}/${prev.fileName}`}
-              className="card-lift group flex flex-col gap-1.5 rounded-lg border border-border p-4"
-            >
-              <span className="mono-meta flex items-center gap-1.5">
-                <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> 上一篇
-              </span>
-              <span className="font-semibold text-foreground transition-colors group-hover:text-(--brand) line-clamp-2">
-                {prev.meta.title}
-              </span>
-            </Link>
-          ) : (
-            <div />
-          )}
-          {next ? (
-            <Link
-              to={`/columns/${path}/${next.fileName}`}
-              className="card-lift group flex flex-col gap-1.5 rounded-lg border border-border p-4 text-right"
-            >
-              <span className="mono-meta flex items-center justify-end gap-1.5">
-                下一篇 <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-              </span>
-              <span className="font-semibold text-foreground transition-colors group-hover:text-(--brand) line-clamp-2">
-                {next.meta.title}
-              </span>
-            </Link>
-          ) : (
-            <div />
-          )}
+          </span>
+          <Link to={`/columns/${path}`} className="transition-colors duration-200 ease hover:text-black">
+            {columnTitle}
+          </Link>
+          <span className="mx-1.5" aria-hidden>
+            /
+          </span>
+          <span className="text-foreground">{chapter.meta.title}</span>
         </nav>
-      </article>
+        {columnDate ? (
+          <span className="inline-flex items-center gap-1.5 text-sm text-black/60">
+            <Clock className="h-3.5 w-3.5" aria-hidden />
+            更新于 <time dateTime={columnDate}>{columnDate}</time>
+          </span>
+        ) : null}
+      </div>
 
+      <h1 className="font-heading mb-8 text-[2rem] font-semibold leading-tight tracking-[-0.02em]">
+        {chapter.meta.title}
+      </h1>
+
+      <div
+        className="prose-blog prose prose-neutral max-w-none prose-headings:scroll-mt-24 prose-headings:font-heading prose-headings:font-semibold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
+        dangerouslySetInnerHTML={{ __html: chapter.html }}
+      />
+
+      <nav className="mt-20 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {prev ? (
+          <Link
+            to={`/columns/${path}/${prev.fileName}`}
+            className="card-lift group flex flex-col gap-1.5 paper-card p-6 shadow-none"
+          >
+            <span className="flex items-center gap-1.5 text-sm text-black/60">
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> 上一篇
+            </span>
+            <span className="line-clamp-2 font-semibold text-foreground transition-colors duration-200 ease group-hover:text-(--brand)">
+              {prev.meta.title}
+            </span>
+          </Link>
+        ) : (
+          <div />
+        )}
+        {next ? (
+          <Link
+            to={`/columns/${path}/${next.fileName}`}
+            className="card-lift group flex flex-col gap-1.5 paper-card p-6 text-right shadow-none"
+          >
+            <span className="flex items-center justify-end gap-1.5 text-sm text-black/60">
+              下一篇 <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </span>
+            <span className="line-clamp-2 font-semibold text-foreground transition-colors duration-200 ease group-hover:text-(--brand)">
+              {next.meta.title}
+            </span>
+          </Link>
+        ) : (
+          <div />
+        )}
+      </nav>
+      </article>
       <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
         <TableOfContents entries={headings} />
       </aside>

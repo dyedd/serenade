@@ -29,7 +29,7 @@ export interface ChapterDetail {
 }
 
 const COLUMN_PATTERN = 'content/columns/*/{README,readme}.md';
-const SLUG_RE = /content\/columns\/([^/]+)\//;
+const SLUG_RE = /content[\\/]columns[\\/]([^\\/]+)[\\/]/;
 
 export async function listColumns(
   options: { page?: number; pageSize?: number } = {}

@@ -2,24 +2,26 @@
 @plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/noto-serif-sc";
-@import "highlight.js/styles/atom-one-dark.css";
+@import "highlight.js/styles/atom-one-light.css";
 @import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'Noto Serif SC Variable', 'Noto Serif SC', ui-sans-serif, system-ui, sans-serif,
+  --font-sans: 'Inter Variable', 'Inter', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
     "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif;
 }
 
 @theme inline {
-  --font-heading: 'Noto Serif SC Variable', 'Noto Serif SC', serif;
-  --font-sans: 'Noto Serif SC Variable', 'Noto Serif SC', 'Apple Color Emoji', 'Segoe UI Emoji',
+  --font-heading: 'Inter Variable', 'Inter', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Apple Color Emoji', 'Segoe UI Emoji',
     'Noto Color Emoji', sans-serif;
+  --font-editorial: 'Noto Serif SC Variable', 'Noto Serif SC', Georgia, serif;
   --font-mono: 'Geist Mono Variable', 'Consolas', ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -53,108 +55,107 @@
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-brand: var(--brand);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+  --radius-4xl: 9999px;
 }
 
-/*
- * 「蓝图」设计系统：蓝色调。
- * 品牌蓝 #1e90ff（暗色 #60a5fa），
- * 暗色背景 #0f172a 石板蓝，
- * 正文墨色 #2f3542（暗色 #e2e8f0）。
- * 交互色一律蓝色，其余保持安静；元信息（日期/标签/计数）用等宽字体。
- */
+/* 暖纸张画布、白色表面和单一主蓝色。 */
 :root {
-  --background: #fbfcfe;
-  --foreground: #2f3542;
-  --card: #ffffff;
-  --card-foreground: #2f3542;
-  --popover: #ffffff;
-  --popover-foreground: #2f3542;
-  --primary: #1e90ff;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #2f3542;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #2f3542;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #e6ebf2;
-  --input: #e6ebf2;
-  --ring: rgba(30, 144, 255, 0.45);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.75rem;
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #2f3542;
-  --sidebar-primary: #1e90ff;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #2f3542;
-  --sidebar-border: #e6ebf2;
-  --sidebar-ring: rgba(30, 144, 255, 0.45);
-  --brand: #1e90ff;
-  --brand-soft: rgba(30, 144, 255, 0.08);
-  --brand-line: rgba(30, 144, 255, 0.28);
-  --note: #f9f0d4;
-  --note-foreground: #644006;
+--background: #ffffff;
+--foreground: #111111;
+--card: #ffffff;
+--card-foreground: #111111;
+--popover: #ffffff;
+--popover-foreground: #111111;
+--primary: #0075de;
+--primary-foreground: #ffffff;
+--secondary: #e6f3fe;
+--secondary-foreground: #0075de;
+--muted: #ebe9e7;
+--muted-foreground: #757575;
+--accent: #e6f3fe;
+--accent-foreground: #111111;
+--destructive: oklch(0.577 0.245 27.325);
+--border: rgba(0, 0, 0, 0.08);
+--input: rgba(0, 0, 0, 0.14);
+--ring: rgba(0, 117, 222, 0.35);
+--chart-1: oklch(0.87 0 0);
+--chart-2: oklch(0.556 0 0);
+--chart-3: oklch(0.439 0 0);
+--chart-4: oklch(0.371 0 0);
+--chart-5: oklch(0.269 0 0);
+--radius: 0.75rem;
+--sidebar: #ffffff;
+--sidebar-foreground: #111111;
+--sidebar-primary: #0075de;
+--sidebar-primary-foreground: #ffffff;
+--sidebar-accent: #e6f3fe;
+--sidebar-accent-foreground: #111111;
+--sidebar-border: rgba(0, 0, 0, 0.08);
+--sidebar-ring: rgba(0, 117, 222, 0.35);
+--brand: #0075de;
+--brand-soft: #e6f3fe;
+--brand-line: rgba(0, 117, 222, 0.3);
+--note: #ffb110;
+--note-foreground: #111111;
+--paper-warmth: #f6f5f4;
+--sky-tint: #e6f3fe;
+--marigold: #ffb110;
+--coral: #f64932;
+--sky-wash: #62aef0;
+--midnight-ink: #02093a;
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #e2e8f0;
-  --card: #16203a;
-  --card-foreground: #e2e8f0;
-  --popover: #16203a;
-  --popover-foreground: #e2e8f0;
-  --primary: #60a5fa;
-  --primary-foreground: #0b1220;
-  --secondary: #1c2942;
-  --secondary-foreground: #e2e8f0;
-  --muted: #1c2942;
-  --muted-foreground: #94a3b8;
-  --accent: #1c2942;
-  --accent-foreground: #e2e8f0;
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: rgba(148, 178, 224, 0.14);
-  --input: rgba(148, 178, 224, 0.18);
-  --ring: rgba(96, 165, 250, 0.5);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: #16203a;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-primary: #60a5fa;
-  --sidebar-primary-foreground: #0b1220;
-  --sidebar-accent: #1c2942;
-  --sidebar-accent-foreground: #e2e8f0;
-  --sidebar-border: rgba(148, 178, 224, 0.14);
-  --sidebar-ring: rgba(96, 165, 250, 0.5);
-  --brand: #60a5fa;
-  --brand-soft: rgba(96, 165, 250, 0.1);
-  --brand-line: rgba(96, 165, 250, 0.32);
-  --note: rgba(245, 158, 11, 0.15);
-  --note-foreground: #fbbf24;
+  /* 设计稿只有浅色主题，保留旧偏好但使用同一组浅色 token。 */
+  --background: #ffffff;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #0075de;
+  --primary-foreground: #ffffff;
+  --secondary: #e6f3fe;
+  --secondary-foreground: #0075de;
+  --muted: #ebe9e7;
+  --muted-foreground: #757575;
+  --accent: #e6f3fe;
+  --accent-foreground: #111111;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.14);
+  --ring: rgba(0, 117, 222, 0.35);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #0075de;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6f3fe;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: rgba(0, 117, 222, 0.35);
+  --brand: #0075de;
+  --brand-soft: #e6f3fe;
+  --brand-line: rgba(0, 117, 222, 0.3);
+  --note: #ffb110;
+  --note-foreground: #111111;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html,
   body {
-    @apply bg-background text-foreground;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: #ffffff;
+    color: #111111;
+  }
+  body {
+    transition: background-color 200ms ease, color 200ms ease;
   }
   html {
     @apply font-sans antialiased;
@@ -178,26 +179,7 @@
   }
 }
 
-/* ---------- 签名元素：终端元信息层 ---------- */
-
-/* 路径式眉标：~/posts ；文内目录仍用 .eyebrow-comment → // */
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  color: var(--muted-foreground);
-}
-.eyebrow::before {
-  content: '~/';
-  color: var(--brand);
-  margin-right: 0.05em;
-}
-.eyebrow-comment::before {
-  content: '//';
-  margin-right: 0.4em;
-}
-
-/* 等宽元信息：日期、计数、标签、面包屑 */
+/* 日期、计数等次级信息，不用路径眉标。 */
 .mono-meta {
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -205,30 +187,96 @@
   color: var(--muted-foreground);
 }
 
-/* 卡片悬浮：轻抬 + 蓝色描边浮现 */
-.card-lift {
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-.card-lift:hover {
-  transform: translateY(-2px);
-  border-color: var(--brand-line);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-}
-.dark .card-lift:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+/* 顶栏和菜单共用的两层浅投影。 */
+.chrome-shadow {
+  box-shadow:
+    0 0.7px 1.462px 0 rgb(0 0 0 / 0.015),
+    0 3px 9px 0 rgb(0 0 0 / 0.03);
 }
 
-/* Petrichor 式胶片噪点：全屏固定一层，极低透明度 */
-.grain-overlay {
+.site-nav {
+  background-color: #ffffff;
+}
+
+/* 页面两侧的虚线格，往下淡出，不盖住正文。 */
+.site-grid {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: 0;
   pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' fill='none'%3E%3Cpath d='M0 .5H88' stroke='%23d4d4d4' stroke-dasharray='5 7'/%3E%3Cpath d='M.5 0V88' stroke='%23d4d4d4' stroke-dasharray='5 7'/%3E%3C/svg%3E");
+  background-size: 88px 88px;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 76%);
 }
-.dark .grain-overlay {
-  opacity: 0.05;
+
+/* 大屏目录和专栏侧栏需要比正文栏更宽的一列，仍以正文阅读宽度为中心展开。 */
+@media (min-width: 1024px) {
+  .doc-rail {
+    width: min(61rem, calc(100vw - 3rem));
+    max-width: none;
+    margin-left: calc((100% - min(61rem, 100vw - 3rem)) / 2);
+  }
+}
+
+/* 搜索弹层跟内容卡片一样：发丝边、无投影，进出 200ms ease。 */
+[data-slot="dialog-content"] {
+  animation-duration: 200ms;
+  animation-timing-function: ease;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* 公开页内容卡片：白底、12px、发丝边、无投影、无渐变。 */
+.paper-card {
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: none;
+}
+.paper-card.card-dashed {
+  border-style: dashed;
+}
+
+/* 贡献图自带浅底，不再套一层卡片边。 */
+.github-chart {
+  border-radius: 12px;
+}
+.bg-card,
+.card-lift,
+.paper-card {
+  box-shadow: none;
+}
+.transition-colors,
+.transition-opacity {
+  transition-timing-function: ease;
+}
+.card-lift {
+  transition: border-color 200ms ease, color 200ms ease, background-color 200ms ease;
+}
+.card-lift:hover {
+  border-color: rgba(0, 0, 0, 0.16);
+  background-color: var(--card);
+}
+
+/* 悬停时卡片和虚线重影朝相反方向拉开。 */
+.card-echo-shadow {
+  transition: transform 360ms ease, opacity 360ms ease;
+}
+.card-echo-face {
+  transition: transform 360ms ease, border-color 200ms ease;
+}
+.card-echo:hover .card-echo-shadow {
+  opacity: 1;
+  transform: translate(6px, 6px);
+}
+.card-echo:hover .card-echo-face {
+  transform: translate(-4px, -4px);
+}
+
+/* 设计稿不使用全屏噪点 */
+.grain-overlay {
+  display: none;
 }
 
 /* ---------- 文章正文排版 ---------- */
@@ -251,7 +299,7 @@
   color: var(--brand);
   background: var(--brand-soft);
   border: 1px solid var(--brand-line);
-  border-radius: 0.375rem;
+  border-radius: 4px;
   padding: 0.1em 0.4em;
 }
 .prose-blog :where(blockquote) {
@@ -268,10 +316,6 @@
 }
 .prose-blog :where(img) {
   border-radius: 0.75rem;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
-}
-.dark .prose-blog :where(img) {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 .prose-blog :where(hr) {
   border-color: var(--border);
@@ -282,14 +326,7 @@
   padding-bottom: 0.15em;
 }
 .prose-blog :where(h2)::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 2.5rem;
-  height: 0.28em;
-  background: var(--brand-line);
-  border-radius: 2px;
+  content: none;
 }
 
 /* ---------- 代码块 ---------- */
@@ -320,30 +357,34 @@
 .code-block-wrapper .copy-btn:hover {
   opacity: 1;
 }
+.code-block-wrapper,
+.code-block-wrapper .code-header,
+.code-block-wrapper .line-numbers,
+.code-block-wrapper pre,
+.code-block-wrapper pre code.hljs {
+  background-color: #ffffff;
+}
 .code-block-wrapper .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
 }
 .code-block-wrapper .custom-scrollbar::-webkit-scrollbar {
   height: 8px;
 }
 .code-block-wrapper .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
+  background: transparent;
 }
 .code-block-wrapper .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.28);
   border-radius: 4px;
 }
 
 /* ---------- 发文热力图 ---------- */
 .heatmap-cell-empty {
-  background: #e2e8f0;
+  background: #e6e2df;
 }
 .heatmap-cell-active {
   background: var(--brand);
-}
-.dark .heatmap-cell-empty {
-  background: rgba(148, 178, 224, 0.14);
 }
 
 /* ---------- 页面入场 ---------- */
@@ -358,15 +399,15 @@
   }
 }
 .page-fade-in {
-  animation: page-fade-in 0.35s ease both;
+  animation: page-fade-in 0.2s ease both;
 }
 
 .page-lead {
-  border-left: 2px solid var(--brand);
-  padding-left: 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.7;
-  color: var(--muted-foreground);
+  font-family: var(--font-editorial);
+  font-size: 18px;
+  line-height: 1.56;
+  letter-spacing: normal;
+  color: #615d59;
 }
 
 /* 归档年份：相对路径 ./2026 + 虚线标尺，和职业轨迹的虚线同一套语言 */
@@ -391,38 +432,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--brand-line) 0 3px,
-    transparent 3px 8px
-  );
-}
-
-.tty-prompt {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-  letter-spacing: 0.02em;
-}
-.tty-prompt::before {
-  content: '$';
-  color: var(--brand);
-  margin-right: 0.5em;
-  font-weight: 600;
-}
-.tty-cursor {
-  display: inline-block;
-  width: 1.5px;
-  height: 0.65em;
-  margin-left: 0.22em;
-  vertical-align: 0.05em;
-  background: var(--brand);
-  opacity: 0.55;
-  animation: tty-blink 2s ease-in-out infinite;
-}
-@keyframes tty-blink {
-  0%, 55% { opacity: 0.55; }
-  60%, 100% { opacity: 0; }
+  background: var(--border);
 }
 
 .pkg {
@@ -443,8 +453,8 @@
   font-size: 0.75rem;
   letter-spacing: 0.01em;
   color: var(--foreground);
-  background: color-mix(in oklab, var(--chip, var(--brand)) 12%, var(--background));
-  border: 1px solid color-mix(in oklab, var(--chip, var(--brand)) 38%, var(--border));
+  background: var(--sky-tint);
+  border: 1px solid var(--brand-line);
   border-radius: 999px;
   padding: 0.22rem 0.65rem 0.22rem 0.4rem;
 }

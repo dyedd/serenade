@@ -1,5 +1,3 @@
-// List-page title block. Eyebrow is the page path (~/posts); counts belong
-// in meta only when the page has no other census (sidebar, filters, …).
 import type { ReactNode } from 'react';
 
 interface PageHeaderProps {
@@ -12,16 +10,16 @@ interface PageHeaderProps {
 
 export function PageHeader({ eyebrow, title, meta, actions, children }: PageHeaderProps) {
   return (
-    <header className="mb-10">
-      {eyebrow || actions ? (
-        <div className="mb-2 flex items-baseline justify-between gap-4">
-          {eyebrow ? <p className="eyebrow">{eyebrow}</p> : <span />}
-          {actions ? <div className="mono-meta shrink-0">{actions}</div> : null}
-        </div>
-      ) : null}
-      <h1 className="font-heading text-3xl font-bold tracking-tight">{title}</h1>
-      {meta ? <div className="mono-meta mt-2">{meta}</div> : null}
-      {children ? <div className="page-lead mt-3">{children}</div> : null}
+    <header className="mb-20">
+      {eyebrow ? <div className="mb-3 text-sm text-black/60">{eyebrow}</div> : null}
+      <div className="flex items-baseline justify-between gap-4">
+        <h1 className="font-heading text-[2rem] font-semibold leading-tight tracking-[-0.02em] text-foreground">
+          {title}
+        </h1>
+        {actions ? <div className="shrink-0 text-sm text-black/60">{actions}</div> : null}
+      </div>
+      {meta ? <p className="mt-2 text-sm text-black/60">{meta}</p> : null}
+      {children ? <div className="page-lead mt-4">{children}</div> : null}
     </header>
   );
 }

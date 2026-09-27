@@ -110,7 +110,7 @@ function RelativeTime({ date }: { date: string }) {
 function MomentCard({ article }: { article: TimelineArticle }) {
   return (
     <li>
-      <Card className="card-lift h-full p-5">
+      <Card className="card-lift h-full p-6 shadow-none">
       {/* 作者信息 */}
       <div className="mb-3 flex items-center gap-3">
         <SiteAvatar src={article.siteLogo} name={article.siteName} />
@@ -119,7 +119,7 @@ function MomentCard({ article }: { article: TimelineArticle }) {
             href={article.siteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block truncate text-sm font-semibold text-foreground transition-colors hover:text-(--brand)"
+            className="block truncate text-sm font-semibold text-foreground transition-colors duration-200 ease hover:text-(--brand)"
           >
             {article.siteName}
           </a>
@@ -136,7 +136,7 @@ function MomentCard({ article }: { article: TimelineArticle }) {
           href={article.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-foreground transition-colors hover:text-(--brand)"
+          className="text-foreground transition-colors duration-200 ease hover:text-(--brand)"
         >
           {article.title}
         </a>
@@ -155,10 +155,10 @@ function MomentCard({ article }: { article: TimelineArticle }) {
 function FailedFeedsPanel({ failedFeeds }: { failedFeeds: SiteResult[] }) {
   return (
     <section
-      className="mt-10 rounded-lg border border-destructive/30 bg-destructive/5 p-5"
+      className="mt-20 paper-card p-6 shadow-none"
       aria-label="RSS 获取失败列表"
     >
-      <h2 className="mb-4 flex items-center gap-2 font-bold text-destructive">
+      <h2 className="mb-4 flex items-center gap-2 font-bold text-foreground">
         <AlertTriangle className="h-5 w-5" aria-hidden />
         RSS 获取失败 ({failedFeeds.length})
       </h2>
@@ -166,7 +166,7 @@ function FailedFeedsPanel({ failedFeeds }: { failedFeeds: SiteResult[] }) {
         {failedFeeds.map((feed) => (
           <li
             key={feed.siteUrl}
-            className="flex items-start justify-between gap-4 rounded-md border border-destructive/20 bg-card p-3"
+            className="flex items-start justify-between gap-4 paper-card p-6 shadow-none"
           >
             <div className="min-w-0">
               <span className="block truncate text-sm font-semibold text-foreground">
@@ -176,12 +176,12 @@ function FailedFeedsPanel({ failedFeeds }: { failedFeeds: SiteResult[] }) {
                 href={feed.siteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mono-meta hover:text-(--brand)"
+                className="mono-meta transition-colors duration-200 ease hover:text-(--brand)"
               >
                 {feed.siteUrl}
               </a>
             </div>
-            <span className="shrink-0 text-sm text-destructive">
+            <span className="shrink-0 text-sm text-black/60">
               {formatErrorMessage(feed.errorMessage)}
             </span>
           </li>
@@ -287,7 +287,7 @@ export function RSSAggregator({ friends }: { friends: Friend[] }) {
         // 加载状态：骨架卡片
         <div className="space-y-5 py-4" aria-label="加载中" role="status">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-lg border border-border bg-card p-5">
+            <div key={i} className="paper-card p-6 shadow-none">
               <div className="mb-3 flex items-center gap-3">
                 <Skeleton className="size-10 rounded-full" />
                 <div className="flex-1 space-y-1.5">

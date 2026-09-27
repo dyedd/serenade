@@ -1,13 +1,11 @@
 // Friends page: application rules + JSON template with copy + links list.
 import { useState } from 'react';
 import type { Route } from './+types/friends';
-import { Check, Copy, Link2, UserRound } from 'lucide-react';
+import { Check, ChevronDown, Copy, Link2 } from 'lucide-react';
 import { loadFriends, type Friend } from '~/lib/content/friends';
 import { siteConfig } from '~/lib/site-config';
 import { pageMeta } from '~/lib/meta';
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Badge } from '~/components/ui/badge';
 import { Card } from '~/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
 import { PageHeader } from '~/components/PageHeader';
@@ -58,62 +56,56 @@ export default function FriendsPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="py-8">
-      <PageHeader eyebrow="friends" title="友情链接" meta={`共 ${friends.length} 位朋友`} />
+      <PageHeader title="友情链接">共有 {friends.length} 位网上邻居。</PageHeader>
 
-      {/* 申请友链前必读 */}
-      <Alert className="mb-10 border-(--brand-line) bg-(--brand-soft)">
-        <UserRound data-icon="inline-start" />
-        <AlertTitle>申请友链前必读</AlertTitle>
-        <AlertDescription>
-          <ul className="list-disc space-y-1 pl-5">
+      <details className="group mb-20 paper-card p-6">
+        <summary className="flex cursor-pointer list-none items-center justify-between font-heading text-lg font-semibold [&::-webkit-details-marker]:hidden">
+          申请友链
+          <ChevronDown className="size-4 text-black/60 transition-transform duration-200 ease group-open:rotate-180" />
+        </summary>
+        <div className="mt-6">
+          <h2 className="mb-3 text-sm font-medium">申请前必读</h2>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-black/60">
             {FRIEND_RULES.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
           </ul>
-        </AlertDescription>
-      </Alert>
 
-      {/* 友链申请方式 */}
-      <div className="mb-12">
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
-          <Link2 className="h-4 w-4 text-(--brand)" aria-hidden />
-          友链申请方式
-        </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          请将你的友链信息按照以下格式发送至{' '}
-          <a
-            href={siteConfig.socialLinks.email.url}
-            className="font-medium text-(--brand) hover:underline"
-          >
-            邮箱
-          </a>
-        </p>
-
-        {/* JSON 模板代码块：头部 + 一键复制 */}
-        <div className="my-6 overflow-hidden rounded-lg border border-border bg-[#282c34] shadow-lg">
-          <div className="flex select-none items-center justify-between border-b border-white/10 bg-[#21252b] px-4 py-1.5 text-xs text-neutral-300">
-            <span className="font-mono opacity-80">json</span>
-            <button
-              type="button"
-              onClick={handleCopy}
-              aria-label="复制友链模板"
-              className="flex cursor-pointer items-center gap-1.5 text-neutral-400 opacity-80 transition-all hover:text-white hover:opacity-100"
+          <h2 className="mt-6 mb-3 text-sm font-medium">申请方式</h2>
+          <p className="mb-4 text-sm text-black/60">
+            请将你的友链信息按照以下格式发送至{' '}
+            <a
+              href={siteConfig.socialLinks.email.url}
+              className="font-medium text-(--brand) hover:underline"
             >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-green-400" aria-hidden />
-              ) : (
-                <Copy className="h-3.5 w-3.5" aria-hidden />
-              )}
-              <span className={copied ? 'font-mono text-green-400' : 'font-mono'}>
-                {copied ? '已复制 ✓' : '复制'}
-              </span>
-            </button>
+              邮箱
+            </a>
+          </p>
+          <div className="code-block-wrapper paper-card overflow-hidden shadow-none">
+            <div className="code-header flex select-none items-center justify-between border-b border-border bg-card px-6 py-3 text-xs text-black/60">
+              <span className="font-mono">json</span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                aria-label="复制友链模板"
+                className="flex cursor-pointer items-center gap-1.5 text-black/60 transition-colors duration-200 ease hover:text-black"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-primary" aria-hidden />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" aria-hidden />
+                )}
+                <span className={copied ? 'font-mono text-primary' : 'font-mono'}>
+                  {copied ? '已复制 ✓' : '复制'}
+                </span>
+              </button>
+            </div>
+            <pre className="overflow-x-auto p-6 text-sm leading-relaxed text-foreground">
+              <code className="block font-mono">{templateJson}</code>
+            </pre>
           </div>
-          <pre className="overflow-x-auto p-4 text-sm leading-relaxed text-neutral-200">
-            <code className="block font-mono">{templateJson}</code>
-          </pre>
         </div>
-      </div>
+      </details>
 
       {/* 友链列表 */}
       {friends.length === 0 ? (
@@ -127,27 +119,26 @@ export default function FriendsPage({ loaderData }: Route.ComponentProps) {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {friends.map((f: Friend) => (
-            <li key={f.url}>
-              <Card className="card-lift h-full gap-0 py-0">
+            <li key={f.url} className="min-w-0">
+              <Card className="card-lift card-dashed h-full gap-0 py-0 shadow-none">
                 <a
                   href={f.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-discover="false"
                   title={f.description || '点击访问友链'}
-                  className="group flex h-full gap-3 p-4"
+                  className="group flex h-full items-center gap-3 p-4"
                 >
                   <FriendAvatar src={f.logo} name={f.name} />
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate font-bold text-foreground transition-colors group-hover:text-(--brand)">
+                    <h2 className="truncate font-bold text-foreground transition-colors duration-200 ease group-hover:text-(--brand)">
                       {f.name}
                     </h2>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    <p className="mt-0.5 truncate text-sm text-black/60">
                       {f.description || '暂无简介'}
                     </p>
-                    {f.rss ? <Badge variant="brand" className="mt-2">RSS</Badge> : null}
                   </div>
                 </a>
               </Card>

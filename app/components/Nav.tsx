@@ -1,71 +1,70 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router';
-import {
-  BookOpen,
-  FileText,
-  House,
-  Menu,
-  Rocket,
-  Search as SearchIcon,
-  Users,
-} from 'lucide-react';
+import { Menu, Search as SearchIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router";
+import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
-import { Button } from '~/components/ui/button';
+} from "~/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '~/components/ui/sheet';
-import { DarkModeToggle } from './DarkModeToggle';
-import { SearchBox } from './SearchBox';
-import { SearchHotkey, SEARCH_HOTKEY } from './SearchHotkey';
-import { siteConfig } from '~/lib/site-config';
-import { cn } from '~/lib/utils';
+} from "~/components/ui/sheet";
+import { siteConfig } from "~/lib/site-config";
+import { cn } from "~/lib/utils";
+import { SearchBox } from "./SearchBox";
+import { SEARCH_HOTKEY, SearchHotkey } from "./SearchHotkey";
 
 interface NavLinkSpec {
   to: string;
   label: string;
-  icon: typeof House;
   end?: boolean;
 }
 
 const primaryLinks: NavLinkSpec[] = [
-  { to: '/', label: '首页', icon: House, end: true },
-  { to: '/posts', label: '文章', icon: FileText },
-  { to: '/columns', label: '专栏', icon: BookOpen },
-  { to: '/projects', label: '项目', icon: Rocket },
+  { to: "/", label: "首页", end: true },
+  { to: "/posts", label: "文章" },
+  { to: "/projects", label: "项目" },
 ];
 
 const friendLinks: NavLinkSpec[] = [
-  { to: '/friends', label: '友链', icon: Users },
-  { to: '/moments', label: '朋友圈', icon: Users },
+  { to: "/friends", label: "友链" },
+  { to: "/moments", label: "朋友圈" },
 ];
 
 function navClass({ isActive }: { isActive: boolean }) {
   return cn(
-    'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors',
-    isActive
-      ? 'bg-(--brand-soft) font-semibold text-(--brand)'
-      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+    "rounded-lg px-3 py-2 text-sm font-medium text-black/60 no-underline transition-colors duration-200 ease hover:text-black hover:no-underline",
+    isActive && "text-black",
   );
 }
 
 export function Nav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const friendsActive =
+    location.pathname.startsWith("/friends") ||
+    location.pathname.startsWith("/moments");
 
   useEffect(() => {
     setMenuOpen(false);
+    setScrolled(window.scrollY > 16);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -73,46 +72,57 @@ export function Nav() {
       e.preventDefault();
       setSearchOpen((v) => !v);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center gap-2 px-6 py-2.5">
+      <header className="sticky top-0 z-40">
+        <div
+          className={cn(
+            "mx-auto flex max-w-4xl items-center gap-2 border border-transparent px-6 transition-[height,background-color,border-color,border-radius] duration-200 ease",
+            scrolled
+              ? "h-14 rounded-b-xl border-black/10 bg-white/80 backdrop-blur-xl"
+              : "h-20 bg-transparent",
+          )}
+        >
           <Link
             to="/"
-            className="flex shrink-0 items-center gap-2.5"
+            className="flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight text-foreground"
             aria-label={siteConfig.title}
           >
             <img
-              src={siteConfig.profile.avatar}
+              src="/favicon-96x96.png"
               alt=""
-              className="size-8 shrink-0 rounded-lg object-cover ring-1 ring-border"
+              width={20}
+              height={20}
+              className="size-5 object-contain"
             />
-            <span className="font-heading hidden text-sm font-semibold tracking-tight sm:inline">
-              {siteConfig.title}
-            </span>
+            {siteConfig.title}
           </Link>
 
-          <nav className="ml-2 hidden items-center gap-0.5 md:flex" aria-label="主导航">
+          <nav
+            className="ml-auto hidden items-center md:flex"
+            aria-label="主导航"
+          >
             {primaryLinks.map((link) => (
-              <NavLink key={link.to} to={link.to} className={navClass} end={link.end}>
-                <link.icon className="size-4" />
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={navClass}
+                end={link.end}
+              >
                 {link.label}
               </NavLink>
             ))}
             <DropdownMenu>
               <DropdownMenuTrigger
                 className={cn(
-                  'inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none data-[state=open]:bg-muted data-[state=open]:text-foreground',
-                  (location.pathname.startsWith('/friends') ||
-                    location.pathname.startsWith('/moments')) &&
-                    'bg-(--brand-soft) font-semibold text-(--brand)',
+                  "cursor-pointer rounded-lg px-3 py-2 text-sm font-medium text-black/60 transition-colors duration-200 ease hover:text-black focus-visible:outline-none data-[state=open]:text-black",
+                  friendsActive && "text-black",
                 )}
               >
-                <Users className="size-4" />
                 朋友
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" sideOffset={8}>
@@ -128,29 +138,26 @@ export function Nav() {
             </DropdownMenu>
           </nav>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-1">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => setSearchOpen(true)}
               aria-label="搜索"
-              className="relative z-50 rounded-full text-muted-foreground"
+              className="text-black/60 transition-colors duration-200 ease hover:text-black"
             >
               <SearchIcon data-icon="inline-start" />
-              <span className="hidden font-mono text-xs sm:inline">
-                <span className="mr-1 text-(--brand)">$</span>find
-              </span>
+              <span className="hidden sm:inline">搜索</span>
               <SearchHotkey className="hidden sm:inline-flex" />
             </Button>
-            <DarkModeToggle />
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="md:hidden"
+                  className="text-black/60 transition-colors duration-200 ease hover:text-black md:hidden"
                   aria-label="打开菜单"
                 >
                   <Menu />
@@ -158,16 +165,12 @@ export function Nav() {
               </SheetTrigger>
               <SheetContent side="left" className="w-72 p-0">
                 <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2.5">
-                    <img
-                      src={siteConfig.profile.avatar}
-                      alt=""
-                      className="size-8 shrink-0 rounded-lg object-cover ring-1 ring-border"
-                    />
-                    {siteConfig.title}
-                  </SheetTitle>
+                  <SheetTitle>{siteConfig.title}</SheetTitle>
                 </SheetHeader>
-                <nav className="flex flex-col gap-1 px-3 pb-6" aria-label="移动导航">
+                <nav
+                  className="flex flex-col gap-1 px-3 pb-6"
+                  aria-label="移动导航"
+                >
                   {[...primaryLinks, ...friendLinks].map((link) => (
                     <NavLink
                       key={link.to}
@@ -175,7 +178,6 @@ export function Nav() {
                       className={navClass}
                       end={link.end}
                     >
-                      <link.icon className="size-4" />
                       {link.label}
                     </NavLink>
                   ))}

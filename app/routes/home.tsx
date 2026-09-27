@@ -1,27 +1,41 @@
 import { Link } from 'react-router';
+import { ChevronDown } from 'lucide-react';
 import type { Route } from './+types/home';
-import { listPosts } from '~/lib/content/posts';
+import { listPostDates, listPosts, openingExcerpts } from '~/lib/content/posts';
+import { listTags } from '~/lib/content/tags';
 import { loadCareer } from '~/lib/content/career';
 import { listFeaturedProjects, type ProjectEntry } from '~/lib/content/projects';
 import { siteConfig } from '~/lib/site-config';
 import { pageMeta } from '~/lib/meta';
 import { CareerTrack } from '~/components/CareerTrack';
+import { PostsHeatmap } from '~/components/PostsHeatmap';
+import { SocialGlyph } from '~/components/SocialIcons';
+import { JsonLd } from '~/components/JsonLd';
 import { TechChip } from '~/components/TechChip';
+import { Badge } from '~/components/ui/badge';
 
 export function meta(_: Route.MetaArgs) {
   return pageMeta({ path: '/', description: siteConfig.description });
 }
 
 export async function loader() {
-  const [recent, career, projects] = await Promise.all([
+  const [recent, career, projects, tags, dates] = await Promise.all([
     listPosts({ page: 1, pageSize: 5 }),
     loadCareer(),
     listFeaturedProjects(),
+    listTags(),
+    listPostDates(),
   ]);
+  const excerpts = await openingExcerpts(recent.data.map((post) => post.path));
   return {
-    posts: recent.data,
+    posts: recent.data.map((post) => ({
+      ...post,
+      abstract: post.abstract || excerpts[post.path] || '',
+    })),
     career,
     projects,
+    tags,
+    dates,
   };
 }
 
@@ -30,146 +44,148 @@ function projectHref(p: ProjectEntry): string | undefined {
   return typeof raw === 'string' && raw.length > 0 ? raw : undefined;
 }
 
+function sectionTitle(id: string, title: string, href: string, action: string) {
+  return (
+    <div className="mb-4 flex items-baseline justify-between gap-4">
+      <h2 id={id} className="font-heading text-[1.375rem] font-semibold tracking-[-0.01em]">
+        {title}
+      </h2>
+      <Link
+        to={href}
+        className="text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
+      >
+        {action}
+      </Link>
+    </div>
+  );
+}
+
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { profile, socialLinks } = siteConfig;
-  const { posts, career, projects } = loaderData;
-  const [role, ...restIntro] = profile.introduction;
+  const { posts, career, projects, tags, dates } = loaderData;
+  const sortedTags = Object.entries(tags).sort((a, b) => b[1] - a[1]).slice(0, 24);
 
   return (
-    <div className="py-8">
-      <section className="mb-14">
-        <p className="eyebrow mb-6">home</p>
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:gap-10">
-          <img
-            src={profile.avatar}
-            alt={profile.name}
-            className="aspect-[4/5] w-32 shrink-0 rounded-lg object-cover ring-1 ring-border sm:w-40"
-          />
-          <div className="min-w-0 flex-1">
-            <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
-              {profile.name}
-            </h1>
-            {role ? (
-              <p className="mt-2 font-heading text-lg text-foreground/80">{role}</p>
-            ) : null}
-            {restIntro.map((line, i) => (
-              <p key={`intro-${i}`} className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                {line}
-              </p>
-            ))}
-            <p className="mt-4 text-sm leading-relaxed text-foreground/85 sm:text-[0.95rem]">
-              {profile.statement}
+    <div className="flex flex-col gap-20 py-2">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: siteConfig.title,
+          url: siteConfig.url,
+          description: siteConfig.description,
+          inLanguage: siteConfig.lang,
+          author: {
+            '@type': 'Person',
+            name: siteConfig.author,
+            url: siteConfig.url,
+            sameAs: [siteConfig.socialLinks.github.url],
+          },
+        }}
+      />
+      <section className="flex flex-col-reverse items-start gap-6 sm:flex-row sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-heading text-[2rem] font-semibold leading-tight tracking-[-0.02em]">
+            你好，我是{profile.name}
+          </h1>
+          {profile.introduction.map((line, i) => (
+            <p key={`intro-${i}`} className="mt-3 text-sm leading-relaxed text-black/95 sm:text-base">
+              {line}
             </p>
-            <p className="mono-meta mt-5 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <a
-                href={socialLinks.github.url}
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-(--brand)"
-              >
-                GitHub
-              </a>
-              <span aria-hidden>·</span>
-              <a href={socialLinks.email.url} className="transition-colors hover:text-(--brand)">
-                Email
-              </a>
-              <span aria-hidden>·</span>
-              <Link to="/feed.xml" className="transition-colors hover:text-(--brand)">
-                RSS
-              </Link>
-            </p>
-          </div>
+          ))}
+          <p className="page-lead mt-3">{profile.statement}</p>
+          <p className="mt-5 flex items-center gap-1">
+            <a
+              href={socialLinks.github.url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+              title="GitHub"
+              className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
+            >
+              <SocialGlyph name="github" />
+            </a>
+            <a
+              href={socialLinks.email.url}
+              aria-label="Email"
+              title="Email"
+              className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
+            >
+              <SocialGlyph name="email" />
+            </a>
+            <a
+              href={socialLinks.qq.url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="QQ"
+              title="QQ"
+              className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
+            >
+              <SocialGlyph name="qq" />
+            </a>
+            <Link
+              to="/feed.xml"
+              aria-label="RSS"
+              title="RSS"
+              className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
+            >
+              <SocialGlyph name="rss" />
+            </Link>
+          </p>
         </div>
+        <img
+          src={profile.avatar}
+          alt={profile.name}
+          className="size-24 shrink-0 rounded-full border border-border object-cover sm:size-28"
+        />
       </section>
 
-      <section id="career" className="mb-14" aria-labelledby="career-heading">
-        <p className="eyebrow mb-2">career</p>
-        <h2 id="career-heading" className="font-heading mb-6 text-2xl font-bold tracking-tight">
+      <div className="relative flex items-center justify-center">
+        <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-black/15" />
+        <a
+          href="#recent-heading"
+          className="relative inline-flex items-center gap-1 rounded-full border border-dashed border-black/15 bg-white px-4 py-1.5 text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
+        >
+          我写的文章
+          <ChevronDown className="size-3.5" aria-hidden />
+        </a>
+      </div>
+
+      <section id="career" aria-labelledby="career-heading">
+        <h2 id="career-heading" className="font-heading mb-6 text-[1.375rem] font-semibold tracking-[-0.01em]">
           职业轨迹
         </h2>
         <CareerTrack items={career} />
       </section>
 
-      <section className="mb-14" aria-labelledby="projects-heading">
-        <p className="eyebrow mb-2">projects</p>
-        <div className="mb-6 flex items-baseline justify-between gap-4">
-          <h2 id="projects-heading" className="font-heading text-2xl font-bold tracking-tight">
-            项目
+      <section aria-labelledby="github-heading">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 id="github-heading" className="font-heading text-[1.375rem] font-semibold tracking-[-0.01em]">
+            GitHub 贡献
           </h2>
-          <Link to="/projects" className="mono-meta transition-colors hover:text-(--brand)">
-            全部项目 →
-          </Link>
+          <a
+            href={socialLinks.github.url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
+          >
+            主页
+          </a>
         </div>
-        {projects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无项目</p>
-        ) : (
-          <ol>
-            {projects.map((p) => {
-              const href = projectHref(p);
-              const year = typeof p.date === 'string' ? p.date.slice(0, 4) : '';
-              const tech = Array.isArray(p.techStack)
-                ? p.techStack.filter((t): t is string => typeof t === 'string').slice(0, 4)
-                : [];
-              const name = (
-                <span className="font-heading text-base font-semibold transition-colors group-hover:text-(--brand)">
-                  {p.name}
-                </span>
-              );
-              const cover = typeof p.cover === 'string' ? p.cover : '';
-              return (
-                <li key={`${p.name}-${p.date}`} className="border-b border-border py-4 first:border-t">
-                  <div className="group flex gap-4">
-                    {cover ? (
-                      <img
-                        src={cover}
-                        alt=""
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                        className="h-16 w-28 shrink-0 rounded-md object-cover ring-1 ring-border sm:h-[4.5rem] sm:w-32"
-                      />
-                    ) : null}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-4">
-                        {href ? (
-                          href.startsWith('/') ? (
-                            <Link to={href} className="min-w-0">
-                              {name}
-                            </Link>
-                          ) : (
-                            <a href={href} target="_blank" rel="noreferrer" className="min-w-0">
-                              {name}
-                            </a>
-                          )
-                        ) : (
-                          name
-                        )}
-                        {year ? <span className="mono-meta shrink-0">{year}</span> : null}
-                      </div>
-                      {p.description ? (
-                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2">
-                          {p.description}
-                        </p>
-                      ) : null}
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        {p.categoryName ? (
-                          <span className="mono-meta mr-1">{p.categoryName}</span>
-                        ) : null}
-                        {tech.map((t) => (
-                          <TechChip key={t} label={t} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        )}
+        <a href={socialLinks.github.url} target="_blank" rel="noreferrer" className="block">
+          <img
+            src={profile.githubContributionChart.replace(
+              /ghchart\.rshah\.org\/[0-9a-fA-F]{6}\//i,
+              'ghchart.rshah.org/0075de/',
+            )}
+            alt="GitHub 贡献图"
+            className="github-chart block h-auto w-full"
+          />
+        </a>
       </section>
 
-      <section className="mb-14" aria-labelledby="stack-heading">
-        <p className="eyebrow mb-2">stack</p>
-        <h2 id="stack-heading" className="font-heading mb-6 text-2xl font-bold tracking-tight">
+      <section aria-labelledby="stack-heading">
+        <h2 id="stack-heading" className="font-heading mb-6 text-[1.375rem] font-semibold tracking-[-0.01em]">
           技术栈
         </h2>
         <ul className="flex flex-wrap gap-2">
@@ -181,32 +197,37 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </ul>
       </section>
 
-      <section className="mb-14" aria-labelledby="recent-heading">
-        <p className="eyebrow mb-2">writing</p>
-        <div className="mb-6 flex items-baseline justify-between gap-4">
-          <h2 id="recent-heading" className="font-heading text-2xl font-bold tracking-tight">
-            最近写作
-          </h2>
-          <Link to="/posts" className="mono-meta transition-colors hover:text-(--brand)">
-            全部文章 →
-          </Link>
-        </div>
+      <section aria-labelledby="recent-heading">
+        {sectionTitle('recent-heading', '文章', '/posts', '全部文章')}
         {posts.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无最新文章</p>
+          <p className="paper-card p-6 text-sm text-black/60 shadow-none">暂无最新文章</p>
         ) : (
-          <ol>
+          <ol className="flex flex-col gap-4">
             {posts.map((p) => (
-              <li key={p.path} className="border-b border-border first:border-t">
-                <Link
-                  to={`/posts/${p.path}`}
-                  className="group flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6"
-                >
-                  <time className="mono-meta shrink-0 sm:w-28" dateTime={p.date}>
-                    {p.date}
-                  </time>
-                  <span className="font-heading font-semibold leading-snug text-foreground transition-colors group-hover:text-(--brand)">
-                    {p.title}
-                  </span>
+              <li key={p.path} className="card-lift group paper-card p-6 shadow-none">
+                <Link to={`/posts/${p.path}`} className="flex gap-4">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-heading text-lg font-semibold leading-snug text-foreground transition-colors duration-200 ease group-hover:text-(--brand)">
+                      {p.title}
+                    </h3>
+                    {p.abstract ? (
+                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-black/60">
+                        {p.abstract}
+                      </p>
+                    ) : null}
+                    <p className="mt-3 text-sm text-black/60">
+                      <time dateTime={p.date}>{p.date}</time>
+                      {p.tags[0] ? <span> · {p.tags[0]}</span> : null}
+                    </p>
+                  </div>
+                  {p.cover ? (
+                    <img
+                      src={p.cover}
+                      alt=""
+                      loading="lazy"
+                      className="h-20 w-28 shrink-0 rounded-lg object-cover"
+                    />
+                  ) : null}
                 </Link>
               </li>
             ))}
@@ -214,28 +235,81 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         )}
       </section>
 
-      <section aria-labelledby="github-heading">
-        <p className="eyebrow mb-2">github</p>
-        <div className="mb-6 flex items-baseline justify-between gap-4">
-          <h2 id="github-heading" className="font-heading text-2xl font-bold tracking-tight">
-            GitHub 贡献
-          </h2>
-          <a
-            href={socialLinks.github.url}
-            target="_blank"
-            rel="noreferrer"
-            className="mono-meta transition-colors hover:text-(--brand)"
-          >
-            主页 →
-          </a>
+      <section aria-label="标签">
+        <h2 className="mb-3 text-sm font-medium text-foreground">标签</h2>
+        <div className="flex flex-wrap gap-2">
+          {sortedTags.map(([tag, count]) => (
+            <Badge key={tag} variant="outline" asChild className="h-auto px-3 py-1">
+              <Link to={`/tags/${encodeURIComponent(tag)}`}>
+                {tag}
+                <span className="ml-1 text-[0.7em] text-black/40 tabular-nums">{count}</span>
+              </Link>
+            </Badge>
+          ))}
         </div>
-        <a href={socialLinks.github.url} target="_blank" rel="noreferrer" className="block">
-          <img
-            src={profile.githubContributionChart}
-            alt="GitHub 贡献图"
-            className="block min-h-20 w-full rounded-lg object-contain opacity-90 dark:invert dark:[filter:invert(1)_hue-rotate(180deg)]"
-          />
-        </a>
+        <Link
+          to="/tags"
+          className="mt-3 inline-block text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
+        >
+          全部标签
+        </Link>
+      </section>
+
+      <section aria-label="写作统计">
+        <PostsHeatmap posts={dates.map((date) => ({ date }))} totalCount={dates.length} />
+      </section>
+
+      <section aria-labelledby="projects-heading">
+        {sectionTitle('projects-heading', '项目', '/projects', '全部项目')}
+        {projects.length === 0 ? (
+          <p className="paper-card p-6 text-sm text-black/60 shadow-none">暂无项目</p>
+        ) : (
+          <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {projects.map((p) => {
+              const href = projectHref(p);
+              const cover = typeof p.cover === 'string' ? p.cover : '';
+              const body = (
+                <>
+                  {cover ? (
+                    <img
+                      src={cover}
+                      alt=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      className="mb-4 aspect-video w-full rounded-lg object-cover"
+                    />
+                  ) : null}
+                  <h3 className="font-heading text-base font-semibold leading-snug text-foreground transition-colors duration-200 ease group-hover:text-(--brand)">
+                    {p.name}
+                  </h3>
+                  {p.description ? (
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-black/60">
+                      {p.description}
+                    </p>
+                  ) : null}
+                </>
+              );
+              const className = 'card-lift group block paper-card p-6 shadow-none';
+              return (
+                <li key={`${p.name}-${p.date}`}>
+                  {href ? (
+                    href.startsWith('/') ? (
+                      <Link to={href} className={className}>
+                        {body}
+                      </Link>
+                    ) : (
+                      <a href={href} target="_blank" rel="noreferrer" className={className}>
+                        {body}
+                      </a>
+                    )
+                  ) : (
+                    <div className={className}>{body}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </section>
     </div>
   );

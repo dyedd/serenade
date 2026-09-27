@@ -36,7 +36,7 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="py-8">
-      <PageHeader eyebrow="projects" title="项目">
+      <PageHeader title="项目">
         这里是我的折腾项目。还有些没有整理的项目，可以
         <a
           href={siteConfig.socialLinks.github.url}
@@ -53,10 +53,10 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
         <Link
           to="/projects"
           className={cn(
-            'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+            'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors duration-200 ease',
             isAllView
-              ? 'border-(--brand-line) bg-(--brand-soft) text-(--brand)'
-              : 'border-border bg-card hover:border-(--brand-line) hover:text-(--brand)',
+              ? 'border-transparent bg-secondary text-secondary-foreground'
+              : 'border-border bg-card text-black/60 hover:bg-secondary hover:text-primary',
           )}
         >
           全部 <span className="font-mono">({categories.reduce((s, c) => s + c.count, 0)})</span>
@@ -66,10 +66,10 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
             key={cat.key}
             to={`/projects?category=${cat.key}`}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors duration-200 ease',
               data.category === cat.key
-                ? 'border-(--brand-line) bg-(--brand-soft) text-(--brand)'
-                : 'border-border bg-card hover:border-(--brand-line) hover:text-(--brand)',
+                ? 'border-transparent bg-secondary text-secondary-foreground'
+                : 'border-border bg-card text-black/60 hover:bg-secondary hover:text-primary',
             )}
           >
             {cat.icon ? <span aria-hidden>{cat.icon}</span> : null}
@@ -79,9 +79,9 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
       </nav>
 
       {projects.length === 0 ? (
-        <p className="text-muted-foreground">该项目分类下暂无内容。</p>
+        <p className="paper-card p-6 text-sm text-black/60 shadow-none">该项目分类下暂无内容。</p>
       ) : (
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {projects.map((p) => {
             const techStack: string[] = Array.isArray(p.techStack)
               ? (p.techStack as unknown[]).filter((t): t is string => typeof t === 'string')
@@ -94,7 +94,7 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
             const dateText = typeof p.date === 'string' ? p.date.slice(0, 10) : '';
             return (
               <li key={name + dateText}>
-                <Card className="card-lift group flex h-full flex-col gap-0 overflow-hidden py-0">
+                <Card className="card-lift group flex h-full flex-col gap-0 overflow-hidden py-0 shadow-none">
                 {cover ? (
                   <a
                     href={link}
@@ -108,17 +108,17 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
                       alt={name}
                       loading="lazy"
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover"
                     />
                   </a>
                 ) : null}
-                <div className="flex flex-col gap-2 p-4 flex-1">
+                <div className="flex flex-1 flex-col gap-2 p-6">
                   {isAllView && p.categoryName ? (
                     <div>
                       <Badge variant="brand">{p.categoryName}</Badge>
                     </div>
                   ) : null}
-                  <h2 className="font-heading text-lg font-bold leading-snug transition-colors group-hover:text-(--brand)">
+                  <h2 className="font-heading text-lg font-bold leading-snug transition-colors duration-200 ease group-hover:text-(--brand)">
                     {link ? (
                       <a
                         href={link}
@@ -151,7 +151,7 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
                   {dateText || link ? (
                     <div className="mt-auto flex items-center gap-3 border-t border-border pt-2.5">
                       {dateText ? (
-                        <span className="mono-meta inline-flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1.5 text-sm text-black/60">
                           <Calendar className="h-3 w-3" aria-hidden />
                           <time dateTime={p.date}>{dateText}</time>
                         </span>

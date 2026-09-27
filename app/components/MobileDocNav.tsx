@@ -55,7 +55,7 @@ export function MobileDocNav({
               <SheetTitle>本页目录</SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-5rem)] px-4 pb-6">
-              <TableOfContents entries={toc} onNavigate={() => setTocOpen(false)} />
+              <TableOfContents entries={toc} labels="always" onNavigate={() => setTocOpen(false)} />
             </ScrollArea>
           </SheetContent>
         </Sheet>

@@ -5,18 +5,18 @@ import matter from 'gray-matter';
 import { paginate, type Paginated, type PostSummary } from './posts';
 import { calculateReadingTime, formatDate, sortByDateDesc } from './reading-time';
 import { parseAsset } from './assets';
+import { parsePostFrontMatter } from './validation';
+
+const SLUG_RE = /content[\\/]posts[\\/]([^\\/]+)[\\/]/;
 
 export async function listTags(): Promise<Record<string, number>> {
   const files = await fg('content/posts/*/*.md', { caseSensitiveMatch: false });
   const counts: Record<string, number> = {};
   for (const file of files) {
     const raw = await fs.readFile(file, 'utf-8');
-    const { data } = matter(raw);
-    const tags = Array.isArray(data.tags) ? data.tags : typeof data.tags === 'string' ? [data.tags] : [];
-    for (const tag of tags) {
-      if (typeof tag === 'string' && tag.length > 0) {
-        counts[tag] = (counts[tag] ?? 0) + 1;
-      }
+    const meta = parsePostFrontMatter(matter(raw).data, file, file.match(SLUG_RE)?.[1]);
+    for (const tag of meta.tags) {
+      counts[tag] = (counts[tag] ?? 0) + 1;
     }
   }
   return counts;
@@ -34,20 +34,21 @@ export async function getPostsByTag(
   const files = await fg('content/posts/*/*.md', { caseSensitiveMatch: false });
   const matches: PostSummary[] = [];
   for (const file of files) {
-    const slugMatch = file.match(/content\/posts\/([^/]+)\//);
+    const slugMatch = file.match(SLUG_RE);
     const slug = slugMatch?.[1];
     if (!slug) continue;
     const raw = await fs.readFile(file, 'utf-8');
-    const { data: meta, content } = matter(raw);
-    const tags = Array.isArray(meta.tags) ? meta.tags : typeof meta.tags === 'string' ? [meta.tags] : [];
-    if (!tags.includes(decoded)) continue;
+    const parsed = matter(raw);
+    const meta = parsePostFrontMatter(parsed.data, file, slug);
+    const content = parsed.content;
+    if (!meta.tags.includes(decoded)) continue;
     matches.push({
       path: slug,
       title: meta.title ?? slug,
       date: formatDate(meta.date),
       cover: meta.cover ? parseAsset(slug, meta.cover) : '',
       abstract: meta.abstract ?? '',
-      tags,
+      tags: meta.tags,
       readingTime: calculateReadingTime(content).text,
     });
   }

@@ -12,7 +12,6 @@ const __dirname = path.dirname(__filename);
 
 const projectRoot = path.join(__dirname, '..');
 const postsDir = path.join(projectRoot, 'content', 'posts');
-const columnsDir = path.join(projectRoot, 'content', 'columns');
 
 const toSafeFilename = (rawName) => String(rawName ?? '').replace(/[^a-zA-Z0-9_-]/g, '-');
 
@@ -91,6 +90,7 @@ const resolveGeneratedValue = async ({
   suggestionLabel,
   conflictLabel,
   existsMessage,
+  allowAI = true,
 }) => {
   const customValue = await question(rl, prompt);
 
@@ -110,7 +110,7 @@ const resolveGeneratedValue = async ({
     return value;
   }
 
-  const useAI = await confirmQuestion(rl, confirmPrompt);
+  const useAI = allowAI && await confirmQuestion(rl, confirmPrompt);
 
   if (!useAI) {
     return fallbackToManual({ rl, directory, kind, existsMessage });
@@ -146,8 +146,17 @@ const resolveGeneratedValue = async ({
   return value;
 };
 
-const resolveContentUrl = (rl, title, directory) =>
-  resolveGeneratedValue({
+const resolveContentUrl = (rl, title, directory, preset = '', allowAI = true) => {
+  if (preset) {
+    const result = validateUrl(preset, directory, '❌ 错误：URL路径已存在');
+    if (!result.valid) {
+      console.error(result.message);
+      return null;
+    }
+    return preset;
+  }
+
+  return resolveGeneratedValue({
     rl,
     title,
     directory,
@@ -158,81 +167,12 @@ const resolveContentUrl = (rl, title, directory) =>
     suggestionLabel: 'URL',
     conflictLabel: 'URL路径',
     existsMessage: '❌ 错误：URL路径已存在',
+    allowAI,
   });
-
-const resolveChapterFilename = (rl, columnPath, title) =>
-  resolveGeneratedValue({
-    rl,
-    title,
-    directory: columnPath,
-    kind: 'filename',
-    prompt: '👉 请输入文件名（不含.md，直接回车跳过）: ',
-    confirmPrompt: '🤖 是否使用AI生成文件名？',
-    generateMessage: '🤖 正在使用AI生成文件名...',
-    suggestionLabel: '文件名',
-    conflictLabel: '文件',
-    existsMessage: '❌ 错误：文件已存在',
-  });
-
-const getExistingColumns = () => {
-  if (!fs.existsSync(columnsDir)) {
-    return [];
-  }
-
-  return fs
-    .readdirSync(columnsDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
 };
 
-const getReadmeTitle = (readmePath, fallback) => {
-  if (!fs.existsSync(readmePath)) {
-    return fallback;
-  }
-
-  const content = fs.readFileSync(readmePath, 'utf8');
-  const titleMatch = content.match(/^title:\s*(.+)$/m);
-
-  return titleMatch ? titleMatch[1] : fallback;
-};
-
-const selectColumn = async (rl, emptyMessage = '❌ 错误：没有找到任何专栏') => {
-  const columns = getExistingColumns();
-
-  if (columns.length === 0) {
-    console.error(emptyMessage);
-    return null;
-  }
-
-  console.log('\n📚 可用的专栏：');
-  columns.forEach((column, index) => {
-    const readmePath = path.join(columnsDir, column, 'README.md');
-    const title = getReadmeTitle(readmePath, column);
-    console.log(`  ${index + 1}. ${title} (${column})`);
-  });
-
-  const answer = await question(rl, '\n👉 请选择专栏（输入序号或专栏路径）: ');
-
-  if (!answer) {
-    return null;
-  }
-
-  const index = parseInt(answer, 10) - 1;
-
-  if (!Number.isNaN(index) && index >= 0 && index < columns.length) {
-    return columns[index];
-  }
-
-  if (columns.includes(answer)) {
-    return answer;
-  }
-
-  console.error('❌ 错误：无效的选择');
-  return null;
-};
-
-const maybeGenerateCover = async (rl, title, targetDir) => {
-  if (!process.env.IMAGE_API_KEY) {
+const maybeGenerateCover = async (rl, title, targetDir, skip = false) => {
+  if (skip || !process.env.IMAGE_API_KEY) {
     return false;
   }
 
@@ -260,14 +200,9 @@ const maybeGenerateCover = async (rl, title, targetDir) => {
 export {
   projectRoot,
   postsDir,
-  columnsDir,
   toSafeFilename,
   isExistingDirectory,
   isExistingMarkdownFile,
   resolveContentUrl,
-  resolveChapterFilename,
-  getExistingColumns,
-  getReadmeTitle,
-  selectColumn,
   maybeGenerateCover,
 };

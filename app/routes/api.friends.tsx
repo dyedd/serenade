@@ -2,19 +2,8 @@
 // Without ?url: returns list of friends with empty articles (for SSR shell).
 // With ?url: fetches the friend's RSS and returns up to 5 articles.
 import Parser from 'rss-parser';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import type { Route } from './+types/api.friends';
-
-const FRIENDS_FILE = path.join(process.cwd(), 'content', 'friends.json');
-
-interface Friend {
-  name: string;
-  url: string;
-  logo: string;
-  description: string;
-  rss?: string;
-}
+import { loadFriends, type Friend } from '~/lib/content/friends';
 
 interface FeedItem {
   title: string;
@@ -30,11 +19,6 @@ interface BaseInfo {
   description: string;
   articles: FeedItem[];
   hasRSS: boolean;
-}
-
-async function loadFriends(): Promise<Friend[]> {
-  const raw = await fs.readFile(FRIENDS_FILE, 'utf-8');
-  return JSON.parse(raw) as Friend[];
 }
 
 function buildBase(friend: Friend): BaseInfo {

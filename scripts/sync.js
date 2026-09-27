@@ -11,18 +11,12 @@ import {
   promptRequired,
   question,
 } from './prompt-helper.js';
-import {
-  columnsDir,
-  postsDir,
-  projectRoot,
-  selectColumn,
-} from './content-helper.js';
+import { postsDir, projectRoot } from './content-helper.js';
 
 const SERVER_HOST = process.env.SERVER_HOST;
 const SERVER_USER = process.env.SERVER_USER;
 const SERVER_PATH = process.env.SERVER_PATH;
 
-const args = process.argv.slice(2);
 const isWindows = os.platform() === 'win32';
 
 const checkConfig = () => {
@@ -261,8 +255,7 @@ const updateTimestamps = () => {
   const timestamp = getCurrentTimestamp();
 
   const updatedPosts = updateReadmeFiles(postsDir, timestamp);
-  const updatedColumns = updateReadmeFiles(columnsDir, timestamp);
-  const updatedCount = updatedPosts + updatedColumns;
+  const updatedCount = updatedPosts;
 
   if (updatedCount > 0) {
     console.log(`✅ 已为 ${updatedCount} 个文件添加时间戳: ${timestamp}`);
@@ -372,10 +365,8 @@ const syncContentEntry = ({ type, urlName, label }) => {
 
 const syncPost = (urlName) => syncContentEntry({ type: 'posts', urlName, label: '文章' });
 
-const syncColumn = (urlName) => syncContentEntry({ type: 'columns', urlName, label: '专栏' });
-
 const syncJsonFile = (fileName) => {
-  const validFiles = ['friends.json', 'projects.json'];
+  const validFiles = ['friends.json', 'projects.json', 'collections.json'];
 
   if (!validFiles.includes(fileName)) {
     console.error(`❌ 错误：只支持同步 ${validFiles.join(', ')}`);
@@ -406,21 +397,14 @@ const handleArgsMode = (mode, target) => {
     return true;
   } else if (mode === 'post') {
     if (!target) {
-      exitWithError('❌ 错误：请指定文章URL名称', { usage: '用法: npm run sync post <url-name>' });
+      exitWithError('❌ 错误：请指定文章URL名称', { usage: '用法: pnpm cli sync post <url-name>' });
     } else {
       exitIfFailed(syncPost(target));
     }
     return true;
-  } else if (mode === 'column') {
-    if (!target) {
-      exitWithError('❌ 错误：请指定专栏URL名称', { usage: '用法: npm run sync column <url-name>' });
-    } else {
-      exitIfFailed(syncColumn(target));
-    }
-    return true;
   } else if (mode === 'json') {
     if (!target) {
-      exitWithError('❌ 错误：请指定JSON文件名', { usage: '用法: npm run sync json <friends.json|projects.json>' });
+      exitWithError('❌ 错误：请指定JSON文件名', { usage: '用法: pnpm cli sync json <friends.json|projects.json|collections.json>' });
     } else {
       exitIfFailed(syncJsonFile(target));
     }
@@ -437,17 +421,9 @@ const handleInteractiveChoice = async (rl, choice) => {
     const urlName = await promptRequired(rl, '👉 请输入文章URL名称: ', '❌ 错误：URL名称不能为空');
     finishCliAction(rl, syncPost(urlName));
   } else if (choice === '3') {
-    const urlName = await selectColumn(rl);
-
-    if (!urlName) {
-      exitWithError('❌ 错误：未选择专栏', { rl });
-    } else {
-      finishCliAction(rl, syncColumn(urlName));
-    }
-  } else if (choice === '4') {
     const fileName = await promptRequired(
       rl,
-      '👉 请输入文件名 (friends.json/projects.json): ',
+      '👉 请输入文件名 (friends.json/projects.json/collections.json): ',
       '❌ 错误：文件名不能为空'
     );
     finishCliAction(rl, syncJsonFile(fileName));
@@ -456,7 +432,7 @@ const handleInteractiveChoice = async (rl, choice) => {
   }
 };
 
-async function main() {
+export async function syncContentCommand(args = []) {
   checkConfig();
 
   const mode = args[0];
@@ -472,11 +448,10 @@ async function main() {
       console.log('请选择同步模式：');
       console.log('1. 同步内容 (content)');
       console.log('2. 同步指定文章 (post)');
-      console.log('3. 同步指定专栏 (column)');
-      console.log('4. 同步JSON文件 (json)')
+      console.log('3. 同步JSON文件 (json)')
       console.log('');
 
-      const choice = await question(rl, '👉 请输入选项 (1-4): ');
+      const choice = await question(rl, '👉 请输入选项 (1-3): ');
       await handleInteractiveChoice(rl, choice);
     } catch (error) {
       if (error instanceof Error) {
@@ -489,5 +464,3 @@ async function main() {
     }
   }
 }
-
-main();

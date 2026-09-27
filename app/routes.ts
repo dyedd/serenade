@@ -18,6 +18,8 @@ export default [
   ]),
   // Standalone routes (no layout).
   route("feed.xml", "routes/feed[.]xml.tsx"),
+  route("robots.txt", "routes/robots[.]txt.tsx"),
+  route("sitemap.xml", "routes/sitemap[.]xml.tsx"),
 
   // API routes (no layout, all return JSON / binary).
   route("api/posts", "routes/api.posts.tsx"),

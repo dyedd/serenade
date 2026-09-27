@@ -46,25 +46,27 @@ export default function ColumnDetail({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <div className="py-2 lg:grid lg:grid-cols-[17rem_1fr] lg:gap-10">
+    <div className="doc-rail py-2 lg:grid lg:grid-cols-[17rem_1fr] lg:gap-10">
       <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">{sidebar}</aside>
-
       <div className="min-w-0">
-        <nav className="eyebrow mb-6" aria-label="breadcrumb">
-          <Link to="/columns" className="transition-colors hover:text-foreground">
-            columns
+        <nav className="mb-6 text-sm text-black/60" aria-label="breadcrumb">
+          <Link to="/columns" className="transition-colors duration-200 ease hover:text-black">
+            专栏
           </Link>
-          /<span className="text-foreground">{path}</span>
+          <span className="mx-1.5" aria-hidden>
+            /
+          </span>
+          <span className="text-foreground">{title}</span>
         </nav>
 
         <MobileDocNav toc={[]} sidebar={sidebar} />
 
-        <header className="mb-10 border-b border-border/80 pb-6">
+        <header className="mb-20 border-b border-border pb-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="font-heading text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
+            <h1 className="font-heading text-[2rem] font-semibold leading-tight tracking-[-0.02em]">{title}</h1>
             {meta.type ? <Badge variant="brand">{meta.type}</Badge> : null}
           </div>
-          <div className="mono-meta mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-black/60">
             {meta.date ? (
               <span className="inline-flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5" aria-hidden />
@@ -81,11 +83,11 @@ export default function ColumnDetail({ loaderData }: Route.ComponentProps) {
         <article className="min-w-0">
           {column.html.length > 0 ? (
             <div
-              className="prose-blog prose prose-neutral dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-headings:font-heading prose-headings:font-bold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
+              className="prose-blog prose prose-neutral max-w-none prose-headings:scroll-mt-24 prose-headings:font-heading prose-headings:font-semibold prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none"
               dangerouslySetInnerHTML={{ __html: column.html }}
             />
           ) : column.chapters.length > 0 ? (
-            <Empty className="rounded-xl border border-dashed">
+            <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
                   <BookOpen />
@@ -95,7 +97,7 @@ export default function ColumnDetail({ loaderData }: Route.ComponentProps) {
               </EmptyHeader>
               <Link
                 to={`/columns/${path}/${column.chapters[0].fileName}`}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity duration-200 ease hover:opacity-90"
               >
                 从第一章开始 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>

@@ -12,10 +12,30 @@ import {
   promptRequired,
 } from './prompt-helper.js';
 
-const args = process.argv.slice(2);
+const parseOptions = (args) => {
+  const options = { title: '', slug: '', noAi: false, noCover: false };
+  const values = [];
 
-const resolveTitle = async (rl) => {
-  const title = args[0];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--slug') {
+      options.slug = args[index + 1] ?? '';
+      index += 1;
+    } else if (arg === '--no-ai') {
+      options.noAi = true;
+    } else if (arg === '--no-cover') {
+      options.noCover = true;
+    } else {
+      values.push(arg);
+    }
+  }
+
+  options.title = values[0] ?? '';
+  return options;
+};
+
+const resolveTitle = async (rl, titleArg) => {
+  const title = titleArg;
 
   if (title) {
     console.log(`ℹ️ 文章标题: ${title}`);
@@ -56,12 +76,13 @@ const writeReadmeFile = (readmePath, title) => {
   fs.writeFileSync(readmePath, buildReadmeContent(title), 'utf8');
 };
 
-async function main() {
+export async function createPost(args = []) {
   const rl = createInterface();
 
   try {
-    const title = await resolveTitle(rl);
-    const finalUrl = await resolveContentUrl(rl, title, postsDir);
+    const options = parseOptions(args);
+    const title = await resolveTitle(rl, options.title);
+    const finalUrl = await resolveContentUrl(rl, title, postsDir, options.slug, !options.noAi);
 
     if (!finalUrl) {
       exitWithError('❌ 错误：未能确定有效的URL路径', { rl });
@@ -79,7 +100,7 @@ async function main() {
     console.log(`📝 标题: ${title}`);
     console.log(`📝 URL: ${finalUrl}`);
 
-    await maybeGenerateCover(rl, title, newPostDir);
+    await maybeGenerateCover(rl, title, newPostDir, options.noCover);
 
     console.log('');
     console.log('现在你可以开始编辑文章内容了！');
@@ -96,5 +117,3 @@ async function main() {
     process.exit(1);
   }
 }
-
-main();

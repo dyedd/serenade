@@ -8,13 +8,14 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "build:static": "cross-env REACT_ROUTER_SSR=false react-router build",
-    "new:post": "node --env-file-if-exists=.env scripts/new-post.js",
-    "new:column": "node --env-file-if-exists=.env scripts/new-column.js",
-    "sync": "node --env-file-if-exists=.env scripts/sync.js"
+    "test": "pnpm build && node --test scripts/app.test.js",
+    "verify": "pnpm typecheck && pnpm test && pnpm build:static",
+    "build:static": "cross-env SERENADE_PRERENDER=true react-router build",
+    "cli": "node --env-file-if-exists=.env scripts/cli.js"
   },
   "dependencies": {
     "@fontsource-variable/geist-mono": "^5.2.5",
+    "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/noto-serif-sc": "^5.2.5",
     "@react-router/node": "^8",
     "@react-router/serve": "^8",

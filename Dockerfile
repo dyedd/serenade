@@ -40,7 +40,6 @@ ENV PORT=3000
 
 COPY --from=build /app/build ./build
 COPY --from=build /app/public ./public
-COPY --from=build /app/content ./content
 COPY --from=build /app/package.json ./package.json
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/app/lib/redirects.json ./app/lib/redirects.json 2>/dev/null || true

@@ -23,7 +23,6 @@ export default function ColumnsIndex({ loaderData }: Route.ComponentProps) {
   return (
     <section className="py-8">
       <PageHeader
-        eyebrow="columns"
         title="专栏"
         meta={`${cols.length} 个专栏 · ${totalDocs} 篇文档`}
       />
@@ -38,7 +37,7 @@ export default function ColumnsIndex({ loaderData }: Route.ComponentProps) {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="flex flex-col gap-4">
           {cols.map((col) => (
             <li key={col.path}>
               <ColumnCard col={col} />

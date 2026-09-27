@@ -18,7 +18,7 @@ export async function loader() {
 export default function MomentsPage({ loaderData }: Route.ComponentProps) {
   return (
     <section className="py-8">
-      <PageHeader eyebrow="moments" title="朋友圈">
+      <PageHeader title="朋友圈">
         朋友们的最新创作，实时更新
       </PageHeader>
       <RSSAggregator friends={loaderData.friends} />

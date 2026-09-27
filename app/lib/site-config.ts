@@ -51,11 +51,8 @@ const url = process.env.SITE_URL || 'https://dyedd.cn';
 const email = process.env.SITE_EMAIL || '1176996982@qq.com';
 const lang = process.env.SITE_LANG || 'zh-CN';
 const startTime = process.env.SITE_START_TIME || '2017-02-11';
-const profileAvatar = process.env.SITE_PROFILE_AVATAR || '/logo.jpg';
+const profileAvatar = process.env.SITE_PROFILE_AVATAR || '/avatar.jpg';
 const normalizedSiteUrl = url.replace(/\/$/, '');
-const profileAvatarUrl = /^https?:\/\//.test(profileAvatar)
-  ? profileAvatar
-  : `${normalizedSiteUrl}/${profileAvatar.replace(/^\//, '')}`;
 
 export const siteConfig = {
   author,
@@ -83,7 +80,7 @@ export const siteConfig = {
       process.env.SITE_PROFILE_STATEMENT ||
       '我将在这里分享我的编程和人工智能知识。如果你对这些主题感兴趣，那么恭喜你找到宝藏了。接下来你可以查看内容或订阅',
     githubContributionChart:
-      process.env.SITE_PROFILE_GITHUB_CHART || 'https://ghchart.rshah.org/409ba5/dyedd',
+      process.env.SITE_PROFILE_GITHUB_CHART || 'https://ghchart.rshah.org/0075de/dyedd',
     techStack: parseTechStack(process.env.SITE_PROFILE_TECH_STACK, defaultProfileTechStack),
   },
   socialLinks: {
@@ -121,7 +118,7 @@ export const siteConfig = {
     applicationTemplate: {
       name: author,
       url,
-      logo: profileAvatarUrl,
+      logo: `${normalizedSiteUrl}/favicon.ico`,
       description,
       rss: `${normalizedSiteUrl}/feed.xml`,
     },
