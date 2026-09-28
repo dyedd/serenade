@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { ChevronDown } from 'lucide-react';
 import type { Route } from './+types/home';
@@ -64,6 +65,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { profile, socialLinks } = siteConfig;
   const { posts, career, projects, tags, dates } = loaderData;
   const sortedTags = Object.entries(tags).sort((a, b) => b[1] - a[1]).slice(0, 24);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-20 py-2">
@@ -198,7 +200,31 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       <section aria-labelledby="recent-heading">
-        {sectionTitle('recent-heading', '文章', '/posts', '全部文章')}
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 id="recent-heading" className="font-heading text-[1.375rem] font-semibold tracking-[-0.01em]">
+            文章
+          </h2>
+          <div className="flex items-baseline gap-4">
+            <button
+              type="button"
+              aria-expanded={statsOpen}
+              aria-controls="post-stats"
+              onClick={() => setStatsOpen((open) => !open)}
+              className={`cursor-pointer text-sm transition-colors duration-200 ease hover:text-black ${statsOpen ? 'text-black' : 'text-black/60'}`}
+            >
+              统计
+            </button>
+            <Link
+              to="/posts"
+              className="text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
+            >
+              全部文章
+            </Link>
+          </div>
+        </div>
+        <div id="post-stats" hidden={!statsOpen} className="mb-4 paper-card p-6 shadow-none">
+          <PostsHeatmap posts={dates.map((date) => ({ date }))} totalCount={dates.length} />
+        </div>
         {posts.length === 0 ? (
           <p className="paper-card p-6 text-sm text-black/60 shadow-none">暂无最新文章</p>
         ) : (
@@ -233,30 +259,23 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             ))}
           </ol>
         )}
-      </section>
 
-      <section aria-label="标签">
-        <h2 className="mb-3 text-sm font-medium text-foreground">标签</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="mt-8 flex flex-wrap items-center gap-2">
           {sortedTags.map(([tag, count]) => (
-            <Badge key={tag} variant="outline" asChild className="h-auto px-3 py-1">
+            <Badge key={tag} variant="outline" asChild className="h-auto px-3 py-1 font-normal">
               <Link to={`/tags/${encodeURIComponent(tag)}`}>
                 {tag}
-                <span className="ml-1 text-[0.7em] text-black/40 tabular-nums">{count}</span>
+                <span className="text-[0.7em] text-black/40 tabular-nums">{count}</span>
               </Link>
             </Badge>
           ))}
+          <Link
+            to="/tags"
+            className="px-1 text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
+          >
+            全部标签
+          </Link>
         </div>
-        <Link
-          to="/tags"
-          className="mt-3 inline-block text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
-        >
-          全部标签
-        </Link>
-      </section>
-
-      <section aria-label="写作统计">
-        <PostsHeatmap posts={dates.map((date) => ({ date }))} totalCount={dates.length} />
       </section>
 
       <section aria-labelledby="projects-heading">

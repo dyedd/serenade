@@ -1,26 +1,6 @@
-// Career path. The rail is a hairline behind the list; labels stay in normal
-// flow so they wrap inside the track (rail inset) instead of a percentage
-// width drawn past that inset.
-import { Briefcase, GraduationCap, IdCard, Laptop } from 'lucide-react';
+// Career path as a quiet list. A hairline marks the column; type is caption
+// text, not a badge, so the row stays inside the track and does not grow chrome.
 import type { CareerItem } from '~/lib/content/career';
-
-const TYPE_ICON = {
-  实习: IdCard,
-  全职: Briefcase,
-  在读: GraduationCap,
-  业余: Laptop,
-} as const;
-
-function TypeBadge({ type }: { type: NonNullable<CareerItem['type']> }) {
-  if (!type) return null;
-  const Icon = TYPE_ICON[type as keyof typeof TYPE_ICON];
-  return (
-    <span className="career-type">
-      {Icon ? <Icon aria-hidden /> : null}
-      {type}
-    </span>
-  );
-}
 
 type Node = CareerItem & { slot?: boolean };
 
@@ -61,7 +41,7 @@ export function CareerTrack({ items }: { items: readonly CareerItem[] }) {
             <div className="career-copy">
               <div className="career-org-row">
                 <span className="career-org">{row.org || row.role}</span>
-                {row.type ? <TypeBadge type={row.type} /> : null}
+                {row.type ? <span className="career-type">{row.type}</span> : null}
               </div>
               {row.org && row.role ? <div className="career-role">{row.role}</div> : null}
               {row.period ? <div className="career-period">{row.period}</div> : null}

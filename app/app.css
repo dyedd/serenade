@@ -422,7 +422,7 @@ main .grid > * {
 
 /* ---------- 发文热力图 ---------- */
 .heatmap-cell-empty {
-  background: #e6e2df;
+  background: rgba(0, 0, 0, 0.06);
 }
 .heatmap-cell-active {
   background: var(--brand);
@@ -451,7 +451,7 @@ main .grid > * {
   color: #615d59;
 }
 
-/* 归档年份：相对路径 ./2026 + 虚线标尺，和职业轨迹的虚线同一套语言 */
+/* 归档年份：相对路径 ./2026 + 发丝标尺，和职业轨迹同一条线。 */
 .year-mark {
   display: flex;
   align-items: center;
@@ -523,104 +523,76 @@ main .grid > * {
 .career-track {
   position: relative;
   margin: 0;
-  padding: 8px 0;
+  padding: 0;
   list-style: none;
   max-width: 100%;
   min-width: 0;
 }
-/* 轨道线画在圆点中心。标签用左内边距让出轨宽，百分比宽度不能再叠在这个缩进上。 */
+/* 发丝线在文字左侧。内边距从轨道宽度里留出，不能再叠一层百分比。 */
 .career-track::before {
   content: '';
   position: absolute;
-  left: 18px;
-  top: 18px;
-  bottom: 18px;
-  border-left: 1.5px dashed var(--brand-line);
-  transform: translateX(-50%);
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
 }
 .career-item {
   position: relative;
   min-width: 0;
-  padding: 0 0 1rem 36px;
+  padding: 0 0 24px 16px;
 }
 .career-item:last-child {
   padding-bottom: 0;
-}
-.career-item::after {
-  content: '';
-  position: absolute;
-  left: 18px;
-  top: 0.45rem;
-  width: 11px;
-  height: 11px;
-  border-radius: 999px;
-  background: var(--brand);
-  box-shadow: 0 0 0 2px var(--background);
-  transform: translateX(-50%);
-}
-.career-item-slot::after {
-  background: var(--background);
-  box-shadow: none;
-  border: 1.5px dashed var(--brand);
 }
 .career-copy {
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
-  color: var(--foreground);
+  color: #000000;
 }
 .career-org-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 8px;
 }
 .career-org {
   font-family: var(--font-heading);
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #000000;
 }
 .career-type {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
-  color: var(--brand);
-  border: 1px solid var(--brand-line);
-  background: var(--brand-soft);
-  border-radius: 999px;
-  padding: 0.1rem 0.5rem 0.1rem 0.35rem;
-  line-height: 1.4;
-}
-.career-type svg {
-  width: 0.75rem;
-  height: 0.75rem;
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: 0.12px;
+  color: rgba(0, 0, 0, 0.4);
 }
 .career-role {
-  margin-top: 0.1rem;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  color: var(--foreground);
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.43;
+  color: rgba(0, 0, 0, 0.95);
 }
 .career-period {
-  margin-top: 0.1rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
-  color: var(--muted-foreground);
-  line-height: 1.3;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: 0.12px;
+  color: #757575;
 }
 .career-note {
-  margin-top: 0.15rem;
-  font-size: 0.8125rem;
-  line-height: 1.55;
-  color: var(--muted-foreground);
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.43;
+  color: #615d59;
+}
+.career-item-slot .career-org,
+.career-item-slot .career-note {
+  color: rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- 细滚动条 ---------- */

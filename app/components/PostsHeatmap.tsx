@@ -3,7 +3,6 @@
 // are transparent. The header row carries the section title on the left and
 // the yearly summary on the right.
 import { useMemo } from 'react';
-import { BarChart3 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
 
 interface PostStub {
@@ -88,11 +87,7 @@ export function PostsHeatmap({ posts, totalCount }: PostsHeatmapProps) {
 
   return (
     <div>
-      <h3 className="mb-1.5 inline-flex items-center gap-2 text-[1.05rem] font-semibold text-foreground">
-        <BarChart3 className="h-4 w-4 text-(--brand)" aria-hidden />
-        统计
-      </h3>
-      <p className="mono-meta mb-4 leading-relaxed">
+      <p className="mb-4 text-sm leading-relaxed text-black/60">
         <span className="block tabular-nums">共 {totalCount} 篇文章</span>
         <span className="block tabular-nums">过去一年 {yearActiveDays} 天有更新</span>
       </p>
