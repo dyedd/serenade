@@ -91,5 +91,10 @@ export function parseMarkdown(
       output: 'mathml',
     }) as unknown as Record<string, unknown>);
   }
-  return marked.parse(content) as string;
+  const html = marked.parse(content) as string;
+  // 表格盒子会跟着列宽变大，包一层后只有表格自己横滑。
+  return html.replace(
+    /<table\b[^>]*>[\s\S]*?<\/table>/g,
+    (table) => `<div class="prose-scroll">${table}</div>`,
+  );
 }

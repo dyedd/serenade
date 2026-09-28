@@ -77,9 +77,9 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
       />
       <MobileDocNav toc={headings} />
 
-      <div className="doc-rail grid grid-cols-1 gap-10 lg:grid-cols-[1fr_14rem]">
+      <div className="doc-rail doc-rail-post grid grid-cols-1 gap-10 lg:grid-cols-[1fr_14rem]">
         <div className="min-w-0">
-      <nav className="mb-6 text-sm text-black/60" aria-label="breadcrumb">
+      <nav className="mb-6 min-w-0 text-sm break-words text-black/60" aria-label="breadcrumb">
         <Link to="/posts" className="transition-colors duration-200 ease hover:text-black">
           文章
         </Link>
@@ -130,7 +130,7 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
           <img
             src={post.cover}
             alt={post.title}
-            className="block h-auto w-full rounded-xl border border-border bg-white"
+            className="block h-auto max-w-full w-full rounded-xl border border-border bg-white"
           />
         </figure>
       ) : null}

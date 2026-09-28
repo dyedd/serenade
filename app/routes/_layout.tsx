@@ -10,7 +10,7 @@ export default function AppLayout() {
     <TooltipProvider>
       <div className="site-grid" aria-hidden="true" />
       <Nav />
-      <main key={location.pathname} className="page-fade-in relative z-10 mx-auto min-h-[60vh] max-w-4xl px-6 pt-10 pb-20">
+      <main key={location.pathname} className="page-fade-in relative z-10 mx-auto min-h-[60vh] min-w-0 max-w-4xl break-words px-6 pt-10 pb-20">
         <Outlet />
       </main>
       <Footer />

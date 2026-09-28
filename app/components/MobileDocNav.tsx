@@ -33,7 +33,7 @@ export function MobileDocNav({
               章节
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0">
+          <SheetContent side="left" className="p-0">
             <SheetHeader>
               <SheetTitle>章节导航</SheetTitle>
             </SheetHeader>
@@ -50,7 +50,7 @@ export function MobileDocNav({
               目录
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80 p-0">
+          <SheetContent side="right" className="p-0">
             <SheetHeader>
               <SheetTitle>本页目录</SheetTitle>
             </SheetHeader>

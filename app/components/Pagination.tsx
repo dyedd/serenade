@@ -45,13 +45,13 @@ export function Pagination({ page, totalPages, basePath, pageParam = 'page' }: P
   const next = Math.min(totalPages, page + 1);
 
   return (
-    <ShadcnPagination className="mt-20">
-      <PaginationContent>
+    <ShadcnPagination className="mt-20 max-w-full">
+      <PaginationContent className="w-full max-w-full flex-wrap justify-center">
         <PaginationItem>
           <Button asChild variant="ghost" size="sm" disabled={page <= 1} className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}>
             <Link to={pageHref(basePath, prev, pageParam)} aria-label="上一页">
               <ChevronLeft data-icon="inline-start" />
-              上一页
+              <span className="hidden sm:inline">上一页</span>
             </Link>
           </Button>
         </PaginationItem>
@@ -87,7 +87,7 @@ export function Pagination({ page, totalPages, basePath, pageParam = 'page' }: P
         <PaginationItem>
           <Button asChild variant="ghost" size="sm" disabled={page >= totalPages} className={page >= totalPages ? 'pointer-events-none opacity-50' : undefined}>
             <Link to={pageHref(basePath, next, pageParam)} aria-label="下一页">
-              下一页
+              <span className="hidden sm:inline">下一页</span>
               <ChevronRight data-icon="inline-end" />
             </Link>
           </Button>

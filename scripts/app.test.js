@@ -20,7 +20,31 @@ async function createFixture() {
     path.join(fixtureRoot, 'content', 'posts', 'smoke-post', 'README.md'),
     `---\ntitle: Smoke post\ndate: 2025-01-01\ntags: [测试]\nabstract: A test post\n---\n\n# Hello\n\nThis checks the blog route.\n`,
   );
-  await writeFile(path.join(fixtureRoot, 'content', 'career.json'), '[]\n');
+  await writeFile(
+    path.join(fixtureRoot, 'content', 'career.json'),
+    `${JSON.stringify([
+      {
+        period: '2020 — 2024',
+        org: '一所名字长到必须在窄屏里换行的机构名称用于检查轨迹标签',
+        role: '把职业说明写得足够长以便在三百二十像素的内容栏里折行',
+        type: '全职',
+        note: '备注同样要在轨道内折行，不能把页面撑出视口。',
+      },
+    ], null, 2)}\n`,
+  );
+  await mkdir(path.join(fixtureRoot, 'content', 'posts', 'wide-post'), { recursive: true });
+  await writeFile(
+    path.join(fixtureRoot, 'content', 'posts', 'wide-post', 'README.md'),
+    `---\ntitle: Wide post\ndate: 2024-06-01\ntags: [版式]\nabstract: Wide fixtures\n---\n\n## 宽表\n\n| alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| very-wide-cell-alpha | very-wide-cell-bravo | very-wide-cell-charlie | very-wide-cell-delta | very-wide-cell-echo | very-wide-cell-foxtrot | very-wide-cell-golf | very-wide-cell-hotel |\n\n$$\nx = a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r + s + t\n$$\n\n\`\`\`text\nthis_is_a_single_line_that_is_wider_than_a_320px_column_and_must_scroll_inside_the_code_block_only\n\`\`\`\n\n![wide](https://example.com/wide.png)\n`,
+  );
+  await Promise.all(Array.from({ length: 69 }, (_, index) => {
+    const slug = `filler-${String(index + 1).padStart(2, '0')}`;
+    const dir = path.join(fixtureRoot, 'content', 'posts', slug);
+    return mkdir(dir, { recursive: true }).then(() => writeFile(
+      path.join(dir, 'README.md'),
+      `---\ntitle: Filler ${index + 1}\ndate: 2020-01-${String((index % 28) + 1).padStart(2, '0')}\ntags: []\n---\n\nFiller body ${index + 1}.\n`,
+    ));
+  }));
   await writeFile(path.join(fixtureRoot, 'content', 'friends.json'), '[]\n');
   await writeFile(path.join(fixtureRoot, 'content', 'projects.json'), '{"categories": {}}\n');
   await writeFile(path.join(fixtureRoot, 'content', 'collections.json'), '{}\n');
@@ -131,4 +155,39 @@ test('文章详情和 RSS 可以响应', async () => {
 
   const cachedResponse = await request('/feed.xml', { headers: { 'if-none-match': etag } });
   assert.equal(cachedResponse.status, 304);
+});
+
+test('窄屏首页把职业轨迹收在轨道内，主导航不进顶栏', async () => {
+  const html = await (await request('/')).text();
+  assert.match(html, /一所名字长到必须在窄屏里换行的机构名称用于检查轨迹标签/);
+  assert.match(html, /class="career-item"/);
+  assert.doesNotMatch(html, /width="90%"/);
+  assert.match(html, /<nav class="ml-auto hidden items-center md:flex" aria-label="主导航">/);
+  assert.match(html, /aria-label="打开菜单"/);
+  assert.match(html, /class="github-chart"/);
+  assert.match(html, /posts-heatmap/);
+  assert.match(html, /minmax\(0,1fr\)/);
+});
+
+test('宽文章的表格、公式和代码各自包在栏内滚动盒里', async () => {
+  const response = await request('/posts/wide-post');
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /<div class="prose-scroll"><table>/);
+  assert.match(html, /very-wide-cell-hotel/);
+  assert.match(html, /<math[^>]*display="block"/);
+  assert.match(html, /class="code-block-wrapper[^"]*"/);
+  assert.match(html, /this_is_a_single_line_that_is_wider_than_a_320px_column_and_must_scroll_inside_the_code_block_only/);
+  assert.match(html, /<img [^>]*src="https:\/\/example.com\/wide.png"/);
+  assert.match(html, /lg:hidden/);
+  assert.match(html, /hidden lg:sticky lg:top-24 lg:block/);
+});
+
+test('超过七页的分页在窄屏可以折行，文字标签让到 sm', async () => {
+  const html = await (await request('/posts?page=4')).text();
+  assert.match(html, /flex-wrap/);
+  assert.match(html, /hidden sm:inline">上一页/);
+  assert.match(html, /hidden sm:inline">下一页/);
+  assert.match(html, /page=8/);
+  assert.match(html, /aria-current="page"/);
 });

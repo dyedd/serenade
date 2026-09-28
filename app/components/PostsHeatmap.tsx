@@ -97,7 +97,7 @@ export function PostsHeatmap({ posts, totalCount }: PostsHeatmapProps) {
         <span className="block tabular-nums">过去一年 {yearActiveDays} 天有更新</span>
       </p>
 
-      <div className="grid grid-cols-[38px_1fr] pt-1">
+      <div className="posts-heatmap grid min-w-0 grid-cols-[38px_minmax(0,1fr)] pt-1">
         <div className="grid grid-rows-[repeat(7,14px)] gap-[2px] pr-1.5">
           {WEEKDAY_LABELS.map((label) => (
             <span key={label} className="mono-meta !text-[0.6rem] h-[14px] leading-[14px]">
@@ -105,9 +105,9 @@ export function PostsHeatmap({ posts, totalCount }: PostsHeatmapProps) {
             </span>
           ))}
         </div>
-        <div className="flex gap-[2px]">
+        <div className="flex min-w-0 gap-[2px]">
           {weeks.map((week, wi) => (
-            <div key={wi} className="grid grid-rows-[repeat(7,14px)] gap-[2px] flex-1">
+            <div key={wi} className="grid min-w-0 flex-1 grid-rows-[repeat(7,14px)] gap-[2px]">
               {week.map((day, di) =>
                 day ? (
                   <Tooltip key={`${wi}-${di}`}>

@@ -13,7 +13,7 @@ export function PageHeader({ eyebrow, title, meta, actions, children }: PageHead
     <header className="mb-20">
       {eyebrow ? <div className="mb-3 text-sm text-black/60">{eyebrow}</div> : null}
       <div className="flex items-baseline justify-between gap-4">
-        <h1 className="font-heading text-[2rem] font-semibold leading-tight tracking-[-0.02em] text-foreground">
+        <h1 className="min-w-0 font-heading text-[2rem] font-semibold leading-tight tracking-[-0.02em] break-words text-foreground">
           {title}
         </h1>
         {actions ? <div className="shrink-0 text-sm text-black/60">{actions}</div> : null}

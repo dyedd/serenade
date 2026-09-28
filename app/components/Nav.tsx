@@ -81,7 +81,7 @@ export function Nav() {
       <header className="sticky top-0 z-40">
         <div
           className={cn(
-            "mx-auto flex max-w-4xl items-center gap-2 border border-transparent px-6 transition-[height,background-color,border-color,border-radius] duration-200 ease",
+            "mx-auto flex min-w-0 max-w-4xl items-center gap-2 border border-transparent px-6 transition-[height,background-color,border-color,border-radius] duration-200 ease",
             scrolled
               ? "h-14 rounded-b-xl border-black/10 bg-white/80 backdrop-blur-xl"
               : "h-20 bg-transparent",
@@ -89,7 +89,7 @@ export function Nav() {
         >
           <Link
             to="/"
-            className="flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight text-foreground"
+            className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-tight text-foreground"
             aria-label={siteConfig.title}
           >
             <img
@@ -97,9 +97,9 @@ export function Nav() {
               alt=""
               width={20}
               height={20}
-              className="size-5 object-contain"
+              className="size-5 shrink-0 object-contain"
             />
-            {siteConfig.title}
+            <span className="min-w-0 truncate">{siteConfig.title}</span>
           </Link>
 
           <nav
@@ -163,7 +163,7 @@ export function Nav() {
                   <Menu />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0">
+              <SheetContent side="left" className="max-w-72 p-0">
                 <SheetHeader>
                   <SheetTitle>{siteConfig.title}</SheetTitle>
                 </SheetHeader>

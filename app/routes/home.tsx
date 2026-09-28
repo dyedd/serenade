@@ -172,14 +172,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             主页
           </a>
         </div>
-        <a href={socialLinks.github.url} target="_blank" rel="noreferrer" className="block">
+        <a href={socialLinks.github.url} target="_blank" rel="noreferrer" className="block min-w-0 max-w-full">
           <img
             src={profile.githubContributionChart.replace(
               /ghchart\.rshah\.org\/[0-9a-fA-F]{6}\//i,
               'ghchart.rshah.org/0075de/',
             )}
             alt="GitHub 贡献图"
-            className="github-chart block h-auto w-full"
+            className="github-chart"
           />
         </a>
       </section>

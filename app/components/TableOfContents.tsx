@@ -65,14 +65,15 @@ export function TableOfContents({
                 onNavigate?.();
               }}
             >
-              <span
-                aria-hidden
-                className={[
-                  'shrink-0 rounded-sm transition-all duration-200 ease',
-                  showLabels ? 'hidden' : 'group-hover/toc:w-0 group-hover/toc:opacity-0',
-                  active === e.id ? 'h-[3px] w-16 bg-black' : 'h-px w-12 bg-black/20',
-                ].join(' ')}
-              />
+              {showLabels ? null : (
+                <span
+                  aria-hidden
+                  className={[
+                    'w-12 shrink-0 rounded-sm transition-all duration-200 ease group-hover/toc:w-0 group-hover/toc:opacity-0',
+                    active === e.id ? 'h-[3px] bg-black' : 'h-px bg-black/20',
+                  ].join(' ')}
+                />
+              )}
               <span
                 className={[
                   'overflow-hidden whitespace-nowrap font-heading text-sm leading-snug transition-all duration-200 ease',
