@@ -138,6 +138,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <img
           src={profile.avatar}
           alt={profile.name}
+          width={112}
+          height={112}
+          decoding="async"
           className="size-24 shrink-0 rounded-full border border-border object-cover sm:size-28"
         />
       </section>
@@ -181,6 +184,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               'ghchart.rshah.org/0075de/',
             )}
             alt="GitHub 贡献图"
+            width={828}
+            height={128}
+            loading="lazy"
+            decoding="async"
             className="github-chart"
           />
         </a>
@@ -250,7 +257,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <img
                       src={p.cover}
                       alt=""
+                      width={112}
+                      height={80}
                       loading="lazy"
+                      decoding="async"
                       className="h-20 w-28 shrink-0 rounded-lg object-cover"
                     />
                   ) : null}
@@ -293,7 +303,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <img
                       src={cover}
                       alt=""
+                      width={640}
+                      height={360}
                       loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="mb-4 aspect-video w-full rounded-lg object-cover"
                     />

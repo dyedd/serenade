@@ -30,6 +30,8 @@ export function TechChip({ label }: { label: string }) {
           alt=""
           width={14}
           height={14}
+          loading="lazy"
+          decoding="async"
         />
       ) : (
         <span className="tech-chip-dot" aria-hidden />

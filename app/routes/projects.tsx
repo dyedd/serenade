@@ -106,7 +106,10 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
                     <img
                       src={cover}
                       alt={name}
+                      width={640}
+                      height={360}
                       loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="h-full w-full object-cover"
                     />

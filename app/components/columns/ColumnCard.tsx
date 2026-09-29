@@ -29,7 +29,10 @@ export function ColumnCard({ col }: { col: ColumnSummary }) {
         <img
           src={col.image}
           alt=""
+          width={112}
+          height={80}
           loading="lazy"
+          decoding="async"
           className="h-20 w-28 shrink-0 rounded-lg object-cover"
         />
       ) : null}

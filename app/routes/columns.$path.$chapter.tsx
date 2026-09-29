@@ -11,6 +11,8 @@ import { useCodeCopy } from '~/hooks/useCodeCopy';
 import { TableOfContents } from '~/components/TableOfContents';
 import { ColumnSidebar } from '~/components/columns/ColumnSidebar';
 import { MobileDocNav } from '~/components/MobileDocNav';
+import 'highlight.js/styles/atom-one-light.css';
+import 'katex/dist/katex.min.css';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return pageMeta({ title: '专栏' });

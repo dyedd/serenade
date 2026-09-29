@@ -98,7 +98,15 @@ export default function TagPosts({ loaderData }: Route.ComponentProps) {
                     to={`/posts/${post.path}`}
                     className="h-20 w-28 shrink-0 overflow-hidden rounded-lg"
                   >
-                    <img src={post.cover} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <img
+                      src={post.cover}
+                      alt=""
+                      width={112}
+                      height={80}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
                   </Link>
                 ) : null}
               </article>

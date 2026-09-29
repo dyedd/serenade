@@ -14,6 +14,8 @@ import { TableOfContents } from '~/components/TableOfContents';
 import { MobileDocNav } from '~/components/MobileDocNav';
 import { JsonLd } from '~/components/JsonLd';
 import { siteConfig } from '~/lib/site-config';
+import 'highlight.js/styles/atom-one-light.css';
+import 'katex/dist/katex.min.css';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const post = loaderData?.post;
@@ -130,6 +132,7 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
           <img
             src={post.cover}
             alt={post.title}
+            decoding="async"
             className="block h-auto max-w-full w-full rounded-xl border border-border bg-white"
           />
         </figure>

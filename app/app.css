@@ -4,9 +4,6 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/geist-mono";
-@import "@fontsource-variable/noto-serif-sc";
-@import "highlight.js/styles/atom-one-light.css";
-@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
 

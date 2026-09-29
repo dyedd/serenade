@@ -172,7 +172,10 @@ export default function PostsIndex({ loaderData }: Route.ComponentProps) {
                               <img
                                 src={p.cover}
                                 alt=""
+                                width={112}
+                                height={80}
                                 loading="lazy"
+                                decoding="async"
                                 className="h-full w-full object-cover"
                               />
                             </Link>
