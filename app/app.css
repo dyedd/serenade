@@ -101,6 +101,7 @@
 --note: #ffb110;
 --note-foreground: #111111;
 --paper-warmth: #f6f5f4;
+--graphite: #615d59;
 --sky-tint: #e6f3fe;
 --marigold: #ffb110;
 --coral: #f64932;
@@ -109,37 +110,43 @@
 }
 
 .dark {
-  /* 设计稿只有浅色主题，保留旧偏好但使用同一组浅色 token。 */
-  --background: #ffffff;
-  --foreground: #111111;
-  --card: #ffffff;
-  --card-foreground: #111111;
-  --popover: #ffffff;
-  --popover-foreground: #111111;
-  --primary: #0075de;
-  --primary-foreground: #ffffff;
-  --secondary: #e6f3fe;
-  --secondary-foreground: #0075de;
-  --muted: #ebe9e7;
-  --muted-foreground: #757575;
-  --accent: #e6f3fe;
-  --accent-foreground: #111111;
-  --border: rgba(0, 0, 0, 0.08);
-  --input: rgba(0, 0, 0, 0.14);
-  --ring: rgba(0, 117, 222, 0.35);
-  --sidebar: #ffffff;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #0075de;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e6f3fe;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: rgba(0, 0, 0, 0.08);
-  --sidebar-ring: rgba(0, 117, 222, 0.35);
-  --brand: #0075de;
-  --brand-soft: #e6f3fe;
-  --brand-line: rgba(0, 117, 222, 0.3);
+  color-scheme: dark;
+  --background: #161513;
+  --foreground: #f4f1ee;
+  --card: #1f1e1c;
+  --card-foreground: #f4f1ee;
+  --popover: #1f1e1c;
+  --popover-foreground: #f4f1ee;
+  --primary: #4c9eff;
+  --primary-foreground: #061018;
+  --secondary: rgba(76, 158, 255, 0.16);
+  --secondary-foreground: #8ec4ff;
+  --muted: #2a2927;
+  --muted-foreground: #a39e98;
+  --accent: rgba(76, 158, 255, 0.16);
+  --accent-foreground: #f4f1ee;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: rgba(76, 158, 255, 0.45);
+  --sidebar: #1f1e1c;
+  --sidebar-foreground: #f4f1ee;
+  --sidebar-primary: #4c9eff;
+  --sidebar-primary-foreground: #061018;
+  --sidebar-accent: rgba(76, 158, 255, 0.16);
+  --sidebar-accent-foreground: #f4f1ee;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgba(76, 158, 255, 0.45);
+  --brand: #4c9eff;
+  --brand-soft: rgba(76, 158, 255, 0.16);
+  --brand-line: rgba(76, 158, 255, 0.4);
   --note: #ffb110;
-  --note-foreground: #111111;
+  --note-foreground: #161513;
+  --paper-warmth: #161513;
+  --graphite: #a39e98;
+  --sky-tint: rgba(76, 158, 255, 0.16);
+  /* text-black / bg-white 跟着主题走，页面里的墨色和白底不用逐个改。 */
+  --color-black: #f4f1ee;
+  --color-white: #1f1e1c;
 }
 
 @layer base {
@@ -148,8 +155,8 @@
   }
   html,
   body {
-    background-color: #ffffff;
-    color: #111111;
+    background-color: var(--background);
+    color: var(--foreground);
   }
   body {
     transition: background-color 200ms ease, color 200ms ease;
@@ -192,7 +199,7 @@
 }
 
 .site-nav {
-  background-color: #ffffff;
+  background-color: var(--background);
 }
 
 /* 页面两侧的虚线格，往下淡出，不盖住正文。 */
@@ -204,6 +211,9 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' fill='none'%3E%3Cpath d='M0 .5H88' stroke='%23d4d4d4' stroke-dasharray='5 7'/%3E%3Cpath d='M.5 0V88' stroke='%23d4d4d4' stroke-dasharray='5 7'/%3E%3C/svg%3E");
   background-size: 88px 88px;
   mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 76%);
+}
+.dark .site-grid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' fill='none'%3E%3Cpath d='M0 .5H88' stroke='%233f3e3c' stroke-dasharray='5 7'/%3E%3Cpath d='M.5 0V88' stroke='%233f3e3c' stroke-dasharray='5 7'/%3E%3C/svg%3E");
 }
 
 /* flex/grid 子项默认 min-width:auto，窄屏上图片和表格的最小内容宽度会把整页撑出视口。 */
@@ -236,9 +246,9 @@ main .grid > * {
 
 /* 公开页内容卡片：白底、12px、发丝边、无投影、无渐变。 */
 .paper-card {
-  background-color: #ffffff;
+  background-color: var(--card);
   background-image: none;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: none;
 }
@@ -333,6 +343,57 @@ main .grid > * {
   height: auto;
   border-radius: 0.75rem;
 }
+.prose-blog img.post-image,
+.post-cover {
+  cursor: zoom-in;
+}
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+}
+.image-lightbox img {
+  max-width: min(100%, 1100px);
+  max-height: calc(100vh - 96px);
+  object-fit: contain;
+  border-radius: 12px;
+}
+.image-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: 0;
+  background: transparent;
+  color: #f4f1ee;
+  font-size: 14px;
+  cursor: pointer;
+}
+.dark .prose-blog {
+  --tw-prose-body: #d9d4ce;
+  --tw-prose-headings: #f4f1ee;
+  --tw-prose-lead: #a39e98;
+  --tw-prose-links: #8ec4ff;
+  --tw-prose-bold: #f4f1ee;
+  --tw-prose-counters: #a39e98;
+  --tw-prose-bullets: #6b6660;
+  --tw-prose-hr: rgba(255, 255, 255, 0.1);
+  --tw-prose-quotes: #d9d4ce;
+  --tw-prose-quote-borders: #4c9eff;
+  --tw-prose-captions: #a39e98;
+  --tw-prose-code: #8ec4ff;
+  --tw-prose-pre-code: #d9d4ce;
+  --tw-prose-pre-bg: transparent;
+  --tw-prose-th-borders: rgba(255, 255, 255, 0.14);
+  --tw-prose-td-borders: rgba(255, 255, 255, 0.08);
+}
+.dark .katex {
+  color: var(--foreground);
+}
 /* 表格盒子会跟着列宽变大，外层才是滚动条，页面本身不横滑。 */
 .prose-scroll {
   max-width: 100%;
@@ -400,11 +461,11 @@ main .grid > * {
 .code-block-wrapper .line-numbers,
 .code-block-wrapper pre,
 .code-block-wrapper pre code.hljs {
-  background-color: #ffffff;
+  background-color: var(--card);
 }
 .code-block-wrapper .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent) transparent;
 }
 .code-block-wrapper .custom-scrollbar::-webkit-scrollbar {
   height: 8px;
@@ -413,13 +474,13 @@ main .grid > * {
   background: transparent;
 }
 .code-block-wrapper .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.28);
+  background: color-mix(in oklab, var(--muted-foreground) 45%, transparent);
   border-radius: 4px;
 }
 
 /* ---------- 发文热力图 ---------- */
 .heatmap-cell-empty {
-  background: rgba(0, 0, 0, 0.06);
+  background: color-mix(in oklab, var(--foreground) 8%, transparent);
 }
 .heatmap-cell-active {
   background: var(--brand);
@@ -445,7 +506,7 @@ main .grid > * {
   font-size: 18px;
   line-height: 1.56;
   letter-spacing: normal;
-  color: #615d59;
+  color: var(--graphite);
 }
 
 /* 归档年份：相对路径 ./2026 + 发丝标尺，和职业轨迹同一条线。 */
@@ -532,7 +593,7 @@ main .grid > * {
   left: 0;
   top: 4px;
   bottom: 4px;
-  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 1px solid var(--border);
 }
 .career-item {
   position: relative;
@@ -546,7 +607,7 @@ main .grid > * {
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
-  color: #000000;
+  color: var(--foreground);
 }
 .career-org-row {
   display: flex;
@@ -560,36 +621,36 @@ main .grid > * {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.5;
-  color: #000000;
+  color: var(--foreground);
 }
 .career-type {
   font-size: 12px;
   line-height: 1.33;
   letter-spacing: 0.12px;
-  color: rgba(0, 0, 0, 0.4);
+  color: color-mix(in oklab, var(--foreground) 40%, transparent);
 }
 .career-role {
   margin-top: 4px;
   font-size: 14px;
   line-height: 1.43;
-  color: rgba(0, 0, 0, 0.95);
+  color: var(--foreground);
 }
 .career-period {
   margin-top: 4px;
   font-size: 12px;
   line-height: 1.33;
   letter-spacing: 0.12px;
-  color: #757575;
+  color: var(--muted-foreground);
 }
 .career-note {
   margin-top: 4px;
   font-size: 14px;
   line-height: 1.43;
-  color: #615d59;
+  color: var(--graphite, #615d59);
 }
 .career-item-slot .career-org,
 .career-item-slot .career-note {
-  color: rgba(0, 0, 0, 0.4);
+  color: color-mix(in oklab, var(--foreground) 40%, transparent);
 }
 
 /* ---------- 细滚动条 ---------- */

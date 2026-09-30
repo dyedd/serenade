@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import { pageMeta } from "~/lib/meta";
 import { siteConfig } from "~/lib/site-config";
 import "./app.css";
+import "./hljs-dark.css";
 
 export function meta() {
   return pageMeta({ path: "/" });
@@ -23,7 +24,7 @@ const themeScript = `
   try {
     var stored = localStorage.getItem('dark-mode') || localStorage.getItem('darkMode');
     var dark = stored === 'true' || stored === 'dark' ||
-      ((stored === null || stored === '') &&
+      ((stored !== 'false' && stored !== 'light') &&
         window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.classList.toggle('dark', dark);
   } catch (e) {}

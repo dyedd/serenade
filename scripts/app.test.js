@@ -164,6 +164,7 @@ test('窄屏首页把职业轨迹收在轨道内，主导航不进顶栏', async
   assert.doesNotMatch(html, /width="90%"/);
   assert.match(html, /<nav class="ml-auto hidden items-center md:flex" aria-label="主导航">/);
   assert.match(html, /aria-label="打开菜单"/);
+  assert.match(html, /aria-label="切换到暗色"/);
   assert.match(html, /class="github-chart"/);
   assert.match(html, /posts-heatmap/);
   assert.match(html, /minmax\(0,1fr\)/);
@@ -178,7 +179,7 @@ test('宽文章的表格、公式和代码各自包在栏内滚动盒里', async
   assert.match(html, /<math[^>]*display="block"/);
   assert.match(html, /class="code-block-wrapper[^"]*"/);
   assert.match(html, /this_is_a_single_line_that_is_wider_than_a_320px_column_and_must_scroll_inside_the_code_block_only/);
-  assert.match(html, /<img [^>]*src="https:\/\/example.com\/wide.png"/);
+  assert.match(html, /<img class="post-image" [^>]*src="https:\/\/example.com\/wide.png"/);
   assert.match(html, /lg:hidden/);
   assert.match(html, /hidden lg:sticky lg:top-24 lg:block/);
 });

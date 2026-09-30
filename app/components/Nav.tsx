@@ -20,6 +20,7 @@ import { siteConfig } from "~/lib/site-config";
 import { cn } from "~/lib/utils";
 import { SearchBox } from "./SearchBox";
 import { SEARCH_HOTKEY, SearchHotkey } from "./SearchHotkey";
+import { DarkModeToggle } from "./DarkModeToggle";
 
 interface NavLinkSpec {
   to: string;
@@ -151,6 +152,7 @@ export function Nav() {
               <span className="hidden sm:inline">搜索</span>
               <SearchHotkey className="hidden sm:inline-flex" />
             </Button>
+            <DarkModeToggle />
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <Button

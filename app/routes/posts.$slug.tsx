@@ -133,7 +133,7 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
             src={post.cover}
             alt={post.title}
             decoding="async"
-            className="block h-auto max-w-full w-full rounded-xl border border-border bg-white"
+            className="post-cover block h-auto max-w-full w-full rounded-xl border border-border bg-card"
           />
         </figure>
       ) : null}

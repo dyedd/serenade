@@ -32,10 +32,10 @@ function createRenderer(slug: string, assetType: AssetType): Partial<RendererObj
       const alt = text ?? '';
       const titleAttr = title ? ` title="${title}"` : '';
       if (!href) {
-        return `<img alt="${alt}"${titleAttr} loading="lazy" decoding="async">`;
+        return `<img class="post-image" alt="${alt}"${titleAttr} loading="lazy" decoding="async">`;
       }
       const imageUrl = parseAsset(slug, href.trim(), assetType);
-      return `<img src="${imageUrl}" alt="${alt}"${titleAttr} loading="lazy" decoding="async">`;
+      return `<img class="post-image" src="${imageUrl}" alt="${alt}"${titleAttr} loading="lazy" decoding="async">`;
     },
     code({ text, lang }) {
       const language = lang ?? 'text';

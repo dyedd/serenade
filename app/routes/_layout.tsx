@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router';
 import { Nav } from '~/components/Nav';
 import { Footer } from '~/components/Footer';
 import { BackToTop } from '~/components/BackToTop';
+import { ImageLightbox } from '~/components/ImageLightbox';
 import { TooltipProvider } from '~/components/ui/tooltip';
 
 export default function AppLayout() {
@@ -15,6 +16,7 @@ export default function AppLayout() {
       </main>
       <Footer />
       <BackToTop />
+      <ImageLightbox />
     </TooltipProvider>
   );
 }
