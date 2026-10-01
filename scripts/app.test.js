@@ -27,7 +27,6 @@ async function createFixture() {
         period: '2020 — 2024',
         org: '一所名字长到必须在窄屏里换行的机构名称用于检查轨迹标签',
         role: '把职业说明写得足够长以便在三百二十像素的内容栏里折行',
-        type: '全职',
         note: '备注同样要在轨道内折行，不能把页面撑出视口。',
       },
     ], null, 2)}\n`,
@@ -167,6 +166,8 @@ test('窄屏首页把职业轨迹收在轨道内，主导航不进顶栏', async
   assert.match(html, /aria-label="切换到暗色"/);
   assert.match(html, /class="github-chart"/);
   assert.match(html, /posts-heatmap/);
+  assert.match(html, /XDU 研究生/);
+  assert.match(html, /TUST 四非本科/);
   assert.match(html, /minmax\(0,1fr\)/);
 });
 

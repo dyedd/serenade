@@ -95,7 +95,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               {line}
             </p>
           ))}
-          <p className="page-lead mt-3">{profile.statement}</p>
           <p className="mt-5 flex items-center gap-1">
             <a
               href={socialLinks.github.url}
