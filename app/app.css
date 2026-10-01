@@ -623,12 +623,6 @@ main .grid > * {
   line-height: 1.5;
   color: var(--foreground);
 }
-.career-type {
-  font-size: 12px;
-  line-height: 1.33;
-  letter-spacing: 0.12px;
-  color: color-mix(in oklab, var(--foreground) 40%, transparent);
-}
 .career-role {
   margin-top: 4px;
   font-size: 14px;
@@ -648,11 +642,6 @@ main .grid > * {
   line-height: 1.43;
   color: var(--graphite, #615d59);
 }
-.career-item-slot .career-org,
-.career-item-slot .career-note {
-  color: color-mix(in oklab, var(--foreground) 40%, transparent);
-}
-
 /* ---------- 细滚动条 ---------- */
 * {
   scrollbar-width: thin;

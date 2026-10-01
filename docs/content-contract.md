@@ -32,7 +32,7 @@ README 提供专栏信息，其他 Markdown 文件按文件名排序作为章节
 
 ## JSON 数据
 
-- `career.json`：职业轨迹数组，常用字段为 `period`、`org`、`role`、`type`、`note`。
+- `career.json`：职业轨迹数组，常用字段为 `period`、`org`、`role`、`note`。
 - `friends.json`：友链数组，常用字段为 `name`、`url`、`logo`、`description`、`rss`。
 - `projects.json`：`{ "categories": {} }` 结构，分类下包含项目数组。
 - `collections.json`：合集 slug 映射，每个合集包含标题、描述和文章或外部链接。
