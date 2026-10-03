@@ -64,18 +64,17 @@ export const siteConfig = {
   lang,
   startTime,
   analytics: {
-    script: process.env.SITE_ANALYTICS_SCRIPT || 'https://statistics.dyedd.cn/script.js',
-    websiteId: process.env.SITE_ANALYTICS_WEBSITE_ID || '11a02a3f-0cdd-452a-bbb8-37f195db86fd',
+    script: process.env.SITE_ANALYTICS_SCRIPT ?? 'https://statistics.dyedd.cn/script.js',
+    websiteId: process.env.SITE_ANALYTICS_WEBSITE_ID ?? '11a02a3f-0cdd-452a-bbb8-37f195db86fd',
   },
   profile: {
     name: author,
     avatar: profileAvatar,
-    badge: process.env.SITE_PROFILE_BADGE || '🐟',
     introduction: splitEnvList(process.env.SITE_PROFILE_INTRO, [
       'XDU 研究生，研究大规模分布式训练',
       'TUST 四非本科，前后端都写过，现在也是不专业的全栈开发者',
     ]),
-    motto: splitEnvList(process.env.SITE_PROFILE_MOTTO, ['🐎 马到成功，心想事成', '🌈🌈🌈']),
+    motto: splitEnvList(process.env.SITE_PROFILE_MOTTO, ['祝你马到成功，心想事成。', '🌈🌈🌈']),
     githubContributionChart:
       process.env.SITE_PROFILE_GITHUB_CHART || 'https://ghchart.rshah.org/0075de/dyedd',
     techStack: parseTechStack(process.env.SITE_PROFILE_TECH_STACK, defaultProfileTechStack),

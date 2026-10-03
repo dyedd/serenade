@@ -29,6 +29,10 @@ async function createFixture() {
         role: '把职业说明写得足够长以便在三百二十像素的内容栏里折行',
         note: '备注同样要在轨道内折行，不能把页面撑出视口。',
       },
+      { period: '2019 — 2020', org: '第二段经历', role: '研究工作' },
+      { period: '2018 — 2019', org: '第三段经历', role: '开发工作' },
+      { period: '2017 — 2018', org: '第四段经历', role: '实习工作' },
+      { period: '2016 — 2017', org: '第五段经历', role: '学习经历' },
     ], null, 2)}\n`,
   );
   await mkdir(path.join(fixtureRoot, 'content', 'posts', 'wide-post'), { recursive: true });
@@ -45,7 +49,19 @@ async function createFixture() {
     ));
   }));
   await writeFile(path.join(fixtureRoot, 'content', 'friends.json'), '[]\n');
-  await writeFile(path.join(fixtureRoot, 'content', 'projects.json'), '{"categories": {}}\n');
+  await writeFile(path.join(fixtureRoot, 'content', 'projects.json'), `${JSON.stringify({
+    categories: {
+      test: {
+        name: '测试项目',
+        icon: '',
+        projects: [
+          { name: '项目一', date: '2022-01-01' },
+          { name: '项目二', date: '2022-01-02' },
+          { name: '项目三', date: '2022-01-03' },
+        ],
+      },
+    },
+  }, null, 2)}\n`);
   await writeFile(path.join(fixtureRoot, 'content', 'collections.json'), '{}\n');
 }
 
@@ -156,18 +172,27 @@ test('文章详情和 RSS 可以响应', async () => {
   assert.equal(cachedResponse.status, 304);
 });
 
+test('首页随机展示两个项目', async () => {
+  const html = await (await request('/')).text();
+  const projectNames = ['项目一', '项目二', '项目三'].filter((name) => html.includes(name));
+  assert.equal(projectNames.length, 2);
+});
+
 test('窄屏首页把职业轨迹收在轨道内，主导航不进顶栏', async () => {
   const html = await (await request('/')).text();
   assert.match(html, /一所名字长到必须在窄屏里换行的机构名称用于检查轨迹标签/);
-  assert.match(html, /class="career-item"/);
+  assert.equal([...html.matchAll(/class="career-item"/g)].length, 3);
+  assert.match(html, /aria-expanded="false"/);
+  assert.match(html, /展开更多/);
   assert.doesNotMatch(html, /width="90%"/);
   assert.match(html, /<nav class="ml-auto hidden items-center md:flex" aria-label="主导航">/);
   assert.match(html, /aria-label="打开菜单"/);
   assert.match(html, /aria-label="切换到暗色"/);
   assert.match(html, /class="github-chart"/);
   assert.match(html, /posts-heatmap/);
-  assert.match(html, /XDU 研究生/);
-  assert.match(html, /TUST 四非本科/);
+  assert.match(html, /class="tech-chip"/);
+  assert.match(html, /class="size-24 shrink-0 rounded-full border border-border object-cover sm:size-28"/);
+  assert.match(html, /class="profile-line mt-3 block max-w-full select-none text-foreground"/);
   assert.match(html, /minmax\(0,1fr\)/);
 });
 

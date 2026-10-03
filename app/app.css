@@ -561,6 +561,7 @@ main .grid > * {
   display: block;
   width: 14px;
   height: 14px;
+  object-fit: contain;
 }
 .tech-chip-dot {
   width: 0.45rem;
