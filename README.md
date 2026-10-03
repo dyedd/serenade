@@ -1,42 +1,115 @@
 # Serenade
 
-Serenade 是一个基于 React Router Framework Mode 的 Markdown 博客程序。文章和站点数据保存在独立的 `content/` 目录中，可使用 Node SSR + Docker 部署，也可构建为预渲染静态站点。
+Serenade 是一个基于 React Router Framework Mode 的 Markdown 博客程序。
+
+程序从独立的 `content/` 目录读取文章和站点数据。你可以使用 Node.js SSR、Docker 或静态站点部署程序。
 
 ## 特性
 
-- Markdown 文章和专栏，支持 KaTeX 数学公式及代码高亮
-- 标签、合集、项目、友链、朋友圈和 RSS
-- React Router SSR 与文章级静态预渲染
-- `pnpm cli post` 创建文章，可选 AI slug 和封面
-- `pnpm cli sync` 同步内容到服务器
-- 不要求把个人文章提交到这个程序仓库
+- 读取 Markdown 文章和专栏。
+- 支持 KaTeX 数学公式和代码高亮。
+- 提供标签、合集、项目、友链、朋友圈和 RSS。
+- 首页最多显示两个随机项目。SSR 在每次请求时选择项目。静态站点在构建时选择项目。
+- 支持 React Router SSR。
+- 支持文章级静态预渲染。
+- 支持图片灯箱和深色模式。
+- 使用 CLI 创建文章和同步内容。
 
 ## 快速开始
 
-需要 Node.js 22+ 和 pnpm 10+。
+安装以下软件：
+
+- Node.js 22 或更高版本。
+- pnpm 10 或更高版本。
+- Docker。仅在使用 Docker 部署时需要。
 
 ```bash
 pnpm install
+```
+
+创建 `.env`：
+
+macOS、Linux 或 Git Bash：
+
+```bash
 cp .env.example .env
+```
+
+PowerShell：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+编辑 `.env`。至少设置站点的 `SITE_*` 配置。不要提交 `.env` 或任何密钥。
+
+准备 `content/`。你可以使用本地目录、私有内容仓库或 Docker volume。内容格式见[内容格式说明](docs/content-contract.md)。
+
+启动开发服务器：
+
+```bash
 pnpm dev
 ```
 
-打开 <http://127.0.0.1:5173>。运行页面前，需要在 `content/` 放入自己的站点数据和文章。`content/` 已被 Git 忽略；格式见[内容格式说明](docs/content-contract.md)。
+打开 <http://127.0.0.1:5173>。
 
-## 内容和 CLI
+## 内容目录
 
-`content/` 是运行时数据，可由私有仓库管理，也可在 Docker 中通过 volume 挂载。项目不会审核文章正文，也不会在 CI 中检查个人内容。
+`content/` 是运行时数据。Git 默认忽略此目录。程序不会在 CI 中审核个人文章。
 
-创建文章 scaffold：
+常用路径如下：
+
+```text
+content/
+├── posts/<slug>/README.md
+├── columns/<slug>/README.md
+├── columns/<slug>/001.md
+├── career.json
+├── collections.json
+├── friends.json
+└── projects.json
+```
+
+文章目录名会成为文章 URL。文章使用 Markdown front matter：
+
+```yaml
+---
+title: 文章标题
+date: 2025-01-31
+tags: [技术]
+abstract: 可选摘要
+cover: 可选封面
+---
+
+正文 Markdown
+```
+
+JSON 文件由 `app/lib/content/` 中的 loader 读取。格式错误会在对应页面或 API 请求中报告。字段要求见[内容格式说明](docs/content-contract.md)。
+
+## CLI
+
+### 创建文章
+
+创建文章目录和 Markdown 起始文件：
 
 ```bash
 pnpm cli post "文章标题"
-pnpm cli post "文章标题" --slug my-post --no-cover
+pnpm cli post "文章标题" --slug my-post --no-ai --no-cover
 ```
 
-不使用 AI slug 时加 `--no-ai`；指定 `--slug` 可直接跳过交互。AI slug 和封面配置见 `.env.example`。
+`--no-ai` 不调用 AI 生成 slug。`--no-cover` 不调用 AI 生成封面。相关 API 配置见 `.env.example`。
 
-同步内容到服务器：
+### 同步内容
+
+同步命令需要以下配置：
+
+```dotenv
+SERVER_HOST=your_server_host
+SERVER_USER=deploy
+SERVER_PATH=/srv/serenade
+```
+
+同步整个 `content/`、一篇文章或一个 JSON 文件：
 
 ```bash
 pnpm cli sync
@@ -45,39 +118,84 @@ pnpm cli sync post <slug>
 pnpm cli sync json <friends.json|projects.json|collections.json>
 ```
 
-服务器同步需要在 `.env` 中配置 `SERVER_HOST`、`SERVER_USER` 和 `SERVER_PATH`。`sync content` 会镜像整个内容目录，Unix 下使用 `rsync --delete`。
+Linux 和 macOS 使用 `rsync`。Windows 使用 `scp`。同步整个内容目录时，Unix 模式会使用 `rsync --delete`。
+
+## 配置
+
+将 `.env.example` 复制为 `.env`，再修改配置值。`.env` 只在本地或服务器保存。
+
+常用配置分为三组：
+
+| 组 | 用途 | 示例字段 |
+| --- | --- | --- |
+| AI | 生成文章 slug 和封面 | `OPENAI_API_KEY`、`IMAGE_API_KEY` |
+| 同步 | 连接内容服务器 | `SERVER_HOST`、`SERVER_USER`、`SERVER_PATH` |
+| 站点 | 设置标题、简介、社交链接和个人介绍 | `SITE_TITLE`、`SITE_URL`、`SITE_PROFILE_INTRO` |
+
+多行文本使用 `|` 分隔。例如：
+
+```dotenv
+SITE_PROFILE_INTRO=第一行|第二行
+SITE_PROFILE_MOTTO=保持简单|持续交付
+```
+
+技术栈使用 `名称::图标地址` 格式，并使用 `|` 分隔：
+
+```dotenv
+SITE_PROFILE_TECH_STACK=TypeScript::https://cdn.simpleicons.org/typescript/3178C6|React::https://cdn.simpleicons.org/react/61DAFB
+```
+
+完整字段和通用示例见 `.env.example`。
 
 ## 部署
 
 ### Docker SSR
 
-准备好 `content/` 和站点配置后，在项目根目录运行：
+准备 `.env` 和 `content/`。在项目根目录运行：
 
 ```bash
-cp .env.example .env
-# 编辑 .env 中的 SITE_* 配置
 docker compose up -d
 ```
 
-Compose 将本地 `content/` 挂载到容器，编辑内容后无需重建镜像。默认地址为 <http://localhost:3000>，端口可用 `SERENADE_PORT` 覆盖。建议将 `.env` 和内容目录保存在私有位置。
+Compose 会把本地 `content/` 挂载到容器的 `/app/content`。修改内容后不需要重建镜像。默认地址为 <http://localhost:3000>。
+
+使用 `SERENADE_PORT` 修改主机端口：
+
+```dotenv
+SERENADE_PORT=8080
+```
 
 ### 静态站点
 
-准备好内容目录后执行：
+准备 `.env` 和 `content/`。执行以下命令：
 
 ```bash
 pnpm build:static
 ```
 
-输出目录为 `build/client/`。文章、专栏、标签和站点页面会在构建时生成 HTML，文章及标签 URL 会进入 `sitemap.xml`。每次内容变更后需要重新构建和部署。
+输出目录为 `build/client/`。构建会生成首页、文章、专栏、标签、RSS、sitemap 和 robots 文件。每次内容变更后都必须重新构建。
 
-静态导出不提供 `/api/*`，因此朋友圈 RSS 聚合、API 调用、搜索和依赖请求时数据的分页功能需要 Node SSR 部署。静态 HTML 中不会自动生成尚未预渲染的分页 URL。内容量增加时，静态构建时间也会随页面数增加。
+静态站点不提供 `/api/*`。以下功能需要 Node.js SSR：
+
+- API 请求。
+- 搜索。
+- 朋友圈 RSS 聚合。
+- 依赖请求时数据的分页。
 
 ## SEO
 
-页面通过 React Router SSR 提供可抓取的 HTML，并输出页面级 title、description、canonical、Open Graph 和 Twitter metadata。文章页另有 BlogPosting 结构化数据。`/sitemap.xml`、`/robots.txt` 和 `/feed.xml` 在 SSR 模式下可用；静态构建也会生成这些文件和内容页。
+SSR 和静态构建会输出以下 metadata：
 
-请在 `.env` 设置公开可访问的 `SITE_URL`，并确保封面图片 URL 可被社交平台访问。SEO 不保证搜索引擎收录或排名。
+- `title`
+- `description`
+- `canonical`
+- Open Graph
+- Twitter metadata
+- 文章页的 BlogPosting 结构化数据
+
+SSR 模式提供 `/sitemap.xml`、`/robots.txt` 和 `/feed.xml`。静态构建也会生成这些文件。
+
+请将 `SITE_URL` 设置为公开访问的完整 URL。请确保封面图片 URL 可以被社交平台访问。SEO 不保证收录或排名。
 
 ## 开发
 
@@ -85,14 +203,33 @@ pnpm build:static
 | --- | --- |
 | `pnpm dev` | 启动开发服务器 |
 | `pnpm typecheck` | 生成路由类型并运行 TypeScript 检查 |
-| `pnpm test` | SSR 构建及页面/API/RSS smoke test |
-| `pnpm build` | 构建 Node SSR 应用 |
+| `pnpm test` | 构建 SSR 并运行页面、API 和 RSS 测试 |
+| `pnpm build` | 构建 Node.js SSR 应用 |
 | `pnpm build:static` | 构建静态预渲染站点 |
 | `pnpm verify` | 类型检查、测试和静态构建 |
 
-测试使用临时 fixture，不检查真实文章内容。Node SSR 和静态构建都会读取当前 `content/`，静态部署前请先准备内容。
+测试使用临时 fixture。测试不会检查真实文章内容。SSR 和静态构建会读取当前 `content/`，因此运行前必须准备内容目录。
 
-更多说明见[文档索引](docs/README.md)。
+## 项目结构
+
+```text
+app/
+├── components/       可复用 React 组件
+├── lib/content/      内容读取层
+└── routes/           页面、API、RSS 和静态资源路由
+content/              使用者的运行时内容
+scripts/              CLI、同步和测试工具
+public/               静态资源
+docs/                 程序文档
+```
+
+页面和 API 必须通过 `app/lib/content/` 读取内容。路由代码不应直接读取 `content/`。
+
+更多信息见[文档索引](docs/README.md)：
+
+- [架构地图](docs/architecture.md)
+- [内容格式说明](docs/content-contract.md)
+- [程序验证](docs/testing.md)
 
 ## 技术栈
 
