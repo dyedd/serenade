@@ -64,21 +64,17 @@ export const siteConfig = {
   lang,
   startTime,
   analytics: {
-    script: process.env.SITE_ANALYTICS_SCRIPT || 'https://statistics.dyedd.cn/script.js',
-    websiteId: process.env.SITE_ANALYTICS_WEBSITE_ID || '11a02a3f-0cdd-452a-bbb8-37f195db86fd',
+    script: process.env.SITE_ANALYTICS_SCRIPT ?? 'https://statistics.dyedd.cn/script.js',
+    websiteId: process.env.SITE_ANALYTICS_WEBSITE_ID ?? '11a02a3f-0cdd-452a-bbb8-37f195db86fd',
   },
   profile: {
     name: author,
     avatar: profileAvatar,
-    badge: process.env.SITE_PROFILE_BADGE || '🐟',
     introduction: splitEnvList(process.env.SITE_PROFILE_INTRO, [
       'AI infra研究生，目前研究大规模分布式训练以及扩散模型在短临降水领域的应用',
       '过去我也学习过前后端，所以现在也是不专业的全栈开发者',
     ]),
-    motto: splitEnvList(process.env.SITE_PROFILE_MOTTO, ['🐎 马到成功，心想事成', '🌈🌈🌈']),
-    statement:
-      process.env.SITE_PROFILE_STATEMENT ||
-      '我将在这里分享我的编程和人工智能知识。如果你对这些主题感兴趣，那么恭喜你找到宝藏了。接下来你可以查看内容或订阅',
+    motto: splitEnvList(process.env.SITE_PROFILE_MOTTO, ['祝你马到成功，心想事成。', '🌈🌈🌈']),
     githubContributionChart:
       process.env.SITE_PROFILE_GITHUB_CHART || 'https://ghchart.rshah.org/0075de/dyedd',
     techStack: parseTechStack(process.env.SITE_PROFILE_TECH_STACK, defaultProfileTechStack),

@@ -5,7 +5,7 @@ import type { Route } from './+types/home';
 import { listPostDates, listPosts, openingExcerpts } from '~/lib/content/posts';
 import { listTags } from '~/lib/content/tags';
 import { loadCareer } from '~/lib/content/career';
-import { listFeaturedProjects, type ProjectEntry } from '~/lib/content/projects';
+import { listRandomProjects, type ProjectEntry } from '~/lib/content/projects';
 import { siteConfig } from '~/lib/site-config';
 import { pageMeta } from '~/lib/meta';
 import { CareerTrack } from '~/components/CareerTrack';
@@ -23,7 +23,7 @@ export async function loader() {
   const [recent, career, projects, tags, dates] = await Promise.all([
     listPosts({ page: 1, pageSize: 5 }),
     loadCareer(),
-    listFeaturedProjects(),
+    listRandomProjects(),
     listTags(),
     listPostDates(),
   ]);
@@ -68,7 +68,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const [statsOpen, setStatsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-20 py-2">
+    <div className="flex flex-col gap-12 py-2">
       <JsonLd
         data={{
           '@context': 'https://schema.org',
@@ -91,9 +91,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             你好，我是{profile.name}
           </h1>
           {profile.introduction.map((line, i) => (
-            <p key={`intro-${i}`} className="mt-3 text-sm leading-relaxed text-black/95 sm:text-base">
-              {line}
-            </p>
+            <SvgTextLine key={`intro-${i}`} line={line} />
+          ))}
+          {profile.motto.map((line, i) => (
+            <SvgTextLine key={`motto-${i}`} line={line} />
           ))}
           <p className="mt-5 flex items-center gap-1">
             <a
@@ -178,10 +179,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
         <a href={socialLinks.github.url} target="_blank" rel="noreferrer" className="block min-w-0 max-w-full">
           <img
-            src={profile.githubContributionChart.replace(
-              /ghchart\.rshah\.org\/[0-9a-fA-F]{6}\//i,
-              'ghchart.rshah.org/0075de/',
-            )}
+            src={profile.githubContributionChart}
             alt="GitHub 贡献图"
             width={828}
             height={128}
@@ -199,7 +197,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <ul className="flex flex-wrap gap-2">
           {profile.techStack.map((tech) => (
             <li key={tech.label}>
-              <TechChip label={tech.label} />
+              <TechChip label={tech.label} icon={tech.icon} />
             </li>
           ))}
         </ul>
@@ -343,5 +341,27 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         )}
       </section>
     </div>
+  );
+}
+
+function SvgTextLine({ line }: { line: string }) {
+  const width = Array.from(line).reduce(
+    (total, char) => total + (char === ' ' ? 35 : char.codePointAt(0)! < 256 ? 50 : 100),
+    0,
+  );
+
+  return (
+    <svg
+      role="img"
+      aria-label={line}
+      viewBox={`0 0 ${width} 150`}
+      preserveAspectRatio="xMinYMid meet"
+      className="profile-line mt-3 block max-w-full select-none text-foreground"
+      style={{ width: `${width / 100}em`, height: '1.5em' }}
+    >
+      <text x="0" y="115" fontSize="100" fill="currentColor" textLength={width} lengthAdjust="spacingAndGlyphs">
+        {line}
+      </text>
+    </svg>
   );
 }

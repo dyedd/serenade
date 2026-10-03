@@ -19,14 +19,15 @@ const TECH: Record<string, { color: string; slug: string }> = {
   Slurm: { color: '#1F1F1F', slug: 'linux' },
 };
 
-export function TechChip({ label }: { label: string }) {
+export function TechChip({ label, icon }: { label: string; icon?: string }) {
   const meta = TECH[label];
   const color = meta?.color ?? 'var(--brand)';
+  const iconSrc = icon || (meta ? `https://cdn.simpleicons.org/${meta.slug}/${meta.color.replace('#', '')}` : '');
   return (
     <span className="tech-chip" style={{ ['--chip' as string]: color }}>
-      {meta ? (
+      {iconSrc ? (
         <img
-          src={`https://cdn.simpleicons.org/${meta.slug}/${meta.color.replace('#', '')}`}
+          src={iconSrc}
           alt=""
           width={14}
           height={14}

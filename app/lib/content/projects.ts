@@ -13,8 +13,6 @@ export interface ProjectEntry {
   tags?: string[];
   techStack?: string[];
   date: string;
-  featured?: boolean;
-  featuredOrder?: number;
   [key: string]: unknown;
 }
 
@@ -67,20 +65,18 @@ async function readProjects(): Promise<ProjectsData> {
   });
 }
 
-export async function listFeaturedProjects() {
+export async function listRandomProjects() {
   const data = await readProjects();
-  return Object.entries(data.categories)
+  const projects = Object.entries(data.categories)
     .flatMap(([categoryKey, cat]) =>
       cat.projects
-        .filter((p) => p.featured)
         .map((p) => ({ ...p, categoryKey, categoryName: cat.name }))
-    )
-    .sort((a, b) => {
-      const ao = a.featuredOrder ?? Number.MAX_SAFE_INTEGER;
-      const bo = b.featuredOrder ?? Number.MAX_SAFE_INTEGER;
-      if (ao !== bo) return ao - bo;
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
+    );
+  for (let index = projects.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [projects[index], projects[randomIndex]] = [projects[randomIndex], projects[index]];
+  }
+  return projects.slice(0, 2);
 }
 
 export async function listProjectCategories() {
