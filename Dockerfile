@@ -8,7 +8,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV CI=true
 
-RUN corepack enable
+RUN corepack enable && corepack install --global pnpm@10.12.4
 
 
 FROM base AS deps
@@ -42,8 +42,9 @@ COPY --from=build /app/build ./build
 COPY --from=build /app/public ./public
 COPY --from=build /app/package.json ./package.json
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/app/lib/redirects.json ./app/lib/redirects.json 2>/dev/null || true
+
+# redirects.json 已由 Vite 打包进 build/server，运行阶段无需复制
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node build/server/index.js"]
+CMD ["pnpm", "start"]
