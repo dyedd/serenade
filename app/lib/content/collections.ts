@@ -19,7 +19,14 @@ export type Collections = Record<string, Collection>;
 
 export async function listCollections(): Promise<Collections> {
   const filePath = 'content/collections.json';
-  const raw = await fs.readFile(filePath, 'utf8');
+  let raw: string;
+  try {
+    raw = await fs.readFile(filePath, 'utf8');
+  } catch (error) {
+    // 没有合集文件时视为「没有合集」：首页和 /posts 不该因为可选文件缺失而整页报错。
+    if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return {};
+    throw new Error(`读取 ${filePath} 失败`, { cause: error });
+  }
   return parseJson(raw, filePath, (value, pathName) => {
     const root = asRecord(value, pathName, '合集数据');
     return Object.fromEntries(Object.entries(root).map(([slug, rawCollection]) => {

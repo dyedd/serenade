@@ -5,6 +5,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
 import { after, before, test } from 'node:test';
+import {
+  hasFrontMatterDate,
+  insertTimestamp,
+  normalizeSlug,
+  quoteYamlString,
+} from './front-matter.js';
+import { isSafeUrl } from './prompt-helper.js';
 
 const projectRoot = process.cwd();
 const port = 32000 + Math.floor(Math.random() * 1000);
@@ -12,6 +19,13 @@ const baseUrl = `http://127.0.0.1:${port}`;
 let fixtureRoot;
 let server;
 let serverOutput = '';
+
+// 站点标题/地址在构建期就固化进产物（SITE_* 在服务端渲染时读取），所以断言不能
+// 写死作者自己的品牌，否则任何人按 README 配置了自己的 SITE_* 后测试都会失败。
+// 这里按同样的默认值回退，测试自身显式注入的 SITE_* 优先。
+const siteTitle = process.env.SITE_TITLE || '染念的笔记';
+const siteUrl = (process.env.SITE_URL || 'https://dyedd.cn').replace(/\/$/, '');
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function createFixture() {
   fixtureRoot = await mkdtemp(path.join(tmpdir(), 'serenade-test-'));
@@ -49,6 +63,34 @@ async function createFixture() {
     ));
   }));
   await writeFile(path.join(fixtureRoot, 'content', 'friends.json'), '[]\n');
+
+  // 同一文章目录里的其他 .md 不是文章：索引、标签计数、搜索和 RSS 都必须忽略它们。
+  for (const extra of ['chapter-draft.md', 'scratch.md']) {
+    await writeFile(
+      path.join(fixtureRoot, 'content', 'posts', 'smoke-post', extra),
+      `---\ntitle: ${extra}\ndate: 2025-01-02\ntags: [测试]\n---\n\nshared-keyword 只出现在附属文件里\n`,
+    );
+  }
+
+  // 专栏：README + 数字前缀章节 + 非数字章节（排序要稳定，README 不算章节）
+  await mkdir(path.join(fixtureRoot, 'content', 'columns', 'smoke-column'), { recursive: true });
+  await writeFile(
+    path.join(fixtureRoot, 'content', 'columns', 'smoke-column', 'README.md'),
+    '---\ntitle: Smoke column\ndate: 2025-01-03\n---\n\nColumn intro\n',
+  );
+  await writeFile(
+    path.join(fixtureRoot, 'content', 'columns', 'smoke-column', '002-second.md'),
+    '# 第二章\n\nsecond chapter\n',
+  );
+  await writeFile(
+    path.join(fixtureRoot, 'content', 'columns', 'smoke-column', '001-first.md'),
+    '# 第一章\n\nfirst chapter\n',
+  );
+  await writeFile(
+    path.join(fixtureRoot, 'content', 'columns', 'smoke-column', 'appendix.md'),
+    '# 附录\n\nappendix chapter\n',
+  );
+
   await writeFile(path.join(fixtureRoot, 'content', 'projects.json'), `${JSON.stringify({
     categories: {
       test: {
@@ -72,8 +114,10 @@ async function request(pathname, init) {
 async function waitForServer() {
   for (let attempt = 0; attempt < 50; attempt += 1) {
     try {
-      const response = await request('/');
-      if (response.status < 600) return;
+      // 必须确认是我们的服务在监听：端口是随机选的，被别的进程占用时
+      // 任何 HTTP 响应都不代表可以开始断言。
+      const response = await request('/robots.txt');
+      if (response.status === 200) return;
     } catch {
       // 服务还未监听。
     }
@@ -101,7 +145,21 @@ before(async () => {
 
 after(async () => {
   server?.kill('SIGTERM');
-  await wait(100);
+  // 等进程真正退出，否则 Windows 上 fixture 目录仍被占用，rm 会失败残留。
+  await new Promise((resolve) => {
+    if (!server || server.exitCode !== null || server.signalCode !== null) {
+      resolve();
+      return;
+    }
+    const timer = setTimeout(() => {
+      server.kill('SIGKILL');
+      resolve();
+    }, 5000);
+    server.once('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
   if (fixtureRoot) await rm(fixtureRoot, { recursive: true, force: true });
 });
 
@@ -114,18 +172,24 @@ test('SSR 页面可以响应', async () => {
 });
 
 test('SEO endpoints and rendered metadata are present', async () => {
+  const titlePattern = new RegExp(`<title>${escapeRegExp(siteTitle)}</title>`);
+  const canonicalBase = escapeRegExp(siteUrl);
+
   const homeResponse = await request('/');
   const homeHtml = await homeResponse.text();
-  assert.match(homeHtml, /<title>染念的笔记<\/title>/);
-  assert.match(homeHtml, /rel="canonical" href="https:\/\/dyedd\.cn\/?"/);
+  assert.match(homeHtml, titlePattern);
+  assert.match(homeHtml, new RegExp(`rel="canonical" href="${canonicalBase}/?"`));
   assert.match(homeHtml, /application\/ld\+json/);
   assert.equal([...homeHtml.matchAll(/rel="canonical"/g)].length, 1);
+  // 运行期站点配置必须注入给客户端：浏览器里没有 process.env。
+  assert.match(homeHtml, /window\.__SERENADE_SITE_CONFIG__=/);
+  assert.doesNotMatch(homeHtml, /process\.env\.SITE_/);
 
   const articleResponse = await request('/posts/smoke-post');
   const articleHtml = await articleResponse.text();
   assert.match(articleHtml, /BlogPosting/);
-  assert.match(articleHtml, /Smoke post - 染念的笔记/);
-  assert.match(articleHtml, /rel="canonical" href="https:\/\/dyedd\.cn\/posts\/smoke-post"/);
+  assert.match(articleHtml, new RegExp(`Smoke post - ${escapeRegExp(siteTitle)}`));
+  assert.match(articleHtml, new RegExp(`rel="canonical" href="${canonicalBase}/posts/smoke-post"`));
 
   const notFoundResponse = await request('/missing-page');
   assert.equal(notFoundResponse.status, 404);
@@ -133,12 +197,75 @@ test('SEO endpoints and rendered metadata are present', async () => {
 
   const robotsResponse = await request('/robots.txt');
   assert.equal(robotsResponse.status, 200);
-  assert.match(await robotsResponse.text(), /Sitemap: https:\/\/dyedd\.cn\/sitemap\.xml/);
+  assert.match(await robotsResponse.text(), new RegExp(`Sitemap: ${canonicalBase}/sitemap\\.xml`));
 
   const sitemapResponse = await request('/sitemap.xml');
   assert.equal(sitemapResponse.status, 200);
   assert.match(sitemapResponse.headers.get('content-type') ?? '', /application\/xml/);
-  assert.match(await sitemapResponse.text(), /https:\/\/dyedd\.cn\/posts\/smoke-post/);
+  assert.match(await sitemapResponse.text(), new RegExp(`${canonicalBase}/posts/smoke-post`));
+});
+
+test('文章索引与标签计数忽略同目录的附属 Markdown', async () => {
+  const posts = await (await request('/api/posts?pageSize=50')).json();
+  const smokePosts = posts.data.filter((post) => post.path === 'smoke-post');
+  assert.equal(smokePosts.length, 1, '同一文章目录只能出现一次');
+  assert.equal(posts.totalItems, 2, '只有 README 算文章');
+
+  const tags = await (await request('/api/tags')).json();
+  assert.equal(tags['测试'], 1, '标签计数按文章数，不按文件数');
+
+  const tagPosts = await (await request('/api/tags/%E6%B5%8B%E8%AF%95')).json();
+  assert.equal(tagPosts.totalItems, tags['测试'], '标签云与标签详情的数量必须一致');
+
+  const search = await (await request('/api/posts/search?keyword=shared-keyword')).json();
+  assert.equal(search.totalItems, 0, '只出现在附属文件里的关键词不应命中');
+
+  const feed = await (await request('/feed.xml')).text();
+  const guids = [...feed.matchAll(/<guid[^>]*>([^<]+)<\/guid>/g)].map((m) => m[1]);
+  assert.equal(new Set(guids).size, guids.length, 'RSS 里不能有重复 guid');
+});
+
+test('畸形 URL 编码返回空结果而不是 500', async () => {
+  for (const pathname of ['/tags/50%', '/tags/%E4%B8', '/api/tags/50%']) {
+    const response = await request(pathname);
+    assert.equal(response.status, 200, pathname);
+  }
+});
+
+test('pageSize 有上界，恶意大值不会拖垮响应', async () => {
+  const response = await request('/api/posts?pageSize=100000');
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.ok(body.pageSize <= 50, `pageSize 应被夹紧，实际 ${body.pageSize}`);
+});
+
+test('专栏章节列表排除 README 并按文件名排序', async () => {
+  const response = await request('/columns/smoke-column');
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const hrefs = [...html.matchAll(/\/columns\/smoke-column\/([^"#?]+)/g)].map((m) => m[1]);
+  assert.ok(hrefs.length > 0, '应列出章节链接');
+  assert.ok(!hrefs.some((h) => /readme/i.test(h)), 'README 不应被当成章节');
+  assert.ok(!hrefs.some((h) => h.includes('/') || h.includes('\\')), '章节链接只应是文件名');
+
+  const first = hrefs.indexOf('001-first.md');
+  const second = hrefs.indexOf('002-second.md');
+  const appendix = hrefs.indexOf('appendix.md');
+  assert.ok(first >= 0 && second >= 0 && appendix >= 0, `缺少章节链接: ${hrefs.join(', ')}`);
+  assert.ok(first < second, '数字前缀章节按序号排序');
+  assert.ok(second < appendix, '非数字前缀章节排在数字章节之后');
+});
+
+test('资产路由只提供图片，且挡掉路径穿越', async () => {
+  for (const pathname of [
+    '/assets/posts/smoke-post/../../../friends.json',
+    '/assets/posts/smoke-post/..%2F..%2Ffriends.json',
+    '/assets/posts/smoke-post/README.md',
+    '/assets/unknown/smoke-post/cover.png',
+  ]) {
+    const response = await request(pathname);
+    assert.ok(response.status === 403 || response.status === 404, `${pathname} -> ${response.status}`);
+  }
 });
 
 test('文章 API 和标签 API 返回程序数据', async () => {
@@ -152,6 +279,68 @@ test('文章 API 和标签 API 返回程序数据', async () => {
   assert.equal(tagsResponse.status, 200);
   const tags = await tagsResponse.json();
   assert.equal(tags['测试'], 1);
+
+  // 分页参数来自 query string，非法值要回落到默认而不是 NaN。
+  const weird = await (await request('/api/posts?page=abc&pageSize=-5')).json();
+  assert.equal(weird.page, 1);
+  assert.ok(weird.pageSize > 0);
+});
+
+test('CLI 写入的 front matter 可以被站点解析', async () => {
+  // 标题必须按 YAML 标量转义：冒号、方括号、引号、换行都不能破坏 front matter。
+  const titles = [
+    'Docker: 入门',
+    '[数组] 标题',
+    '"引号" 标题',
+    '#井号开头',
+    'a: b: c',
+    '带\n换行的标题',
+  ];
+  for (const title of titles) {
+    const readme = `---\ntitle: ${quoteYamlString(title)}\ntags: [cli]\n---\n\nCLI 写入的正文\n`;
+    const slug = `cli-${Buffer.from(title).toString('hex').slice(0, 8)}`;
+    await mkdir(path.join(fixtureRoot, 'content', 'posts', slug), { recursive: true });
+    await writeFile(path.join(fixtureRoot, 'content', 'posts', slug, 'README.md'), readme);
+  }
+
+  // 索引缓存 30 秒，这里只断言这些文章能通过 API 取到（不依赖缓存失效时机）。
+  const detail = await request(`/api/posts/cli-${Buffer.from(titles[0]).toString('hex').slice(0, 8)}`);
+  assert.equal(detail.status, 200);
+  const post = await detail.json();
+  assert.equal(post.title, titles[0]);
+});
+
+test('slug 规则在 post 与 sync 两侧一致', () => {
+  for (const slug of ['docker-intro', 'a.b_c-d', 'UPPER']) {
+    assert.equal(isSafeUrl(slug).valid, true, `${slug} 应被接受`);
+    assert.equal(normalizeSlug(slug), slug);
+  }
+  for (const slug of ['中文标题', 'my post', '--no-ai', '..', 'a/b', '']) {
+    assert.equal(isSafeUrl(slug).valid, false, `${slug} 应被拒绝`);
+    assert.equal(normalizeSlug(slug), null, `${slug} 在两侧都应被拒绝`);
+  }
+});
+
+test('时间戳只补进 front matter，且不误判正文里的 date 行', () => {
+  const timestamp = '2025-03-04T05:06:07+08:00';
+
+  const skeleton = '---\ntitle: "标题"\ntags: []\n---\n\n正文\n';
+  const withDate = insertTimestamp(skeleton, timestamp);
+  assert.equal(withDate.updated, true);
+  assert.match(withDate.content, /^---\ntitle: "标题"\ndate: 2025-03-04T05:06:07\+08:00\ntags: \[\]\n---/);
+
+  const already = '---\ntitle: "标题"\ndate: 2020-01-01\n---\n\n正文\n';
+  assert.equal(insertTimestamp(already, timestamp).updated, false);
+  assert.equal(hasFrontMatterDate(already), true);
+
+  // 正文里的 date 行不算，否则真正缺 date 的文章会被跳过
+  const proseDate = '---\ntitle: "标题"\n---\n\n这是正文\ndate: 随便一行\n';
+  assert.equal(hasFrontMatterDate(proseDate), false);
+  assert.equal(insertTimestamp(proseDate, timestamp).updated, true);
+
+  const noFrontMatter = '# 只有正文\n';
+  assert.equal(insertTimestamp(noFrontMatter, timestamp).updated, false);
+  assert.equal(insertTimestamp(noFrontMatter, timestamp).reason, 'missing-front-matter');
 });
 
 test('文章详情和 RSS 可以响应', async () => {
@@ -172,10 +361,25 @@ test('文章详情和 RSS 可以响应', async () => {
   assert.equal(cachedResponse.status, 304);
 });
 
-test('首页随机展示两个项目', async () => {
-  const html = await (await request('/')).text();
-  const projectNames = ['项目一', '项目二', '项目三'].filter((name) => html.includes(name));
+test('首页展示两个项目，且 SSR 与客户端取值一致', async () => {
+  const first = await (await request('/')).text();
+  const second = await (await request('/')).text();
+  const projectNames = ['项目一', '项目二', '项目三'].filter((name) => first.includes(name));
   assert.equal(projectNames.length, 2);
+  // 按日期确定性选取，两次请求必须给出同一组项目，否则水合会不一致。
+  assert.deepEqual(
+    ['项目一', '项目二', '项目三'].filter((name) => second.includes(name)),
+    projectNames,
+  );
+});
+
+test('热力图数据由服务端给出，渲染期不读当前时间', async () => {
+  const html = await (await request('/')).text();
+  // 网格单元格与统计文案都来自 loader，组件不再自行取 new Date()。
+  assert.match(html, /posts-heatmap/);
+  assert.match(html, /过去一年 \d+ 天有更新/);
+  const labelled = [...html.matchAll(/aria-label="(\d+ 篇文章 · [^"]+|无文章 · [^"]+)"/g)];
+  assert.ok(labelled.length > 0, '热力图单元格需要有可访问名称');
 });
 
 test('窄屏首页把职业轨迹收在轨道内，主导航不进顶栏', async () => {

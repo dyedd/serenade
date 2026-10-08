@@ -1,4 +1,5 @@
 import readline from 'readline';
+import { normalizeSlug, slugRuleHint } from './front-matter.js';
 
 const createInterface = () =>
   readline.createInterface({
@@ -87,29 +88,8 @@ const isSafeUrl = (url) => {
     return { valid: false, reason: 'URL不能为空' };
   }
 
-  const hasTraversal =
-    normalizedUrl.includes('..') ||
-    normalizedUrl.includes('/') ||
-    normalizedUrl.includes('\\');
-
-  if (hasTraversal) {
-    return { valid: false, reason: 'URL不能包含路径遍历字符（.. / \\）' };
-  }
-
-  const hasControlChars =
-    normalizedUrl.includes('\0') ||
-    normalizedUrl.includes('\n') ||
-    normalizedUrl.includes('\r');
-
-  if (hasControlChars) {
-    return { valid: false, reason: 'URL不能包含控制字符' };
-  }
-
-  const dangerousChars = ['<', '>', ':', '"', '|', '?', '*'];
-  const invalidChar = dangerousChars.find((char) => normalizedUrl.includes(char));
-
-  if (invalidChar) {
-    return { valid: false, reason: `URL不能包含特殊字符：${invalidChar}` };
+  if (!normalizeSlug(normalizedUrl)) {
+    return { valid: false, reason: `URL ${slugRuleHint}` };
   }
 
   return { valid: true };

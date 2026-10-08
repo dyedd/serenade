@@ -34,8 +34,8 @@ function Command({
 }
 
 function CommandDialog({
-  title = "Command Palette",
-  description = "Search for a command to run...",
+  title = "命令面板",
+  description = "搜索要执行的命令…",
   children,
   className,
   showCloseButton = false,
@@ -48,10 +48,6 @@ function CommandDialog({
 }) {
   return (
     <Dialog {...props}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
       <DialogContent
         className={cn(
           "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
@@ -59,6 +55,12 @@ function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
+        {/* 标题必须在 DialogContent 之内：Radix 的 Root 不产生 DOM 包装，
+            放在外面时对话框没有可访问名，还会常驻在页面 DOM 里。 */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
         {/* cmdk 的 Input/List/Item 必须在 <Command>（store provider）内渲染，
             否则 useSyncExternalStore 订阅 undefined 直接崩溃 */}
         <Command className="size-full">

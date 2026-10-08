@@ -1,9 +1,7 @@
-// Posts filtered by tag. URL-decodes the tag name from the slug.
-// Rows mirror posts._index.tsx: cover thumbnail + mono meta + #tags.
 import { Link } from 'react-router';
 import type { Route } from './+types/tags.$tag';
-import { getPostsByTag } from '~/lib/content/tags';
-import { openingExcerpts } from '~/lib/content/posts';
+import { getPostsByTag, safeDecode } from '~/lib/content/tags';
+import { normalizePage, normalizePageSize, openingExcerpts } from '~/lib/content/posts';
 import { Pagination } from '~/components/Pagination';
 import { pageMeta } from '~/lib/meta';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
@@ -11,7 +9,8 @@ import { FileText } from 'lucide-react';
 import { PageHeader } from '~/components/PageHeader';
 
 export function meta({ params, loaderData }: Route.MetaArgs) {
-  const tag = decodeURIComponent(params.tag);
+  // 参数可能带畸形百分号编码，解码失败时退回原值而不是抛错。
+  const tag = safeDecode(params.tag);
   const posts = loaderData?.posts;
   return pageMeta({
     title: `#${tag}`,
@@ -21,10 +20,11 @@ export function meta({ params, loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  const tag = decodeURIComponent(params.tag);
+  const tag = safeDecode(params.tag);
   const url = new URL(request.url);
-  const page = Number.parseInt(url.searchParams.get('page') ?? '1', 10) || 1;
-  const posts = await getPostsByTag(tag, { page, pageSize: 10 });
+  const page = normalizePage(url.searchParams.get('page'));
+  const pageSize = normalizePageSize(url.searchParams.get('pageSize'), 10);
+  const posts = await getPostsByTag(tag, { page, pageSize });
   const excerpts = await openingExcerpts(posts.data.map((post) => post.path));
   return {
     tag,

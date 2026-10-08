@@ -1,7 +1,3 @@
-// RSS aggregator: client-side fetches every friend's RSS via /api/friends and
-// flattens the per-site results into one timeline sorted by pubDate.
-// Includes 查看更多 paging, a refresh button and the failed-feeds summary
-// panel with friendly error mapping.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, RefreshCw, Rss } from 'lucide-react';
 import { Spinner } from '~/components/ui/spinner';
@@ -39,9 +35,6 @@ interface TimelineArticle extends FeedItem {
   siteUrl: string;
 }
 
-// Single-site fetch: the API returns { results: [siteResult] }; client-side
-// failures (network / HTTP) are converted into the same error shape the API
-// uses so the failed-feeds panel can treat them uniformly.
 async function fetchSite(friend: Friend): Promise<SiteResult> {
   const base: SiteResult = {
     siteName: friend.name,
@@ -65,7 +58,6 @@ async function fetchSite(friend: Friend): Promise<SiteResult> {
   }
 }
 
-// Friendly error mapping for feed fetch failures.
 function formatErrorMessage(raw: string | undefined): string {
   const message = (raw ?? '').trim() || '未知错误';
   const status = message.match(/(?:Status code|HTTP)\s+(\d+)/);
@@ -88,7 +80,6 @@ function formatErrorMessage(raw: string | undefined): string {
   return message;
 }
 
-// Site avatar with initial-letter fallback when the logo fails to load.
 function SiteAvatar({ src, name }: { src: string; name: string }) {
   return (
     <Avatar className="size-10 shrink-0 border border-border">
@@ -100,8 +91,6 @@ function SiteAvatar({ src, name }: { src: string; name: string }) {
   );
 }
 
-// Relative <time> that self-recalibrates every minute. Data here is fetched
-// client-side, so there is no SSR/CSR text mismatch to worry about.
 function RelativeTime({ date }: { date: string }) {
   const label = useRelativeTime(date);
   return <time dateTime={date}>{label}</time>;
@@ -111,7 +100,6 @@ function MomentCard({ article }: { article: TimelineArticle }) {
   return (
     <li>
       <Card className="card-lift h-full p-6 shadow-none">
-      {/* 作者信息 */}
       <div className="mb-3 flex items-center gap-3">
         <SiteAvatar src={article.siteLogo} name={article.siteName} />
         <div className="min-w-0 flex-1">
@@ -130,7 +118,6 @@ function MomentCard({ article }: { article: TimelineArticle }) {
         <Rss className="h-3.5 w-3.5 shrink-0 text-(--brand-line)" aria-hidden />
       </div>
 
-      {/* 文章内容 */}
       <h3 className="mb-1.5 text-base font-bold leading-snug">
         <a
           href={article.link}
@@ -151,7 +138,6 @@ function MomentCard({ article }: { article: TimelineArticle }) {
   );
 }
 
-// RSS 获取失败汇总面板
 function FailedFeedsPanel({ failedFeeds }: { failedFeeds: SiteResult[] }) {
   return (
     <section
@@ -207,21 +193,24 @@ export function RSSAggregator({ friends }: { friends: Friend[] }) {
     };
   }, []);
 
+  // 用 ref 固化首屏入参：friends 若来自父组件的内联数组，引用变化会让 effect
+  // 反复重新拉取所有站点的 RSS。
+  const friendsRef = useRef(friends);
+  friendsRef.current = friends;
+
   const load = useCallback(async () => {
     setIsRefreshing(true);
-    const settled = await Promise.all(friends.map(fetchSite));
+    const settled = await Promise.all(friendsRef.current.map(fetchSite));
     if (mountedRef.current) {
       setResults(settled);
       setIsRefreshing(false);
     }
-  }, [friends]);
+  }, []);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // Flatten per-site results into a single pubDate-desc timeline; per-article
-  // site meta (avatar/name/url) comes from the API's BaseInfo.
   const { articles, failedFeeds, activeSites } = useMemo(() => {
     const list: TimelineArticle[] = [];
     const failed: SiteResult[] = [];
@@ -244,16 +233,30 @@ export function RSSAggregator({ friends }: { friends: Friend[] }) {
   const hasMore = displayed.length < articles.length;
   const initialLoading = results === null;
 
+  // 「加载更多」的延迟定时器要能被刷新和卸载取消：否则 300ms 内点刷新会被
+  // 这个定时器再追加一页，卸载后也会继续改状态。
+  const loadMoreTimerRef = useRef<number | null>(null);
+  const cancelLoadMore = useCallback(() => {
+    if (loadMoreTimerRef.current !== null) {
+      window.clearTimeout(loadMoreTimerRef.current);
+      loadMoreTimerRef.current = null;
+    }
+    setLoadingMore(false);
+  }, []);
+
+  useEffect(() => cancelLoadMore, [cancelLoadMore]);
+
   const refresh = () => {
+    cancelLoadMore();
     setVisibleCount(PAGE_SIZE);
     load();
   };
 
   const loadMore = () => {
     if (loadingMore || !hasMore) return;
-    // 300ms 延迟让"加载中"有反馈，而不是瞬间追加重绘
     setLoadingMore(true);
-    window.setTimeout(() => {
+    loadMoreTimerRef.current = window.setTimeout(() => {
+      loadMoreTimerRef.current = null;
       setVisibleCount((count) => count + PAGE_SIZE);
       setLoadingMore(false);
     }, 300);
@@ -261,7 +264,6 @@ export function RSSAggregator({ friends }: { friends: Friend[] }) {
 
   return (
     <div>
-      {/* 工具栏：状态摘要 + 刷新 */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <p className="mono-meta">
           {initialLoading
@@ -284,7 +286,6 @@ export function RSSAggregator({ friends }: { friends: Friend[] }) {
       </div>
 
       {initialLoading ? (
-        // 加载状态：骨架卡片
         <div className="space-y-5 py-4" aria-label="加载中" role="status">
           {[0, 1, 2].map((i) => (
             <div key={i} className="paper-card p-6 shadow-none">

@@ -1,29 +1,8 @@
-// Posts heatmap: a 14-week × 7-day grid (周日..周六 row labels). Each cell is
-// shaded by how many posts were published that day; days outside the window
-// are transparent. The header row carries the section title on the left and
-// the yearly summary on the right.
-import { useMemo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import type { HeatmapData } from '~/lib/content/heatmap';
 
-interface PostStub {
-  date: string;
-}
-
-interface PostsHeatmapProps {
-  posts: PostStub[];
-  totalCount: number;
-}
-
-const WEEKS_TO_SHOW = 14;
-const SUMMARY_DAYS = 365;
 const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
-function toDateKey(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
-// 0 = no posts, 4 = five or more.
 function levelOf(count: number): number {
   if (count >= 5) return 4;
   if (count >= 3) return 3;
@@ -32,58 +11,14 @@ function levelOf(count: number): number {
   return 0;
 }
 
-function buildTitle(count: number, date: Date): string {
-  const label = date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
-  return count === 0 ? `无文章 · ${label}` : `${count} 篇文章 · ${label}`;
-}
-
-export function PostsHeatmap({ posts, totalCount }: PostsHeatmapProps) {
-  const { weeks, yearActiveDays } = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of posts) {
-      if (!p.date) continue;
-      const d = new Date(p.date);
-      if (Number.isNaN(d.getTime())) continue;
-      const key = toDateKey(d);
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    // 年度统计与网格窗口分开算：摘要按近一年，网格按最近 14 周。
-    let yearActiveDays = 0;
-    for (let offset = 0; offset < SUMMARY_DAYS; offset += 1) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - offset);
-      if ((counts.get(toDateKey(date)) ?? 0) > 0) yearActiveDays += 1;
-    }
-
-    const rangeStart = new Date(today);
-    rangeStart.setDate(rangeStart.getDate() - (WEEKS_TO_SHOW * 7 - 1));
-    // Align the grid to full weeks: back to Sunday, forward to Saturday.
-    const gridStart = new Date(rangeStart);
-    gridStart.setDate(gridStart.getDate() - gridStart.getDay());
-
-    const weekCount = Math.ceil(((today.getTime() - gridStart.getTime()) / 86_400_000 + 1) / 7);
-    const weeks: Array<Array<{ count: number; title: string } | null>> = [];
-
-    for (let w = 0; w < weekCount; w += 1) {
-      const week: Array<{ count: number; title: string } | null> = [];
-      for (let d = 0; d < 7; d += 1) {
-        const date = new Date(gridStart);
-        date.setDate(gridStart.getDate() + w * 7 + d);
-        if (date < rangeStart || date > today) {
-          week.push(null);
-          continue;
-        }
-        const count = counts.get(toDateKey(date)) ?? 0;
-        week.push({ count, title: buildTitle(count, date) });
-      }
-      weeks.push(week);
-    }
-
-    return { weeks, yearActiveDays };
-  }, [posts]);
+export function PostsHeatmap({
+  data,
+  totalCount,
+}: {
+  data: HeatmapData;
+  totalCount: number;
+}) {
+  const { weeks, yearActiveDays } = data;
 
   return (
     <div>
@@ -107,8 +42,10 @@ export function PostsHeatmap({ posts, totalCount }: PostsHeatmapProps) {
                 day ? (
                   <Tooltip key={`${wi}-${di}`}>
                     <TooltipTrigger asChild>
-                      <span
-                        className={`block h-[14px] w-auto ${day.count > 0 ? 'heatmap-cell-active' : 'heatmap-cell-empty'}`}
+                      <button
+                        type="button"
+                        aria-label={day.title}
+                        className={`block h-[14px] w-auto cursor-default appearance-none border-0 p-0 ${day.count > 0 ? 'heatmap-cell-active' : 'heatmap-cell-empty'}`}
                         style={day.count > 0 ? { opacity: 0.45 + levelOf(day.count) * 0.14 } : undefined}
                       />
                     </TooltipTrigger>

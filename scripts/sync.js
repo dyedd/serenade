@@ -1,4 +1,4 @@
-import { execSync, execFileSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -11,7 +11,8 @@ import {
   promptRequired,
   question,
 } from './prompt-helper.js';
-import { postsDir, projectRoot } from './content-helper.js';
+import { columnsDir, postsDir, projectRoot } from './content-helper.js';
+import { hasFrontMatterDate, insertTimestamp, normalizeSlug, slugRuleHint } from './front-matter.js';
 
 const SERVER_HOST = process.env.SERVER_HOST;
 const SERVER_USER = process.env.SERVER_USER;
@@ -150,12 +151,8 @@ const normalizeContentEntryName = (value, label) => {
     return null;
   }
 
-  const hasPathSeparator = /[\\/]/.test(name);
-  const isDotPath = name === '.' || name === '..';
-  const hasInvalidCharacter = !/^[A-Za-z0-9._-]+$/.test(name);
-
-  if (hasPathSeparator || isDotPath || path.isAbsolute(name) || hasInvalidCharacter) {
-    console.error(`❌ 错误：${label}URL名称只能包含字母、数字、点号、短横线或下划线`);
+  if (!normalizeSlug(name)) {
+    console.error(`❌ 错误：${label}URL名称${slugRuleHint}`);
     return null;
   }
 
@@ -187,79 +184,67 @@ const resolveContentEntryDirectory = (type, rawName, label) => {
   return { urlName, entryPath };
 };
 
+// 保留时区偏移，避免 YAML 按 UTC 解析本地时间。
 const getCurrentTimestamp = () => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const pad = (value) => String(value).padStart(2, '0');
+  const offsetMinutes = -now.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const offsetHours = pad(Math.floor(Math.abs(offsetMinutes) / 60));
+  const offsetRemainder = pad(Math.abs(offsetMinutes) % 60);
 
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  return [
+    `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+    `T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+    `${sign}${offsetHours}:${offsetRemainder}`,
+  ].join('');
 };
 
-const insertTimestamp = (content, timestamp) => {
-  const updatedContent = content.replace(
-    /^(---\s*\ntitle:[^\n]+\s*\n)/m,
-    `$1date: ${timestamp}\n`
-  );
-
-  if (content !== updatedContent) {
-    return { updated: true, content: updatedContent };
-  } else {
-    return { updated: false, content };
-  }
-};
-
-const updateReadmeFiles = (dir, timestamp) => {
-  if (!fs.existsSync(dir)) {
-    return 0;
-  } else {
-    const items = fs.readdirSync(dir, { withFileTypes: true });
-
-    return items.reduce((count, item) => {
-      if (item.isDirectory()) {
-        const readmePath = path.join(dir, item.name, 'README.md');
-
-        if (fs.existsSync(readmePath)) {
-          const content = fs.readFileSync(readmePath, 'utf8');
-          const hasDate = /^date:\s*.+$/m.test(content);
-
-          if (!hasDate) {
-            const result = insertTimestamp(content, timestamp);
-
-            if (result.updated) {
-              fs.writeFileSync(readmePath, result.content, 'utf8');
-              const relativePath = path.relative(projectRoot, readmePath);
-              console.log(`  📝 ${relativePath}`);
-              return count + 1;
-            } else {
-              return count;
-            }
-          } else {
-            return count;
-          }
-        } else {
-          return count;
-        }
-      } else {
-        return count;
-      }
-    }, 0);
-  }
+const collectReadmeFiles = (dir) => {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((item) => item.isDirectory())
+    .map((item) => path.join(dir, item.name, 'README.md'))
+    .filter((readmePath) => fs.existsSync(readmePath));
 };
 
 const updateTimestamps = () => {
   console.log('🔍 检查并添加缺失的时间戳...');
   const timestamp = getCurrentTimestamp();
+  const readmeFiles = [
+    ...collectReadmeFiles(postsDir),
+    ...collectReadmeFiles(columnsDir),
+  ];
 
-  const updatedPosts = updateReadmeFiles(postsDir, timestamp);
-  const updatedCount = updatedPosts;
+  let updatedCount = 0;
+  const skipped = [];
+
+  for (const readmePath of readmeFiles) {
+    const content = fs.readFileSync(readmePath, 'utf8');
+    if (hasFrontMatterDate(content)) continue;
+
+    const result = insertTimestamp(content, timestamp);
+    const relativePath = path.relative(projectRoot, readmePath);
+
+    if (result.updated) {
+      fs.writeFileSync(readmePath, result.content, 'utf8');
+      console.log(`  📝 ${relativePath}`);
+      updatedCount += 1;
+    } else {
+      // 缺 front matter 这类文件无法自动补，必须如实报出来而不是算作「已完成」。
+      skipped.push(relativePath);
+    }
+  }
 
   if (updatedCount > 0) {
     console.log(`✅ 已为 ${updatedCount} 个文件添加时间戳: ${timestamp}`);
-  } else {
+  }
+  if (skipped.length > 0) {
+    console.warn(`⚠️ ${skipped.length} 个文件缺少 front matter，无法自动添加时间戳：`);
+    for (const file of skipped) console.warn(`  ${file}`);
+  }
+  if (updatedCount === 0 && skipped.length === 0) {
     console.log('✅ 所有文件都已有时间戳');
   }
 
@@ -270,35 +255,33 @@ const ensureReadmeTimestamp = (readmePath) => {
   if (!fs.existsSync(readmePath)) {
     console.log('ℹ️ 未找到 README.md，跳过时间戳');
     return false;
-  } else {
-    const content = fs.readFileSync(readmePath, 'utf8');
-    const hasDate = /^date:\s*.+$/m.test(content);
-
-    if (hasDate) {
-      console.log('ℹ️ 已存在时间戳，保持不变');
-      return false;
-    } else {
-      const timestamp = getCurrentTimestamp();
-      const result = insertTimestamp(content, timestamp);
-
-      if (result.updated) {
-        fs.writeFileSync(readmePath, result.content, 'utf8');
-        console.log(`✅ 已添加时间戳: ${timestamp}`);
-        return true;
-      } else {
-        console.log('ℹ️ 未找到可插入的位置，跳过时间戳');
-        return false;
-      }
-    }
   }
+
+  const content = fs.readFileSync(readmePath, 'utf8');
+  if (hasFrontMatterDate(content)) {
+    console.log('ℹ️ 已存在时间戳，保持不变');
+    return false;
+  }
+
+  const timestamp = getCurrentTimestamp();
+  const result = insertTimestamp(content, timestamp);
+
+  if (!result.updated) {
+    console.warn('⚠️ 未找到 front matter，跳过时间戳');
+    return false;
+  }
+
+  fs.writeFileSync(readmePath, result.content, 'utf8');
+  console.log(`✅ 已添加时间戳: ${timestamp}`);
+  return true;
 };
 
-const runSyncCommand = ({ windowsCommand, unixCommand, successMessage, errorMessage }) => {
+const runSyncCommand = ({ windowsArgs, unixArgs, successMessage, errorMessage }) => {
   try {
     if (isWindows) {
-      execSync(windowsCommand, { stdio: 'inherit', shell: true });
+      execFileSync('scp', windowsArgs, { stdio: 'inherit' });
     } else {
-      execSync(unixCommand, { stdio: 'inherit' });
+      execFileSync('rsync', unixArgs, { stdio: 'inherit' });
     }
     console.log(successMessage);
     return true;
@@ -324,8 +307,9 @@ const syncContent = () => {
     const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/`;
 
     return runSyncCommand({
-      windowsCommand: `scp -r "${contentPath}/*" "${target}"`,
-      unixCommand: `rsync -avz --delete "${contentPath}/" "${target}"`,
+      // 数组参数绕过 shell；整目录同步才允许删除远端多余文件。
+      windowsArgs: ['-r', `${contentPath}\\*`, target],
+      unixArgs: ['-avz', '--delete', `${contentPath}/`, target],
       successMessage: '✅ 内容同步完成',
       errorMessage: '❌ 内容同步失败:',
     });
@@ -333,6 +317,7 @@ const syncContent = () => {
     return false;
   }
 };
+
 
 const syncContentEntry = ({ type, urlName, label }) => {
   const entry = resolveContentEntryDirectory(type, urlName, label);
@@ -356,8 +341,9 @@ const syncContentEntry = ({ type, urlName, label }) => {
   const target = `${SERVER_USER}@${SERVER_HOST}:${remoteDir}/`;
 
   return runSyncCommand({
-    windowsCommand: `scp -r "${entry.entryPath}" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/${type}/"`,
-    unixCommand: `rsync -avz --delete "${entry.entryPath}/" "${target}"`,
+    // 单篇同步不删除远端同目录的其他文件。
+    windowsArgs: ['-r', entry.entryPath, target],
+    unixArgs: ['-avz', `${entry.entryPath}/`, target],
     successMessage: `✅ ${label}同步完成`,
     errorMessage: `❌ ${label}同步失败:`,
   });
@@ -366,7 +352,7 @@ const syncContentEntry = ({ type, urlName, label }) => {
 const syncPost = (urlName) => syncContentEntry({ type: 'posts', urlName, label: '文章' });
 
 const syncJsonFile = (fileName) => {
-  const validFiles = ['friends.json', 'projects.json', 'collections.json'];
+  const validFiles = ['friends.json', 'projects.json', 'collections.json', 'career.json'];
 
   if (!validFiles.includes(fileName)) {
     console.error(`❌ 错误：只支持同步 ${validFiles.join(', ')}`);
@@ -382,8 +368,8 @@ const syncJsonFile = (fileName) => {
       const target = `${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}/content/${fileName}`;
 
       return runSyncCommand({
-        windowsCommand: `scp "${filePath}" "${target}"`,
-        unixCommand: `rsync -avz "${filePath}" "${target}"`,
+        windowsArgs: [filePath, target],
+        unixArgs: ['-avz', filePath, target],
         successMessage: '✅ 文件同步完成',
         errorMessage: '❌ 文件同步失败:',
       });

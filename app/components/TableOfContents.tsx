@@ -1,6 +1,3 @@
-// Table of Contents: receives pre-parsed entries (computed server-side in
-// the route loader so SSR HTML is complete and SEO-friendly). Highlights the
-// active section via IntersectionObserver on the client.
 import { useEffect, useState } from 'react';
 
 export interface TocEntry {
@@ -27,7 +24,6 @@ export function TableOfContents({
       (records) => {
         const visible = records.filter((r) => r.isIntersecting);
         if (visible.length > 0) {
-          // Pick the topmost visible heading.
           const top = visible.reduce((a, b) =>
             a.boundingClientRect.top < b.boundingClientRect.top ? a : b
           );
@@ -54,7 +50,9 @@ export function TableOfContents({
           <li key={e.id}>
             <a
               href={`#${e.id}`}
-              className="group/item flex items-center"
+              // 键盘聚焦时也要展开文字：只绑 hover 的话 Tab 过去什么都看不到。
+              className="group/item flex items-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--brand)"
+              aria-current={active === e.id ? 'true' : undefined}
               onClick={(ev) => {
                 ev.preventDefault();
                 const el = document.getElementById(e.id);
@@ -69,7 +67,7 @@ export function TableOfContents({
                 <span
                   aria-hidden
                   className={[
-                    'w-12 shrink-0 rounded-sm transition-all duration-200 ease group-hover/toc:w-0 group-hover/toc:opacity-0',
+                    'w-12 shrink-0 rounded-sm transition-all duration-200 ease group-hover/toc:w-0 group-hover/toc:opacity-0 group-focus-within/toc:w-0 group-focus-within/toc:opacity-0',
                     active === e.id ? 'h-[3px] bg-black' : 'h-px bg-black/20',
                   ].join(' ')}
                 />
@@ -79,8 +77,12 @@ export function TableOfContents({
                   'overflow-hidden whitespace-nowrap font-heading text-sm leading-snug transition-all duration-200 ease',
                   showLabels
                     ? 'max-w-56 opacity-100'
-                    : 'max-w-0 opacity-0 group-hover/toc:max-w-56 group-hover/toc:opacity-100',
-                  e.level === 3 ? 'group-hover/toc:pl-3' : e.level === 4 ? 'group-hover/toc:pl-6' : '',
+                    : 'max-w-0 opacity-0 group-hover/toc:max-w-56 group-hover/toc:opacity-100 group-focus-within/toc:max-w-56 group-focus-within/toc:opacity-100',
+                  e.level === 3
+                    ? 'group-hover/toc:pl-3 group-focus-within/toc:pl-3'
+                    : e.level === 4
+                      ? 'group-hover/toc:pl-6 group-focus-within/toc:pl-6'
+                      : '',
                   showLabels && e.level === 3 ? 'pl-3' : '',
                   showLabels && e.level === 4 ? 'pl-6' : '',
                   active === e.id

@@ -1,4 +1,3 @@
-// Search dialog over /api/posts/search. Opened from the nav button or Ctrl/⌘+Shift+K.
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Search as SearchIcon } from 'lucide-react';
@@ -82,6 +81,7 @@ export function SearchBox({ open, onOpenChange }: { open: boolean; onOpenChange:
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="搜索文章、标签…"
+            aria-label="搜索文章"
             className="h-11 border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
             autoComplete="off"
             autoFocus

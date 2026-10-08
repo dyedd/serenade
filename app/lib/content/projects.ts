@@ -1,4 +1,3 @@
-// Projects: read content/projects.json, paginate by category or "all".
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { asOptionalString, asRecord, asString, asStringArray, parseJson } from './validation';
@@ -65,18 +64,21 @@ async function readProjects(): Promise<ProjectsData> {
   });
 }
 
-export async function listRandomProjects() {
+// 首页「随便看看」用的两个项目。按日期轮换而不是 Math.random()：随机值在 SSR
+// 与客户端水合时会给出不同结果，React 会报水合不一致。
+export async function listRandomProjects(now = new Date()) {
   const data = await readProjects();
   const projects = Object.entries(data.categories)
     .flatMap(([categoryKey, cat]) =>
-      cat.projects
-        .map((p) => ({ ...p, categoryKey, categoryName: cat.name }))
+      cat.projects.map((p) => ({ ...p, categoryKey, categoryName: cat.name }))
     );
-  for (let index = projects.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [projects[index], projects[randomIndex]] = [projects[randomIndex], projects[index]];
-  }
-  return projects.slice(0, 2);
+  if (projects.length === 0) return [];
+
+  const start = Math.floor(now.getTime() / 86_400_000) % projects.length;
+  return Array.from(
+    { length: Math.min(2, projects.length) },
+    (_, offset) => projects[(start + offset) % projects.length]
+  );
 }
 
 export async function listProjectCategories() {
@@ -91,11 +93,11 @@ export async function listProjectCategories() {
 
 export async function listProjects(options: {
   page?: number;
-  pageSize?: number;
+  pageSize: number;
   category?: string;
-} = {}) {
+}) {
   const page = options.page ?? 1;
-  const pageSize = options.pageSize ?? (options.category ? 10 : 6);
+  const pageSize = Math.max(1, Math.floor(options.pageSize));
   const data = await readProjects();
 
   if (!options.category) {
@@ -104,7 +106,12 @@ export async function listProjects(options: {
     ).flatMap(([catKey, catData]) =>
       catData.projects.map((p) => ({ ...p, categoryKey: catKey, categoryName: catData.name }))
     );
-    all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // 日期相同时用名称兜底，保证分页顺序稳定。
+    all.sort(
+      (a, b) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime() ||
+        a.name.localeCompare(b.name, 'zh-CN')
+    );
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
     return {

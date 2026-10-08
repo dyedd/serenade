@@ -1,4 +1,3 @@
-// Career path as a quiet list. A hairline marks the column.
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { CareerItem } from '~/lib/content/career';
@@ -7,24 +6,10 @@ export function CareerTrack({ items }: { items: readonly CareerItem[] }) {
   const [expanded, setExpanded] = useState(false);
   const hasMore = items.length > 3;
   const nodes = expanded ? items : items.slice(0, 3);
-  const spoken = nodes
-    .map((n) => [n.org, n.role, n.period, n.note].filter(Boolean).join('，'))
-    .join('。');
-
-  const blockCopy = (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-  };
 
   return (
     <div className="career-track-wrap">
-      <p className="sr-only">{spoken}</p>
-      <ol
-        id="career-list"
-        className="career-track"
-        onCopy={blockCopy}
-        onCut={blockCopy}
-        onContextMenu={blockCopy}
-      >
+      <ol id="career-list" className="career-track">
         {nodes.map((row) => (
           <li
             key={`${row.org}-${row.role}-${row.period}`}

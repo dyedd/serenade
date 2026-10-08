@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { ChevronDown } from 'lucide-react';
 import type { Route } from './+types/home';
 import { listPostDates, listPosts, openingExcerpts } from '~/lib/content/posts';
+import { buildHeatmap } from '~/lib/content/heatmap';
 import { listTags } from '~/lib/content/tags';
 import { loadCareer } from '~/lib/content/career';
 import { listRandomProjects, type ProjectEntry } from '~/lib/content/projects';
@@ -36,7 +37,8 @@ export async function loader() {
     career,
     projects,
     tags,
-    dates,
+    heatmap: buildHeatmap(dates),
+    postCount: dates.length,
   };
 }
 
@@ -63,7 +65,7 @@ function sectionTitle(id: string, title: string, href: string, action: string) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { profile, socialLinks } = siteConfig;
-  const { posts, career, projects, tags, dates } = loaderData;
+  const { posts, career, projects, tags, heatmap, postCount } = loaderData;
   const sortedTags = Object.entries(tags).sort((a, b) => b[1] - a[1]).slice(0, 24);
   const [statsOpen, setStatsOpen] = useState(false);
 
@@ -227,7 +229,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
         <div id="post-stats" hidden={!statsOpen} className="mb-4 paper-card p-6 shadow-none">
-          <PostsHeatmap posts={dates.map((date) => ({ date }))} totalCount={dates.length} />
+          <PostsHeatmap data={heatmap} totalCount={postCount} />
         </div>
         {posts.length === 0 ? (
           <p className="paper-card p-6 text-sm text-black/60 shadow-none">暂无最新文章</p>

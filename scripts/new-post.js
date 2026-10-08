@@ -5,6 +5,7 @@ import {
   postsDir,
   resolveContentUrl,
 } from './content-helper.js';
+import { quoteYamlString } from './front-matter.js';
 import {
   closeInterface,
   createInterface,
@@ -19,8 +20,17 @@ const parseOptions = (args) => {
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--slug') {
-      options.slug = args[index + 1] ?? '';
-      index += 1;
+      const next = args[index + 1];
+      // 只有下一个参数确实是一个值时才算 slug；否则 --slug 会吞掉 --no-ai 这类开关，
+      // 静默建出名为 --no-ai 的目录。
+      if (typeof next === 'string' && next.length > 0 && !next.startsWith('-')) {
+        options.slug = next;
+        index += 1;
+      } else {
+        exitWithError('❌ 错误：--slug 后面需要跟一个 URL 路径', {
+          usage: '用法: pnpm cli post "标题" --slug my-post-slug [--no-ai] [--no-cover]',
+        });
+      }
     } else if (arg === '--no-ai') {
       options.noAi = true;
     } else if (arg === '--no-cover') {
@@ -45,8 +55,10 @@ const resolveTitle = async (rl, titleArg) => {
   return promptRequired(rl, '👉 请输入文章标题: ', '❌ 错误：文章标题不能为空');
 };
 
+// 标题按 YAML 双引号标量写出：含冒号、方括号、引号或换行的标题都不会破坏
+// front matter（过去会写出 gray-matter 无法解析的文件，文章页直接报错）。
 const buildReadmeContent = (title) => `---
-title: ${title}
+title: ${quoteYamlString(title)}
 tags: []
 ---
 
@@ -92,7 +104,13 @@ export async function createPost(args = []) {
     const readmePath = path.join(newPostDir, 'README.md');
 
     fs.mkdirSync(newPostDir, { recursive: true });
-    writeReadmeFile(readmePath, title);
+    try {
+      writeReadmeFile(readmePath, title);
+    } catch (error) {
+      // 写失败时把空目录收掉：残留的目录会让下次同 slug 创建被判定为「已存在」。
+      fs.rmSync(newPostDir, { recursive: true, force: true });
+      throw error;
+    }
 
     console.log('');
     console.log('✅ 文章创建成功！');

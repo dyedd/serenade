@@ -1,9 +1,8 @@
-// Projects page: lists all projects grouped by category, supports pagination
-// and category filtering via ?category= key.
 import { Link } from 'react-router';
 import type { Route } from './+types/projects';
 import { Calendar } from 'lucide-react';
-import { listProjects, listProjectCategories, type ProjectEntry } from '~/lib/content/projects';
+import { listProjects, listProjectCategories } from '~/lib/content/projects';
+import { readPageParams } from '~/lib/content/posts';
 import { siteConfig } from '~/lib/site-config';
 import { pageMeta } from '~/lib/meta';
 import { Badge } from '~/components/ui/badge';
@@ -18,9 +17,8 @@ export function meta(_: Route.MetaArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const page = Number.parseInt(url.searchParams.get('page') ?? '1', 10) || 1;
-  const pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '6', 10) || 6;
   const category = url.searchParams.get('category') ?? undefined;
+  const { page, pageSize } = readPageParams(url.searchParams, category ? 10 : 6);
   const [data, categories] = await Promise.all([
     listProjects({ page, pageSize, category }),
     listProjectCategories(),
@@ -30,8 +28,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
   const { data, categories } = loaderData;
-  const projects = data.data.projects as Array<ProjectEntry & { categoryName?: string }>;
-  // "全部"视图下 loader 会给每个项目附带 categoryName，用于卡片分类徽章
+  const projects = data.data.projects;
   const isAllView = data.category === 'all';
 
   return (
@@ -90,30 +87,37 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
             const cover: string | undefined = p.cover;
             const name: string = p.name;
             const description: string = p.description ?? '';
-            // projects.json 里 date 是 ISO 日期串，直接取 yyyy-MM-dd
             const dateText = typeof p.date === 'string' ? p.date.slice(0, 10) : '';
+            const coverImage = cover ? (
+              <img
+                src={cover}
+                alt={name}
+                width={640}
+                height={360}
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                className="h-full w-full object-cover"
+              />
+            ) : null;
             return (
               <li key={name + dateText}>
                 <Card className="card-lift group flex h-full flex-col gap-0 overflow-hidden py-0 shadow-none">
-                {cover ? (
-                  <a
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-discover="false"
-                    className="block aspect-video overflow-hidden bg-muted"
-                  >
-                    <img
-                      src={cover}
-                      alt={name}
-                      width={640}
-                      height={360}
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                      className="h-full w-full object-cover"
-                    />
-                  </a>
+                {coverImage ? (
+                  link ? (
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-discover="false"
+                      className="block aspect-video overflow-hidden bg-muted"
+                    >
+                      {coverImage}
+                    </a>
+                  ) : (
+                    // 没有链接时渲染成容器而不是空 href 的 <a>，否则键盘可聚焦却点不动。
+                    <div className="block aspect-video overflow-hidden bg-muted">{coverImage}</div>
+                  )
                 ) : null}
                 <div className="flex flex-1 flex-col gap-2 p-6">
                   {isAllView && p.categoryName ? (
