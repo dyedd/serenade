@@ -28,4 +28,4 @@ services:
       SITE_QQ_URL: ${SITE_QQ_URL:-}
       SITE_FOOTER_ICP_LABEL: ${SITE_FOOTER_ICP_LABEL:-}
     volumes:
-      - ./content:/app/content:ro
+      - ./content:/app/content
