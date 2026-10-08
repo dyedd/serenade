@@ -7,7 +7,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "node --env-file-if-exists=.env node_modules/@react-router/serve/bin.cjs ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "test": "pnpm build && node --test scripts/app.test.js",
     "verify": "pnpm typecheck && pnpm test && pnpm build:static",

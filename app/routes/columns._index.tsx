@@ -1,7 +1,7 @@
-// Column list with chapter counts.
 import type { Route } from './+types/columns._index';
 import { BookOpen } from 'lucide-react';
 import { listColumns } from '~/lib/content/columns';
+import { readPageParams } from '~/lib/content/posts';
 import { Pagination } from '~/components/Pagination';
 import { ColumnCard } from '~/components/columns/ColumnCard';
 import { pageMeta } from '~/lib/meta';
@@ -14,7 +14,7 @@ export function meta(_: Route.MetaArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const page = Number.parseInt(url.searchParams.get('page') ?? '1', 10) || 1;
+  const { page } = readPageParams(url.searchParams);
   return listColumns({ page, pageSize: 12 });
 }
 

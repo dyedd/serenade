@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const projectRoot = path.join(__dirname, '..');
 const postsDir = path.join(projectRoot, 'content', 'posts');
+const columnsDir = path.join(projectRoot, 'content', 'columns');
 
 const toSafeFilename = (rawName) => String(rawName ?? '').replace(/[^a-zA-Z0-9_-]/g, '-');
 
@@ -200,6 +201,7 @@ const maybeGenerateCover = async (rl, title, targetDir, skip = false) => {
 export {
   projectRoot,
   postsDir,
+  columnsDir,
   toSafeFilename,
   isExistingDirectory,
   isExistingMarkdownFile,

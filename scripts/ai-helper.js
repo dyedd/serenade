@@ -1,7 +1,9 @@
 import path from 'path';
 
 const API_KEY = process.env.OPENAI_API_KEY;
-const BASE_URL = process.env.OPENAI_BASE_URL ?? 'https://aiping.cn/api/v1';
+// 默认值与 .env.example / README 保持一致：没显式配置时不该把标题和密钥
+// 悄悄发往第三方中转地址。
+const BASE_URL = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
 
 const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
@@ -139,7 +141,16 @@ const getResponseErrorMessage = (response, bodyText) => {
 
   if (bodyPreview) {
     const contentType = response.headers.get('content-type') ?? '';
-    const responseUrl = response.url ? `；URL: ${response.url}` : '';
+    // 只保留主机与路径：BASE_URL 里若带 user:token 形式的凭据，不该进日志。
+  const responseUrl = (() => {
+    if (!response.url) return '';
+    try {
+      const parsed = new URL(response.url);
+      return `；URL: ${parsed.origin}${parsed.pathname}`;
+    } catch {
+      return '';
+    }
+  })();
     const contentTypeInfo = contentType ? `；Content-Type: ${contentType}` : '';
 
     return `${bodyPreview}${responseUrl}${contentTypeInfo}`;
@@ -152,11 +163,15 @@ const getResponseErrorMessage = (response, bodyText) => {
   return `HTTP ${response.status}`;
 };
 
+const AI_REQUEST_TIMEOUT_MS = 60_000;
+
 const requestJson = async (url, body, apiKey, errorPrefix) => {
   const response = await fetch(url, {
     method: 'POST',
     headers: buildHeaders(apiKey),
     body: JSON.stringify(body),
+    // 没有超时的话，对端不响应会让 CLI 永久挂住。
+    signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
   });
 
   const responseText = await response.text();
@@ -289,12 +304,14 @@ const extractImagePayloadFromObject = (value) => {
     return null;
   }
 
+  // 顺序很重要：url 要先于 base64 判断。`{ result: "https://…/a.png" }` 若先走
+  // base64 分支，会把这段 URL 文本当 base64 解码，写出一张损坏的封面图。
   return (
     imagePayloadFromBase64(value.b64_json) ??
     imagePayloadFromValue(value.url) ??
     imagePayloadFromValue(value.image_url) ??
-    imagePayloadFromBase64(value.result) ??
-    imagePayloadFromValue(value.result)
+    imagePayloadFromValue(value.result) ??
+    imagePayloadFromBase64(value.result)
   );
 };
 
@@ -330,23 +347,69 @@ const extractImagePayload = (data) => {
   return extractImagePayloadFromObject(parsedContent) ?? imagePayloadFromValue(chatContent);
 };
 
+// 图片来源于模型返回的文本/JSON，不能无条件信任：限制协议、类型与体积，
+// 超时兜底，避免把任意地址的内容（或超大文件）写进文章目录。
+const IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+const IMAGE_FETCH_TIMEOUT_MS = 30_000;
+
+const decodeBase64Image = (value) => {
+  const cleaned = String(value ?? '').replace(/\s/g, '');
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(cleaned) || cleaned.length % 4 !== 0) {
+    throw new Error('返回的 base64 图片数据不合法');
+  }
+  const buffer = Buffer.from(cleaned, 'base64');
+  if (buffer.byteLength === 0) {
+    throw new Error('返回的 base64 图片数据为空');
+  }
+  if (buffer.byteLength > IMAGE_MAX_BYTES) {
+    throw new Error(`图片超过 ${IMAGE_MAX_BYTES / 1024 / 1024}MB 上限`);
+  }
+  return buffer;
+};
+
+const downloadImage = async (rawUrl) => {
+  let url;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    throw new Error(`图片地址无效: ${rawUrl}`);
+  }
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new Error(`不支持的图片地址协议: ${url.protocol}`);
+  }
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(IMAGE_FETCH_TIMEOUT_MS) });
+  if (!response.ok) {
+    throw new Error(`下载图片失败: ${response.status} ${response.statusText}`);
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.startsWith('image/')) {
+    throw new Error(`图片地址返回的不是图片: ${contentType || '未知类型'}`);
+  }
+
+  const declaredLength = Number.parseInt(response.headers.get('content-length') ?? '', 10);
+  if (Number.isFinite(declaredLength) && declaredLength > IMAGE_MAX_BYTES) {
+    throw new Error(`图片超过 ${IMAGE_MAX_BYTES / 1024 / 1024}MB 上限`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.byteLength > IMAGE_MAX_BYTES) {
+    throw new Error(`图片超过 ${IMAGE_MAX_BYTES / 1024 / 1024}MB 上限`);
+  }
+  return buffer;
+};
+
 const writeImageFile = async (payload, targetPath) => {
   const { writeFileSync } = await import('fs');
 
   if (payload.kind === 'base64') {
-    writeFileSync(targetPath, Buffer.from(payload.value, 'base64'));
+    writeFileSync(targetPath, decodeBase64Image(payload.value));
     return;
   }
 
   if (payload.kind === 'url') {
-    const imageResponse = await fetch(payload.value);
-
-    if (!imageResponse.ok) {
-      throw new Error(`下载图片失败: ${imageResponse.status} ${imageResponse.statusText}`);
-    }
-
-    const buffer = await imageResponse.arrayBuffer();
-    writeFileSync(targetPath, Buffer.from(buffer));
+    writeFileSync(targetPath, await downloadImage(payload.value));
     return;
   }
 

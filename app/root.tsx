@@ -9,7 +9,7 @@ import {
 } from "react-router";
 import type { Route } from "./+types/root";
 import { pageMeta } from "~/lib/meta";
-import { siteConfig } from "~/lib/site-config";
+import { SITE_CONFIG_GLOBAL, serializeSiteConfig, siteConfig } from "~/lib/site-config";
 import "./app.css";
 import "./hljs-dark.css";
 
@@ -31,6 +31,10 @@ const themeScript = `
 })();
 `;
 
+// 站点配置在服务端按请求解析，这里把结果注入 HTML，浏览器端据此读取。
+// 必须排在模块脚本之前执行，客户端组件才不会拿到占位值。
+const siteConfigScript = `window.${SITE_CONFIG_GLOBAL}=${serializeSiteConfig()};`;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang={siteConfig.lang} suppressHydrationWarning>
@@ -41,6 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <script dangerouslySetInnerHTML={{ __html: siteConfigScript }} />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Meta />
         <Links />

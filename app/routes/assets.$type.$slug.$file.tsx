@@ -1,12 +1,12 @@
-// GET /api/assets/:type/:slug/:file
-// Streams files from content/<type>/<slug>/<file> with correct Content-Type.
-// Used by markdown images whose src was rewritten to /assets/<type>/<slug>/<file>.
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import type { Route } from './+types/assets.$type.$slug.$file';
+import { toPosixPath } from '~/lib/content/posts';
 
 const CONTENT_ROOT = path.join(process.cwd(), 'content');
 
+// 只允许图片扩展名：这个路由是公开可预测地址，不加白名单就等于把 content/ 下
+// 任何可预测路径（friends.json 等）变成可下载文件。
 const MIME: Record<string, string> = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
@@ -18,26 +18,53 @@ const MIME: Record<string, string> = {
   '.avif': 'image/avif',
 };
 
-export async function loader({ params }: Route.LoaderArgs) {
-  const filePath = path.join(CONTENT_ROOT, params.type, params.slug, params.file);
+const ASSET_TYPES = new Set(['posts', 'columns']);
 
-  // Path traversal guard: ensure resolved path stays inside CONTENT_ROOT.
+export async function loader({ params }: Route.LoaderArgs) {
+  const { type, slug, file } = params;
+
+  // react-router 会把 %2F 还原成分隔符，所以这里必须挡掉路径片段。
+  const hasTraversal =
+    [type, slug, file].some(
+      (segment) =>
+        !segment ||
+        segment !== path.basename(segment) ||
+        segment.includes('/') ||
+        segment.includes('\\')
+    );
+  if (hasTraversal || !ASSET_TYPES.has(type)) {
+    throw new Response('Forbidden', { status: 403 });
+  }
+
+  const ext = path.extname(file).toLowerCase();
+  if (!MIME[ext]) {
+    throw new Response('Forbidden', { status: 403 });
+  }
+
+  const filePath = path.join(CONTENT_ROOT, type, slug, file);
+
+  // 路径穿越兜底：解析后的路径必须仍在 CONTENT_ROOT 之内。
   const resolved = path.resolve(filePath);
-  if (!resolved.startsWith(path.resolve(CONTENT_ROOT) + path.sep)) {
+  if (!toPosixPath(resolved).startsWith(`${toPosixPath(path.resolve(CONTENT_ROOT))}/`)) {
     throw new Response('Forbidden', { status: 403 });
   }
 
   try {
     const buffer = await fs.readFile(resolved);
-    const ext = path.extname(resolved).toLowerCase();
-    const contentType = MIME[ext] ?? 'application/octet-stream';
     return new Response(buffer, {
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': MIME[ext],
+        'Content-Length': String(buffer.byteLength),
+        // 地址由 type/slug/file 唯一确定，内容变更会改变文件名之外的引用关系。
         'Cache-Control': 'public, max-age=31536000, immutable',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
-  } catch {
-    throw new Response('Not Found', { status: 404 });
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException)?.code;
+    if (code === 'ENOENT' || code === 'EISDIR') {
+      throw new Response('Not Found', { status: 404 });
+    }
+    throw error;
   }
 }

@@ -1,7 +1,3 @@
-// Posts: list / detail / search.
-// All content reads go through fs/promises + fast-glob, scoped to process.cwd().
-// fast-glob uses caseSensitiveMatch:false so README.md / readme.md both match
-// regardless of host OS.
 import fg from 'fast-glob';
 import fs from 'node:fs/promises';
 import matter from 'gray-matter';
@@ -34,7 +30,9 @@ export interface Paginated<T> {
   data: T[];
 }
 
-const POST_PATTERN = 'content/posts/*/*.md';
+// 文章正文是每个目录下的 README.md；同目录里的其他 .md（如章节草稿、附件笔记）
+// 不构成文章。索引、标签计数、搜索和 RSS 必须用同一个模式，否则同一目录会被算成多篇。
+const POST_PATTERN = 'content/posts/*/{README,readme}.md';
 const SLUG_RE = /content[\\/]posts[\\/]([^\\/]+)[\\/]/;
 
 function getSlug(file: string): string | null {
@@ -58,8 +56,43 @@ export function paginate<T>(items: T[], page: number, pageSize: number): Paginat
   };
 }
 
+// 分页参数来自 query string，必须夹紧：pageSize 不设上界时
+// /api/posts?pageSize=100000 会把整库序列化成一次响应。
+export const MAX_PAGE_SIZE = 50;
+
+export function normalizePage(value: string | null, fallback = 1): number {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export function normalizePageSize(value: string | null, fallback: number): number {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, MAX_PAGE_SIZE);
+}
+
+export function clampPageSize(value: number | undefined, fallback: number): number {
+  if (value === undefined || !Number.isFinite(value) || value < 1) return fallback;
+  return Math.min(Math.floor(value), MAX_PAGE_SIZE);
+}
+
+export function readPageParams(
+  searchParams: URLSearchParams,
+  defaultPageSize = 10
+): { page: number; pageSize: number } {
+  return {
+    page: normalizePage(searchParams.get('page')),
+    pageSize: normalizePageSize(searchParams.get('pageSize'), defaultPageSize),
+  };
+}
+
 async function loadPostFiles(): Promise<string[]> {
   return fg(POST_PATTERN, { caseSensitiveMatch: false });
+}
+
+// fast-glob 在 Windows 上返回反斜杠路径，展示和比较前统一成正斜杠。
+export function toPosixPath(file: string): string {
+  return file.replaceAll('\\', '/');
 }
 
 function openingExcerpt(content: string): string {
@@ -96,9 +129,8 @@ export async function openingExcerpts(slugs: string[]): Promise<Record<string, s
   for (const file of files) {
     const slug = getSlug(file);
     if (!slug || !wanted.has(slug)) continue;
-    if (!/[/\\](README|readme)\.md$/i.test(file)) continue;
     const current = chosen.get(slug);
-    if (!current || file.replaceAll('\\', '/').endsWith('/README.md')) chosen.set(slug, file);
+    if (!current || toPosixPath(file).endsWith('/README.md')) chosen.set(slug, file);
   }
   const out: Record<string, string> = {};
   await Promise.all([...chosen.entries()].map(async ([slug, file]) => {
@@ -131,6 +163,57 @@ async function buildSummary(file: string): Promise<PostSummary | null> {
 let indexCache: { posts: PostSummary[]; at: number } | null = null;
 const CACHE_TTL_MS = 30_000;
 
+interface SearchEntry {
+  summary: PostSummary;
+  haystack: string;
+}
+
+let searchCache: { entries: SearchEntry[]; at: number } | null = null;
+
+async function getSearchIndex(): Promise<SearchEntry[]> {
+  if (searchCache && Date.now() - searchCache.at < CACHE_TTL_MS) {
+    return searchCache.entries;
+  }
+  const posts = await getIndex();
+  const files = await loadPostFiles();
+  const fileBySlug = new Map<string, string>();
+  for (const file of files) {
+    const slug = getSlug(file);
+    if (!slug) continue;
+    if (!fileBySlug.has(slug) || toPosixPath(file).endsWith('/README.md')) {
+      fileBySlug.set(slug, file);
+    }
+  }
+
+  const entries: SearchEntry[] = [];
+  await Promise.all(
+    posts.map(async (summary) => {
+      const file = fileBySlug.get(summary.path);
+      let body = '';
+      if (file) {
+        try {
+          const raw = await fs.readFile(file, 'utf-8');
+          body = readFrontMatter(raw, file, summary.path).content;
+        } catch {
+          // 读取失败不影响标题/标签检索。
+        }
+      }
+      entries.push({
+        summary,
+        haystack: [
+          summary.title,
+          summary.abstract,
+          summary.tags.join(' '),
+          body,
+        ].join('\n').toLowerCase(),
+      });
+    })
+  );
+
+  searchCache = { entries, at: Date.now() };
+  return entries;
+}
+
 async function getIndex(): Promise<PostSummary[]> {
   if (indexCache && Date.now() - indexCache.at < CACHE_TTL_MS) {
     return indexCache.posts;
@@ -150,9 +233,9 @@ export async function listPostIndex(): Promise<PostSummary[]> {
 
 export async function listPosts(options: { page?: number; pageSize?: number } = {}): Promise<Paginated<PostSummary>> {
   const page = options.page ?? 1;
-  const pageSize = options.pageSize ?? 10;
+  const pageSize = clampPageSize(options.pageSize, 10);
   const posts = await getIndex();
-  return { ...paginate(posts, page, pageSize), data: paginate(posts, page, pageSize).data };
+  return paginate(posts, page, pageSize);
 }
 
 export async function listPostDates(): Promise<string[]> {
@@ -161,11 +244,11 @@ export async function listPostDates(): Promise<string[]> {
 }
 
 export async function getPost(slug: string): Promise<PostDetail | null> {
-  const files = await fg('content/posts/*/{README,readme}.md', { caseSensitiveMatch: false });
+  const files = await fg(POST_PATTERN, { caseSensitiveMatch: false });
   const matches = files.filter((file) => getSlug(file) === slug);
   if (matches.length === 0) return null;
 
-  const target = matches.find((f) => f.replaceAll('\\', '/').endsWith('/README.md')) ?? matches[0];
+  const target = matches.find((f) => toPosixPath(f).endsWith('/README.md')) ?? matches[0];
   const raw = await fs.readFile(target, 'utf-8');
   const { meta, content } = readFrontMatter(raw, target, slug);
   const html = parseMarkdown(content, slug, { enableKatex: true, assetType: 'posts' });
@@ -197,39 +280,17 @@ export async function searchPosts(options: {
 }): Promise<Paginated<PostSummary>> {
   const keyword = (options.keyword ?? '').trim().toLowerCase();
   const page = options.page ?? 1;
-  const pageSize = options.pageSize ?? 10;
+  const pageSize = clampPageSize(options.pageSize, 10);
 
   if (!keyword) {
     return { page, pageSize, totalPages: 0, totalItems: 0, data: [] };
   }
 
-  const files = await loadPostFiles();
-  const matched = (
-    await Promise.all(
-      files.map(async (file) => {
-        const slug = getSlug(file);
-        if (!slug) return null;
-        const raw = await fs.readFile(file, 'utf-8');
-        const { meta, content } = readFrontMatter(raw, file, slug);
-        const titleMatch = typeof meta.title === 'string' && meta.title.toLowerCase().includes(keyword);
-        const abstractMatch =
-          typeof meta.abstract === 'string' && meta.abstract.toLowerCase().includes(keyword);
-        const tagsMatch = meta.tags.some((t) => t.toLowerCase().includes(keyword));
-        const contentMatch = content.toLowerCase().includes(keyword);
-        if (!(titleMatch || abstractMatch || tagsMatch || contentMatch)) return null;
-        return {
-          path: slug,
-          title: meta.title ?? slug,
-          date: formatDate(meta.date),
-          cover: meta.cover ? parseAsset(slug, meta.cover) : '',
-          abstract: meta.abstract ?? '',
-          tags: meta.tags,
-          readingTime: calculateReadingTime(content).text,
-        };
-      })
-    )
-  ).filter((s): s is PostSummary => s !== null);
+  const index = await getSearchIndex();
+  const matched = index
+    .filter((entry) => entry.haystack.includes(keyword))
+    .map((entry) => entry.summary);
 
   matched.sort(sortByDateDesc);
-  return { ...paginate(matched, page, pageSize), data: paginate(matched, page, pageSize).data };
+  return paginate(matched, page, pageSize);
 }

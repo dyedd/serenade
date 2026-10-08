@@ -1,8 +1,8 @@
-// Columns: list / detail (README + chapters) / single chapter.
 import fg from 'fast-glob';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import matter from 'gray-matter';
-import { paginate, type Paginated } from './posts';
+import { paginate, toPosixPath, type Paginated } from './posts';
 import { formatDate } from './reading-time';
 import { parseMarkdown } from './markdown';
 
@@ -31,6 +31,37 @@ export interface ChapterDetail {
 const COLUMN_PATTERN = 'content/columns/*/{README,readme}.md';
 const SLUG_RE = /content[\\/]columns[\\/]([^\\/]+)[\\/]/;
 
+// fast-glob 在 Windows 上返回反斜杠路径，split('/') 会拿到整条路径。
+function baseName(file: string): string {
+  return path.basename(toPosixPath(file));
+}
+
+function isReadmeFile(file: string): boolean {
+  return baseName(file).toLowerCase() === 'readme.md';
+}
+
+// 章节排序：文件名（001.md、002.md …）决定顺序，README 不是章节。
+// 非数字前缀的章节文件 parseInt 得 NaN，退回按文件名比较以保证顺序稳定。
+function compareChapterFiles(a: string, b: string): number {
+  const na = Number.parseInt(baseName(a), 10);
+  const nb = Number.parseInt(baseName(b), 10);
+  if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return na - nb;
+  if (Number.isFinite(na) && !Number.isFinite(nb)) return -1;
+  if (!Number.isFinite(na) && Number.isFinite(nb)) return 1;
+  return baseName(a).localeCompare(baseName(b), 'zh-CN');
+}
+
+async function loadColumnFiles(slug: string): Promise<string[]> {
+  return fg(`content/columns/${slug}/*.md`, { caseSensitiveMatch: false });
+}
+
+async function readChapterList(slug: string): Promise<string[]> {
+  const files = await loadColumnFiles(slug);
+  return files
+    .filter((file) => !isReadmeFile(file))
+    .sort(compareChapterFiles);
+}
+
 export async function listColumns(
   options: { page?: number; pageSize?: number } = {}
 ): Promise<Paginated<ColumnSummary> & { totalDocs: number }> {
@@ -48,7 +79,7 @@ export async function listColumns(
       if (!slug) return null;
       const raw = await fs.readFile(file, 'utf-8');
       const { data: meta } = matter(raw);
-      const chapterFiles = await fg(`content/columns/${slug}/*.md`, { caseSensitiveMatch: false });
+      const chapterFiles = await readChapterList(slug);
       return {
         path: slug,
         title: meta.title ?? slug,
@@ -56,7 +87,7 @@ export async function listColumns(
         image: meta.image ? `/assets/columns/${slug}/${String(meta.image).replace(/^\.\//, '')}` : null,
         description: meta.description ?? '',
         type: meta.type ?? '',
-        chapterCount: chapterFiles.length - 1,
+        chapterCount: chapterFiles.length,
       };
     })
   );
@@ -74,39 +105,46 @@ export async function getColumn(slug: string): Promise<ColumnDetail | null> {
   const readmes = await fg(`${columnPath}/{README,readme}.md`, { caseSensitiveMatch: false });
   if (readmes.length === 0) return null;
 
-  const target = readmes.find((f) => f.endsWith('/README.md')) ?? readmes[0];
+  const target = readmes.find((f) => toPosixPath(f).endsWith('/README.md')) ?? readmes[0];
   const raw = await fs.readFile(target, 'utf-8');
   const { data: readmeMeta, content: readmeMarkdown } = matter(raw);
   const html = parseMarkdown(readmeMarkdown, slug, { enableKatex: true, assetType: 'columns' });
 
-  const chapterFiles = await fg(`${columnPath}/*.md`, { caseSensitiveMatch: false });
+  const chapterFiles = await readChapterList(slug);
   const chapters = (
     await Promise.all(
       chapterFiles.map(async (file) => {
-        const fileName = file.split('/').pop() ?? '';
-        if (fileName.toLowerCase() === 'readme.md') return null;
+        const fileName = baseName(file);
         const chapterRaw = await fs.readFile(file, 'utf-8');
-        const h1 = chapterRaw.match(/^#\s+(.+)$/m);
-        const title = h1 ? h1[1].trim() : fileName;
-        return { meta: { title }, fileName };
+        const { content: chapterBody } = matter(chapterRaw);
+        const h1 = chapterBody.match(/^#\s+(.+)$/m);
+        return { meta: { title: h1 ? h1[1].trim() : fileName }, fileName };
       })
     )
-  )
-    .filter((c): c is { meta: { title: string }; fileName: string } => c !== null)
-    .sort((a, b) => Number.parseInt(a.fileName, 10) - Number.parseInt(b.fileName, 10));
+  );
 
   return { meta: { ...readmeMeta, date: formatDate(readmeMeta.date) }, html, chapters };
 }
 
 export async function getChapter(slug: string, chapter: string): Promise<ChapterDetail | null> {
   const chapterPath = `content/columns/${slug}/${chapter}`;
+  // 章节名来自 URL：只接受同目录下的普通文件名，避免 ../ 读到 content/ 以外。
+  if (chapter !== path.basename(chapter) || chapter.includes('\\')) return null;
+  if (!chapter.toLowerCase().endsWith('.md')) return null;
+
+  const files = await loadColumnFiles(slug);
+  const match = files.find((file) => baseName(file).toLowerCase() === chapter.toLowerCase());
+  if (!match) return null;
+
   try {
-    const raw = await fs.readFile(chapterPath, 'utf-8');
-    const html = parseMarkdown(raw, slug, { enableKatex: true, assetType: 'columns' });
-    const h1 = raw.match(/^#\s+(.+)$/m);
-    const title = h1 ? h1[1].trim() : chapter;
-    return { meta: { title }, html, fileName: chapter };
-  } catch {
-    return null;
+    const raw = await fs.readFile(match, 'utf-8');
+    const { content } = matter(raw);
+    const html = parseMarkdown(content, slug, { enableKatex: true, assetType: 'columns' });
+    const h1 = content.match(/^#\s+(.+)$/m);
+    return { meta: { title: h1 ? h1[1].trim() : chapter }, html, fileName: chapter };
+  } catch (error) {
+    // 只把「文件读不到」当 404，其他错误（权限、IO）要暴露出来。
+    if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return null;
+    throw new Error(`${chapterPath}: 章节读取失败`, { cause: error });
   }
 }

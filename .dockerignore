@@ -5,24 +5,21 @@ build
 .nuxt
 node_modules
 
-# Editor / OS
+content
+
 .DS_Store
 Thumbs.db
 .vscode
 .idea
 
-# Env / secrets (keep .env.example for documentation)
 .env
 .env.*
 !.env.example
 
-# Legacy code (kept in repo for reference, not shipped in image)
 legacy
 
-# Git metadata
 .git
 .gitignore
 
-# Dev-only docs that bloat context
-*.md
+**/*.md
 !README.md
