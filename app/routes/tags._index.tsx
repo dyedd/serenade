@@ -6,8 +6,8 @@ import { pageMeta } from '~/lib/meta';
 import { Badge } from '~/components/ui/badge';
 import { PageHeader } from '~/components/PageHeader';
 
-export function meta(_: Route.MetaArgs) {
-  return pageMeta({ title: '标签', path: '/tags', description: '按标签浏览文章' });
+export function meta({ matches }: Route.MetaArgs) {
+  return pageMeta(matches[0].loaderData, { title: '标签', path: '/tags', description: '按标签浏览文章' });
 }
 
 export async function loader() {

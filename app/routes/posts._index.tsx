@@ -11,9 +11,9 @@ import { collectionsByPost, collectionPosts, listCollections } from '~/lib/conte
 
 const PAGE_SIZE = 10;
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, matches }: Route.MetaArgs) {
   const collection = loaderData?.collection;
-  return pageMeta({
+  return pageMeta(matches[0].loaderData, {
     title: collection?.title || '文章',
     path: collection ? `/posts?collection=${encodeURIComponent(collection.slug)}` : '/posts',
     description: collection ? `${collection.title}：精选文章合集` : '全部文章归档',

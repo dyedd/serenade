@@ -2,7 +2,8 @@
 // to HTML + resolves prev/next. Renders the article body as HTML (markdown
 // output is trusted: written by the author via git, not user input).
 // A delegated click handler powers the renderer's .copy-btn buttons.
-import { Link } from 'react-router';
+import { Link, useRouteLoaderData } from 'react-router';
+import type { loader as rootLoader } from '~/root';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import type { Route } from './+types/posts.$slug';
 import { getPost } from '~/lib/content/posts';
@@ -13,14 +14,13 @@ import { useCodeCopy } from '~/hooks/useCodeCopy';
 import { TableOfContents } from '~/components/TableOfContents';
 import { MobileDocNav } from '~/components/MobileDocNav';
 import { JsonLd } from '~/components/JsonLd';
-import { siteConfig } from '~/lib/site-config';
 import 'highlight.js/styles/atom-one-light.css';
 import 'katex/dist/katex.min.css';
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, matches }: Route.MetaArgs) {
   const post = loaderData?.post;
-  if (!post) return pageMeta({ title: '文章' });
-  return pageMeta({
+  if (!post) return pageMeta(matches[0].loaderData, { title: '文章' });
+  return pageMeta(matches[0].loaderData, {
     title: post.title,
     description: post.abstract,
     path: `/posts/${post.path}`,
@@ -44,6 +44,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export default function PostDetail({ loaderData }: Route.ComponentProps) {
+  const site = useRouteLoaderData<typeof rootLoader>('root')!;
   const { post, headings, collectedIn } = loaderData;
   const bodyHtml = post.abstract ? post.html : post.html.replace(/<p>/, '<p class="page-lead">');
   useCodeCopy();
@@ -57,22 +58,22 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
           headline: post.title,
           description: post.abstract || undefined,
           datePublished: post.date,
-          inLanguage: siteConfig.lang,
-          mainEntityOfPage: `${siteConfig.url.replace(/\/$/, '')}/posts/${post.path}`,
-          url: `${siteConfig.url.replace(/\/$/, '')}/posts/${post.path}`,
+          inLanguage: site.lang,
+          mainEntityOfPage: `${site.url}/posts/${post.path}`,
+          url: `${site.url}/posts/${post.path}`,
           image: post.cover
             ? /^https?:\/\//.test(post.cover)
               ? post.cover
-              : `${siteConfig.url.replace(/\/$/, '')}${post.cover.startsWith('/') ? post.cover : `/${post.cover}`}`
+              : `${site.url}${post.cover.startsWith('/') ? post.cover : `/${post.cover}`}`
             : undefined,
           author: {
             '@type': 'Person',
-            name: siteConfig.author,
-            url: siteConfig.url,
+            name: site.author,
+            url: site.url,
           },
           publisher: {
             '@type': 'Person',
-            name: siteConfig.author,
+            name: site.author,
           },
           keywords: post.tags,
         }}

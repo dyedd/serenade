@@ -11,11 +11,11 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/
 import 'highlight.js/styles/atom-one-light.css';
 import 'katex/dist/katex.min.css';
 
-export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return pageMeta({ title: '专栏' });
+export function meta({ loaderData, matches }: Route.MetaArgs) {
+  if (!loaderData) return pageMeta(matches[0].loaderData, { title: '专栏' });
   const title =
     (loaderData.column.meta as { title?: string })?.title ?? loaderData.path;
-  return pageMeta({ title, path: `/columns/${loaderData.path}` });
+  return pageMeta(matches[0].loaderData, { title, path: `/columns/${loaderData.path}` });
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {

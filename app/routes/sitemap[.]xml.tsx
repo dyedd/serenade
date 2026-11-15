@@ -2,7 +2,6 @@ import type { Route } from './+types/sitemap[.]xml';
 import { getColumn, listColumns } from '~/lib/content/columns';
 import { listPostIndex } from '~/lib/content/posts';
 import { listTags } from '~/lib/content/tags';
-import { siteConfig } from '~/lib/site-config';
 
 function escapeXml(value: string): string {
   return value.replace(/[<>&'\"]/g, (char) => ({
@@ -15,7 +14,7 @@ function escapeXml(value: string): string {
 }
 
 export async function loader(_: Route.LoaderArgs) {
-  const baseUrl = siteConfig.url.replace(/\/$/, '');
+  const baseUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
   const urls = new Set([
     baseUrl,
     `${baseUrl}/posts`,

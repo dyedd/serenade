@@ -1,4 +1,4 @@
-import { siteConfig } from '~/lib/site-config';
+import type { loader } from '~/root';
 
 interface PageMeta {
   title?: string;
@@ -10,14 +10,7 @@ interface PageMeta {
   tags?: string[];
 }
 
-function absoluteUrl(path = ''): string {
-  const base = siteConfig.url.replace(/\/$/, '');
-  if (!path) return base;
-  if (/^https?:\/\//.test(path)) return path;
-  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
-}
-
-export function pageMeta({
+export function pageMeta(site: ReturnType<typeof loader> | undefined, {
   title,
   description,
   path = '/',
@@ -26,24 +19,28 @@ export function pageMeta({
   publishedTime,
   tags = [],
 }: PageMeta = {}) {
-  const fullTitle = title ? `${title} - ${siteConfig.title}` : siteConfig.title;
-  const desc = description || siteConfig.description;
+  if (!site) return [{ title: title || '未命名站点' }];
+  const absoluteUrl = (path: string) => /^https?:\/\//.test(path)
+    ? path
+    : `${site.url}${path.startsWith('/') ? path : `/${path}`}`;
+  const fullTitle = title ? `${title} - ${site.title}` : site.title;
+  const desc = description || site.description;
   const url = absoluteUrl(path);
-  const ogImage = image ? absoluteUrl(image) : absoluteUrl(siteConfig.profile.avatar);
+  const ogImage = absoluteUrl(image || site.avatar);
 
   return [
     { title: fullTitle },
     { name: 'description', content: desc },
-    { name: 'keywords', content: siteConfig.keywords },
-    { name: 'author', content: siteConfig.author },
-    { property: 'og:site_name', content: siteConfig.title },
+    { name: 'keywords', content: site.keywords },
+    { name: 'author', content: site.author },
+    { property: 'og:site_name', content: site.title },
     { property: 'og:title', content: fullTitle },
     { property: 'og:description', content: desc },
     { property: 'og:type', content: type },
     { property: 'og:url', content: url },
     { property: 'og:image', content: ogImage },
-    { property: 'og:image:alt', content: title ? `${title} 封面` : siteConfig.title },
-    { property: 'og:locale', content: siteConfig.lang === 'zh-CN' ? 'zh_CN' : siteConfig.lang },
+    { property: 'og:image:alt', content: title ? `${title} 封面` : site.title },
+    { property: 'og:locale', content: site.lang === 'zh-CN' ? 'zh_CN' : site.lang },
     ...(type === 'article' && publishedTime
       ? [{ property: 'article:published_time', content: publishedTime }]
       : []),
@@ -54,6 +51,6 @@ export function pageMeta({
     { name: 'twitter:image', content: ogImage },
     { name: 'twitter:url', content: url },
     { tagName: 'link', rel: 'canonical', href: url },
-    { tagName: 'link', rel: 'alternate', type: 'application/rss+xml', title: siteConfig.title, href: absoluteUrl('/feed.xml') },
+    { tagName: 'link', rel: 'alternate', type: 'application/rss+xml', title: site.title, href: absoluteUrl('/feed.xml') },
   ];
 }

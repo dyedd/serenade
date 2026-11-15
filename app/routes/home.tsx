@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useRouteLoaderData } from 'react-router';
 import { ChevronDown } from 'lucide-react';
 import type { Route } from './+types/home';
 import { listPostDates, listPosts, openingExcerpts } from '~/lib/content/posts';
 import { buildHeatmap } from '~/lib/content/heatmap';
 import { listTags } from '~/lib/content/tags';
 import { loadCareer } from '~/lib/content/career';
-import { listRandomProjects, type ProjectEntry } from '~/lib/content/projects';
-import { siteConfig } from '~/lib/site-config';
+import { listRandomProjects } from '~/lib/content/projects';
+import type { loader as rootLoader } from '~/root';
 import { pageMeta } from '~/lib/meta';
 import { CareerTrack } from '~/components/CareerTrack';
 import { PostsHeatmap } from '~/components/PostsHeatmap';
@@ -16,8 +16,8 @@ import { JsonLd } from '~/components/JsonLd';
 import { TechChip } from '~/components/TechChip';
 import { Badge } from '~/components/ui/badge';
 
-export function meta(_: Route.MetaArgs) {
-  return pageMeta({ path: '/', description: siteConfig.description });
+export function meta({ matches }: Route.MetaArgs) {
+  return pageMeta(matches[0].loaderData, { path: '/' });
 }
 
 export async function loader() {
@@ -29,7 +29,16 @@ export async function loader() {
     listPostDates(),
   ]);
   const excerpts = await openingExcerpts(recent.data.map((post) => post.path));
+  const splitLines = (value = '') => value.split('|').map((line) => line.trim()).filter(Boolean);
   return {
+    introduction: splitLines(process.env.SITE_PROFILE_INTRO),
+    motto: splitLines(process.env.SITE_PROFILE_MOTTO),
+    githubChart: process.env.SITE_PROFILE_GITHUB_CHART || '',
+    qq: process.env.SITE_QQ_URL || '',
+    techStack: splitLines(process.env.SITE_PROFILE_TECH_STACK).flatMap((item) => {
+      const [label, icon] = item.split('::').map((part) => part.trim());
+      return label && icon ? [{ label, icon }] : [];
+    }),
     posts: recent.data.map((post) => ({
       ...post,
       abstract: post.abstract || excerpts[post.path] || '',
@@ -42,32 +51,22 @@ export async function loader() {
   };
 }
 
-function projectHref(p: ProjectEntry): string | undefined {
-  const raw = p.link ?? p.url ?? p.github;
-  return typeof raw === 'string' && raw.length > 0 ? raw : undefined;
-}
-
-function sectionTitle(id: string, title: string, href: string, action: string) {
-  return (
-    <div className="mb-4 flex items-baseline justify-between gap-4">
-      <h2 id={id} className="font-heading text-[1.375rem] font-semibold tracking-[-0.01em]">
-        {title}
-      </h2>
-      <Link
-        to={href}
-        className="text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
-      >
-        {action}
-      </Link>
-    </div>
-  );
-}
-
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { profile, socialLinks } = siteConfig;
-  const { posts, career, projects, tags, heatmap, postCount } = loaderData;
+  const site = useRouteLoaderData<typeof rootLoader>('root')!;
+  const { posts, career, projects, tags, heatmap, postCount, introduction, motto, githubChart, qq, techStack } = loaderData;
   const sortedTags = Object.entries(tags).sort((a, b) => b[1] - a[1]).slice(0, 24);
   const [statsOpen, setStatsOpen] = useState(false);
+  const chartImage = (
+    <img
+      src={githubChart}
+      alt="GitHub 贡献图"
+      width={828}
+      height={128}
+      loading="lazy"
+      decoding="async"
+      className="github-chart"
+    />
+  );
 
   return (
     <div className="flex flex-col gap-12 py-2">
@@ -75,58 +74,66 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         data={{
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-          name: siteConfig.title,
-          url: siteConfig.url,
-          description: siteConfig.description,
-          inLanguage: siteConfig.lang,
+          name: site.title,
+          url: site.url,
+          description: site.description,
+          inLanguage: site.lang,
           author: {
             '@type': 'Person',
-            name: siteConfig.author,
-            url: siteConfig.url,
-            sameAs: [siteConfig.socialLinks.github.url],
+            name: site.author,
+            url: site.url,
+            sameAs: site.github
+              ? [site.github]
+              : undefined,
           },
         }}
       />
       <section className="flex flex-col-reverse items-start gap-6 sm:flex-row sm:justify-between">
         <div className="min-w-0 flex-1">
           <h1 className="font-heading text-[2rem] font-semibold leading-tight tracking-[-0.02em]">
-            你好，我是{profile.name}
+            你好，我是{site.author}
           </h1>
-          {profile.introduction.map((line, i) => (
+          {introduction.map((line, i) => (
             <SvgTextLine key={`intro-${i}`} line={line} />
           ))}
-          {profile.motto.map((line, i) => (
+          {motto.map((line, i) => (
             <SvgTextLine key={`motto-${i}`} line={line} />
           ))}
           <p className="mt-5 flex items-center gap-1">
-            <a
-              href={socialLinks.github.url}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub"
-              title="GitHub"
-              className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
-            >
-              <SocialGlyph name="github" />
-            </a>
-            <a
-              href={socialLinks.email.url}
-              aria-label="Email"
-              title="Email"
-              className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
-            >
-              <SocialGlyph name="email" />
-            </a>
-            <a
-              href={socialLinks.qq.url}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="QQ"
-              title="QQ"
-              className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
-            >
-              <SocialGlyph name="qq" />
-            </a>
+            {site.github ? (
+              <a
+                href={site.github}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub"
+                title="GitHub"
+                className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
+              >
+                <SocialGlyph name="github" />
+              </a>
+            ) : null}
+            {site.email ? (
+              <a
+                href={`mailto:${site.email}`}
+                aria-label="Email"
+                title="Email"
+                className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
+              >
+                <SocialGlyph name="email" />
+              </a>
+            ) : null}
+            {qq ? (
+              <a
+                href={qq}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="QQ"
+                title="QQ"
+                className="p-2 text-black/60 transition-colors duration-200 ease hover:text-black"
+              >
+                <SocialGlyph name="qq" />
+              </a>
+            ) : null}
             <Link
               to="/feed.xml"
               aria-label="RSS"
@@ -138,8 +145,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         <img
-          src={profile.avatar}
-          alt={profile.name}
+          src={site.avatar}
+          alt={site.author}
           width={112}
           height={112}
           decoding="async"
@@ -165,39 +172,39 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <CareerTrack items={career} />
       </section>
 
-      <section aria-labelledby="github-heading">
-        <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 id="github-heading" className="font-heading text-[1.375rem] font-semibold tracking-[-0.01em]">
-            GitHub 贡献
-          </h2>
-          <a
-            href={socialLinks.github.url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
-          >
-            主页
-          </a>
-        </div>
-        <a href={socialLinks.github.url} target="_blank" rel="noreferrer" className="block min-w-0 max-w-full">
-          <img
-            src={profile.githubContributionChart}
-            alt="GitHub 贡献图"
-            width={828}
-            height={128}
-            loading="lazy"
-            decoding="async"
-            className="github-chart"
-          />
-        </a>
-      </section>
+      {githubChart ? (
+        <section aria-labelledby="github-heading">
+          <div className="mb-4 flex items-baseline justify-between gap-4">
+            <h2 id="github-heading" className="font-heading text-[1.375rem] font-semibold tracking-[-0.01em]">
+              GitHub 贡献
+            </h2>
+            {site.github ? (
+              <a
+                href={site.github}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm text-black/60 transition-colors duration-200 ease hover:text-black"
+              >
+                主页
+              </a>
+            ) : null}
+          </div>
+          {site.github ? (
+            <a href={site.github} target="_blank" rel="noreferrer" className="block min-w-0 max-w-full">
+              {chartImage}
+            </a>
+          ) : (
+            chartImage
+          )}
+        </section>
+      ) : null}
 
       <section aria-labelledby="stack-heading">
         <h2 id="stack-heading" className="font-heading mb-6 text-[1.375rem] font-semibold tracking-[-0.01em]">
           技术栈
         </h2>
         <ul className="flex flex-wrap gap-2">
-          {profile.techStack.map((tech) => (
+          {techStack.map((tech) => (
             <li key={tech.label}>
               <TechChip label={tech.label} icon={tech.icon} />
             </li>
@@ -288,14 +295,21 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       <section aria-labelledby="projects-heading">
-        {sectionTitle('projects-heading', '项目', '/projects', '全部项目')}
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 id="projects-heading" className="font-heading text-[1.375rem] font-semibold tracking-[-0.01em]">
+            项目
+          </h2>
+          <Link to="/projects" className="text-sm text-black/60 transition-colors duration-200 ease hover:text-black">
+            全部项目
+          </Link>
+        </div>
         {projects.length === 0 ? (
           <p className="paper-card p-6 text-sm text-black/60 shadow-none">暂无项目</p>
         ) : (
           <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {projects.map((p) => {
-              const href = projectHref(p);
-              const cover = typeof p.cover === 'string' ? p.cover : '';
+              const href = p.link ?? p.url ?? p.github;
+              const cover = p.cover;
               const body = (
                 <>
                   {cover ? (

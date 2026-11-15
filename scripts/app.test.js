@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
@@ -12,19 +12,34 @@ import {
   quoteYamlString,
 } from './front-matter.js';
 import { isSafeUrl } from './prompt-helper.js';
+import { resolveContentUrl } from './content-helper.js';
 
 const projectRoot = process.cwd();
-const port = 32000 + Math.floor(Math.random() * 1000);
-const baseUrl = `http://127.0.0.1:${port}`;
+let baseUrl;
 let fixtureRoot;
 let server;
-let serverOutput = '';
+const serverEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('SITE_')));
 
-// 站点标题/地址在构建期就固化进产物（SITE_* 在服务端渲染时读取），所以断言不能
-// 写死作者自己的品牌，否则任何人按 README 配置了自己的 SITE_* 后测试都会失败。
-// 这里按同样的默认值回退，测试自身显式注入的 SITE_* 优先。
-const siteTitle = process.env.SITE_TITLE || '染念的笔记';
-const siteUrl = (process.env.SITE_URL || 'https://dyedd.cn').replace(/\/$/, '');
+// 测试显式注入固定的 SITE_*，不依赖本地 .env。
+const TEST_SITE_ENV = {
+  SITE_AUTHOR: 'Test Author',
+  SITE_TITLE: 'Test Notes',
+  SITE_URL: 'https://test.example',
+  SITE_EMAIL: 'test@example.com',
+  SITE_DESCRIPTION: 'Fixture site',
+  SITE_PROFILE_INTRO: 'Test intro line|Second intro <script>window.__envLeak=true</script>',
+  SITE_PROFILE_MOTTO: 'Test motto',
+  SITE_PROFILE_GITHUB_CHART: 'https://example.com/chart.svg',
+  SITE_PROFILE_TECH_STACK: 'TypeScript::https://example.com/ts.svg',
+  SITE_GITHUB_URL: 'https://github.com/test-author',
+  SITE_QQ_URL: 'https://example.com/contact',
+  SITE_FOOTER_ICP_LABEL: 'Test ICP',
+  SITE_START_TIME: '2020-01-01',
+  SITE_ANALYTICS_SCRIPT: 'https://example.com/analytics.js',
+  SITE_ANALYTICS_WEBSITE_ID: 'test-analytics',
+};
+const siteTitle = TEST_SITE_ENV.SITE_TITLE;
+const siteUrl = TEST_SITE_ENV.SITE_URL;
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function createFixture() {
@@ -32,7 +47,7 @@ async function createFixture() {
   await mkdir(path.join(fixtureRoot, 'content', 'posts', 'smoke-post'), { recursive: true });
   await writeFile(
     path.join(fixtureRoot, 'content', 'posts', 'smoke-post', 'README.md'),
-    `---\ntitle: Smoke post\ndate: 2025-01-01\ntags: [测试]\nabstract: A test post\n---\n\n# Hello\n\nThis checks the blog route.\n`,
+    `---\ntitle: Smoke post\ndate: 2025-01-01\ntags: [测试, "50%25"]\nabstract: A test post\n---\n\n# Hello\n\nThis checks the blog route.\n`,
   );
   await writeFile(
     path.join(fixtureRoot, 'content', 'career.json'),
@@ -111,36 +126,34 @@ async function request(pathname, init) {
   return fetch(`${baseUrl}${pathname}`, init);
 }
 
-async function waitForServer() {
-  for (let attempt = 0; attempt < 50; attempt += 1) {
-    try {
-      // 必须确认是我们的服务在监听：端口是随机选的，被别的进程占用时
-      // 任何 HTTP 响应都不代表可以开始断言。
-      const response = await request('/robots.txt');
-      if (response.status === 200) return;
-    } catch {
-      // 服务还未监听。
-    }
+async function startServer(siteEnv) {
+  const port = 32000 + Math.floor(Math.random() * 1000);
+  const url = `http://127.0.0.1:${port}`;
+  const serveScript = path.join(projectRoot, 'node_modules', '@react-router', 'serve', 'bin.cjs');
+  const child = spawn(process.execPath, [serveScript, path.join(projectRoot, 'build/server/index.js')], {
+    cwd: fixtureRoot,
+    env: { ...serverEnv, ...siteEnv, HOST: '127.0.0.1', PORT: String(port), NODE_ENV: 'production' },
+    windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let output = '';
+  child.stdout.on('data', (chunk) => { output += chunk; });
+  child.stderr.on('data', (chunk) => { output += chunk; });
+  for (let attempt = 0; attempt < 300; attempt += 1) {
+    if (child.exitCode !== null) throw new Error(`测试服务提前退出\n${output}`);
+    const response = await fetch(`${url}/robots.txt`).catch(() => null);
+    if (response?.status === 200) return { child, url };
     await wait(100);
   }
-  throw new Error(`测试服务启动超时\n${serverOutput}`);
+  child.kill();
+  throw new Error(`测试服务启动超时\n${output}`);
 }
 
 before(async () => {
   await createFixture();
-  const serveScript = path.join(projectRoot, 'node_modules', '@react-router', 'serve', 'bin.cjs');
-  server = spawn(process.execPath, [serveScript, path.join(projectRoot, 'build/server/index.js')], {
-    cwd: fixtureRoot,
-    env: { ...process.env, HOST: '127.0.0.1', PORT: String(port), NODE_ENV: 'production' },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  server.stdout.on('data', (chunk) => {
-    serverOutput += chunk;
-  });
-  server.stderr.on('data', (chunk) => {
-    serverOutput += chunk;
-  });
-  await waitForServer();
+  const running = await startServer(TEST_SITE_ENV);
+  server = running.child;
+  baseUrl = running.url;
 });
 
 after(async () => {
@@ -160,7 +173,11 @@ after(async () => {
       resolve();
     });
   });
-  if (fixtureRoot) await rm(fixtureRoot, { recursive: true, force: true });
+  if (fixtureRoot) {
+    assert.equal(path.dirname(fixtureRoot), path.resolve(tmpdir()));
+    assert.ok(path.basename(fixtureRoot).startsWith('serenade-test-'));
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
 });
 
 test('SSR 页面可以响应', async () => {
@@ -181,9 +198,16 @@ test('SEO endpoints and rendered metadata are present', async () => {
   assert.match(homeHtml, new RegExp(`rel="canonical" href="${canonicalBase}/?"`));
   assert.match(homeHtml, /application\/ld\+json/);
   assert.equal([...homeHtml.matchAll(/rel="canonical"/g)].length, 1);
-  // 运行期站点配置必须注入给客户端：浏览器里没有 process.env。
-  assert.match(homeHtml, /window\.__SERENADE_SITE_CONFIG__=/);
-  assert.doesNotMatch(homeHtml, /process\.env\.SITE_/);
+  assert.match(homeHtml, /<text\b[^>]*>Test intro line<\/text>/);
+  assert.match(homeHtml, /<text\b[^>]*>Test motto<\/text>/);
+  assert.match(homeHtml, /<text\b[^>]*>Second intro &lt;script&gt;window\.__envLeak=true&lt;\/script&gt;<\/text>/);
+  assert.doesNotMatch(homeHtml, /<script>window\.__envLeak=true<\/script>/);
+  assert.match(homeHtml, /href="mailto:test@example.com"/);
+  assert.match(homeHtml, /href="https:\/\/github.com\/test-author"/);
+  assert.match(homeHtml, /src="https:\/\/example.com\/chart.svg"/);
+  assert.equal([...homeHtml.matchAll(/class="github-chart"/g)].length, 1);
+  assert.match(homeHtml, /<a\b[^>]*>Test ICP<\/a>/);
+  assert.match(homeHtml, /<script\b[^>]*src="https:\/\/example.com\/analytics.js"[^>]*data-website-id="test-analytics"/);
 
   const articleResponse = await request('/posts/smoke-post');
   const articleHtml = await articleResponse.text();
@@ -209,7 +233,7 @@ test('文章索引与标签计数忽略同目录的附属 Markdown', async () =>
   const posts = await (await request('/api/posts?pageSize=50')).json();
   const smokePosts = posts.data.filter((post) => post.path === 'smoke-post');
   assert.equal(smokePosts.length, 1, '同一文章目录只能出现一次');
-  assert.equal(posts.totalItems, 2, '只有 README 算文章');
+  assert.equal(posts.totalItems, 71, '两篇正文加 69 篇分页数据，附属 Markdown 不计入');
 
   const tags = await (await request('/api/tags')).json();
   assert.equal(tags['测试'], 1, '标签计数按文章数，不按文件数');
@@ -225,11 +249,86 @@ test('文章索引与标签计数忽略同目录的附属 Markdown', async () =>
   assert.equal(new Set(guids).size, guids.length, 'RSS 里不能有重复 guid');
 });
 
-test('畸形 URL 编码返回空结果而不是 500', async () => {
+test('空 env 隐藏可选入口，统计 ID 单独存在时不输出脚本', async (t) => {
+  const { child, url } = await startServer({ SITE_ANALYTICS_WEBSITE_ID: 'id-without-script' });
+  t.after(async () => {
+    if (child.exitCode !== null || child.signalCode !== null) return;
+    const exited = new Promise((resolve) => child.once('exit', resolve));
+    child.kill();
+    await exited;
+  });
+  const html = await (await fetch(url)).text();
+  assert.match(html, /<title>未命名站点<\/title>/);
+  assert.match(html, /src="\/avatar.jpg"/);
+  assert.match(html, /Powered by serenade<\/a>/);
+  assert.doesNotMatch(html, /aria-label="(?:GitHub|Email|QQ)"/);
+  assert.doesNotMatch(html, /id="github-heading"|已运行|href="https:\/\/beian.miit.gov.cn\/"/);
+  assert.doesNotMatch(html, /<script\b[^>]*data-website-id=/);
+  assert.match(await (await fetch(`${url}/friends`)).text(), /发送给站主/);
+  assert.doesNotMatch(await (await fetch(`${url}/projects`)).text(), /访问我的 GitHub/);
+});
+
+test('CLI slug 只校验文章路径，支持手动输入并拒绝冲突和越界', async () => {
+  const directory = path.join(fixtureRoot, 'content', 'posts');
+  assert.equal(await resolveContentUrl(null, '标题', directory, 'new-post', false), 'new-post');
+  for (const slug of ['../escape', '--flag', 'smoke-post']) {
+    assert.equal(await resolveContentUrl(null, '标题', directory, slug, false), null);
+  }
+  const answers = ['', 'manual-slug'];
+  const rl = { question: (_prompt, reply) => reply(answers.shift()) };
+  assert.equal(await resolveContentUrl(rl, '标题', directory, '', false), 'manual-slug');
+  assert.equal(answers.length, 0);
+});
+
+test('文章封面保留 images 和 chat 两种 API 模式', async (t) => {
+  const imageKeys = ['IMAGE_API_KEY', 'IMAGE_API_MODE', 'IMAGE_BASE_URL'];
+  const previousEnv = Object.fromEntries(imageKeys.map((key) => [key, process.env[key]]));
+  t.after(() => {
+    for (const key of imageKeys) {
+      if (previousEnv[key] === undefined) delete process.env[key];
+      else process.env[key] = previousEnv[key];
+    }
+  });
+  process.env.IMAGE_API_KEY = 'fixture-key';
+  process.env.IMAGE_BASE_URL = 'https://images.example/v1';
+  const image = Buffer.from('fixture-image');
+  const requests = [];
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    const body = JSON.parse(init.body);
+    requests.push({ url, body });
+    const payload = body.messages
+      ? { choices: [{ message: { content: `data:image/png;base64,${image.toString('base64')}` } }] }
+      : { data: [{ b64_json: image.toString('base64') }] };
+    return Response.json(payload);
+  });
+  for (const mode of ['images', 'chat']) {
+    process.env.IMAGE_API_MODE = mode;
+    const { generateImageWithAI } = await import(`./ai-helper.js?mode=${mode}`);
+    const target = path.join(fixtureRoot, `${mode}-cover.png`);
+    assert.equal(await generateImageWithAI('测试文章', target), true);
+    assert.deepEqual(await readFile(target), image);
+  }
+  assert.equal(requests[0].url, 'https://images.example/v1/images/generations');
+  assert.equal(requests[0].body.size, '1536x1024');
+  assert.equal(requests[1].url, 'https://images.example/v1/chat/completions');
+  assert.match(requests[1].body.messages[0].content, /16:9/);
+});
+
+test('畸形 URL 编码由请求边界返回 400', async () => {
   for (const pathname of ['/tags/50%', '/tags/%E4%B8', '/api/tags/50%']) {
     const response = await request(pathname);
-    assert.equal(response.status, 200, pathname);
+    assert.equal(response.status, 400, pathname);
   }
+});
+
+test('标签参数只由路由解码一次，保留名称中的百分号编码', async () => {
+  const tag = encodeURIComponent('50%25');
+  const posts = await (await request(`/api/tags/${tag}`)).json();
+  assert.equal(posts.totalItems, 1);
+  assert.equal(posts.data[0].path, 'smoke-post');
+  const html = await (await request(`/tags/${tag}`)).text();
+  assert.match(html, /<h1\b[^>]*>50%25<\/h1>/);
+  assert.match(html, /href="\/posts\/smoke-post"/);
 });
 
 test('pageSize 有上界，恶意大值不会拖垮响应', async () => {
@@ -377,7 +476,7 @@ test('热力图数据由服务端给出，渲染期不读当前时间', async ()
   const html = await (await request('/')).text();
   // 网格单元格与统计文案都来自 loader，组件不再自行取 new Date()。
   assert.match(html, /posts-heatmap/);
-  assert.match(html, /过去一年 \d+ 天有更新/);
+  assert.match(html.replace(/<!-- -->/g, ''), /过去一年 \d+ 天有更新/);
   const labelled = [...html.matchAll(/aria-label="(\d+ 篇文章 · [^"]+|无文章 · [^"]+)"/g)];
   assert.ok(labelled.length > 0, '热力图单元格需要有可访问名称');
 });

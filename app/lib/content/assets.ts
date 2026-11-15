@@ -10,7 +10,7 @@ export function parseAsset(
   href: string | null | undefined,
   type: AssetType = 'posts'
 ): string {
-  if (!href || typeof href !== 'string') return href ?? '';
+  if (!href) return '';
   if (/^https?:\/\//.test(href) || href.startsWith('/')) return href;
   return `/assets/${type}/${slug}/${href.replace(/^\.\//, '')}`;
 }

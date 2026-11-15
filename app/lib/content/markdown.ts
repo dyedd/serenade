@@ -1,6 +1,6 @@
 // 每次 parse 都新建 Marked 实例：marked 的扩展是实例级状态，共用一个全局实例
 // 会让「这篇文章开了 KaTeX」泄漏到之后所有渲染（例如专栏页面里 $100 被当公式）。
-import { Marked, type RendererObject, type Token, type Tokens } from 'marked';
+import { Marked, Renderer, type RendererObject, type Token, type Tokens } from 'marked';
 import markedKatex from 'marked-katex-extension';
 import hljs from 'highlight.js';
 import { parseAsset, type AssetType } from './assets';
@@ -12,10 +12,6 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-function escapeAttr(value: string): string {
-  return escapeHtml(value);
 }
 
 // 渲染回调拿到的是 inline token，不是原始 Markdown 文本：标题里带 **强调**、
@@ -75,15 +71,18 @@ function createRenderer(slug: string, assetType: AssetType): Partial<RendererObj
   const takenIds = new Map<string, number>();
 
   return {
+    table(token) {
+      return `<div class="prose-scroll">${Renderer.prototype.table.call(this, token)}</div>\n`;
+    },
     heading({ tokens, depth }) {
       const text = plainText(tokens);
       const id = headingId(text, takenIds);
-      return `<h${depth} class="relative group" id="${escapeAttr(id)}">${this.parser.parseInline(tokens)}</h${depth}>`;
+      return `<h${depth} class="relative group" id="${escapeHtml(id)}">${this.parser.parseInline(tokens)}</h${depth}>\n`;
     },
     image({ href, title, text }) {
-      const alt = escapeAttr(text ?? '');
-      const titleAttr = title ? ` title="${escapeAttr(title)}"` : '';
-      const src = href ? escapeAttr(parseAsset(slug, href.trim(), assetType)) : '';
+      const alt = escapeHtml(text ?? '');
+      const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+      const src = href ? escapeHtml(parseAsset(slug, href.trim(), assetType)) : '';
       const srcAttr = src ? ` src="${src}"` : '';
       return `<img class="post-image"${srcAttr} alt="${alt}"${titleAttr} loading="lazy" decoding="async">`;
     },
@@ -136,11 +135,5 @@ export function parseMarkdown(
   if (enableKatex) {
     marked.use(markedKatex({ throwOnError: false, nonStandard: true, output: 'mathml' }));
   }
-  const html = marked.parse(content, { async: false });
-  // 表格盒子会跟着列宽变大，包一层后只有表格自己横滑。
-  // 只包顶层 <table>：代码高亮产出的表格在 <pre> 内，缩进形式不会命中这个锚定写法。
-  return html.replace(
-    /^<table\b[^>]*>[\s\S]*?<\/table>$/gm,
-    (table) => `<div class="prose-scroll">${table}</div>`,
-  );
+  return marked.parse(content, { async: false });
 }

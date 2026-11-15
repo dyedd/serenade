@@ -7,17 +7,18 @@
 - `app/routes/_layout.tsx` 提供页面壳层；可复用 UI 在 `app/components/`。
 - 默认构建 Node.js 服务端应用，不预渲染个人内容。
 - `pnpm build:static` 通过 `SERENADE_PRERENDER=true` 预渲染站点、文章、标签和专栏路由；服务端产物仍会生成，目录仍为 `build/server`。
-- `content/` 是使用者自己的运行时数据，Docker 服务端部署时通过 volume 挂载（只读）。
+- `content/` 是使用者自己的运行时数据，Docker 服务端部署时通过 volume 挂载。
 
 ## 站点配置
 
-`SITE_*` 是**运行期**配置：服务端每次渲染时从 `process.env` 读取，并把解析结果注入 HTML
-（`window.__SERENADE_SITE_CONFIG__`），浏览器端从该 payload 读取。
+服务端 loader 直接读取 `process.env.SITE_*`。
 
-- 改配置只需重启容器/进程，不需要重新构建镜像。
-- 组件统一通过 `app/lib/site-config.ts` 的 `siteConfig` / `getSiteConfig()` 取值，
-  不要直接读 `process.env`：浏览器里没有 `process`。
-- `docker-compose.yml` 会把未设置的变量注入成空字符串，因此配置读取把空串视为「未配置」。
+- `app/root.tsx` 的 loader 提供标题、作者、地址等公共页面字段；组件通过根路由数据读取。
+- 首页 loader 读取介绍、格言和技术栈；RSS、sitemap 和 robots 在自己的 loader 中读取所需 env。
+- React Router 负责把公开页面数据传给浏览器。AI 和服务器连接密钥只供服务端工具使用。
+- 开发服务和 `pnpm start` 在启动时加载 `.env`；Docker Compose 通过 `environment` 传入配置。
+- 修改 `.env` 后重启 Node.js 进程，或运行 `docker compose up -d --force-recreate` 重新创建容器。
+- `pnpm build:static` 在构建时读取配置；更改配置后需要重新构建。
 
 ## 程序边界
 
@@ -53,7 +54,6 @@ content/
 ## 请求类型
 
 - 页面路由由 React Router 服务端模式或静态构建处理。
-- `/api/*` 路由返回 JSON。
 - `/feed.xml` 返回 RSS；静态构建时生成静态 feed 文件。
 - `/sitemap.xml` 和 `/robots.txt` 提供搜索引擎发现入口。
 - `/api/*` 路由返回 JSON，静态部署不包含这些运行时 API。

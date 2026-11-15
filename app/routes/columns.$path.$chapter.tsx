@@ -14,9 +14,9 @@ import { MobileDocNav } from '~/components/MobileDocNav';
 import 'highlight.js/styles/atom-one-light.css';
 import 'katex/dist/katex.min.css';
 
-export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return pageMeta({ title: '专栏' });
-  return pageMeta({
+export function meta({ loaderData, matches }: Route.MetaArgs) {
+  if (!loaderData) return pageMeta(matches[0].loaderData, { title: '专栏' });
+  return pageMeta(matches[0].loaderData, {
     title: loaderData.chapter.meta.title,
     path: `/columns/${loaderData.path}/${loaderData.chapter.fileName}`,
   });

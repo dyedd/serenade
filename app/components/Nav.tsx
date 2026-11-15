@@ -1,6 +1,6 @@
 import { Menu, Search as SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router";
+import { Link, NavLink, useLocation, useRouteLoaderData } from "react-router";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "~/components/ui/sheet";
-import { siteConfig } from "~/lib/site-config";
+import type { loader } from "~/root";
 import { cn } from "~/lib/utils";
 import { SearchBox } from "./SearchBox";
 import { SEARCH_HOTKEY, SearchHotkey } from "./SearchHotkey";
@@ -47,6 +47,7 @@ function navClass({ isActive }: { isActive: boolean }) {
 }
 
 export function Nav() {
+  const site = useRouteLoaderData<typeof loader>('root')!;
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -91,7 +92,7 @@ export function Nav() {
           <Link
             to="/"
             className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-tight text-foreground"
-            aria-label={siteConfig.title}
+            aria-label={site.title}
           >
             <img
               src="/favicon-96x96.png"
@@ -100,7 +101,7 @@ export function Nav() {
               height={20}
               className="size-5 shrink-0 object-contain"
             />
-            <span className="min-w-0 truncate">{siteConfig.title}</span>
+            <span className="min-w-0 truncate">{site.title}</span>
           </Link>
 
           <nav
@@ -167,7 +168,7 @@ export function Nav() {
               </SheetTrigger>
               <SheetContent side="left" className="max-w-72 p-0">
                 <SheetHeader>
-                  <SheetTitle>{siteConfig.title}</SheetTitle>
+                  <SheetTitle>{site.title}</SheetTitle>
                 </SheetHeader>
                 <nav
                   className="flex flex-col gap-1 px-3 pb-6"

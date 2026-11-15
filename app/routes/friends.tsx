@@ -1,21 +1,22 @@
 // Friends page: application rules + JSON template with copy + links list.
 import { useState } from 'react';
+import { useRouteLoaderData } from 'react-router';
+import type { loader as rootLoader } from '~/root';
 import type { Route } from './+types/friends';
 import { Check, ChevronDown, Copy, Link2 } from 'lucide-react';
 import { loadFriends, type Friend } from '~/lib/content/friends';
-import { siteConfig } from '~/lib/site-config';
 import { pageMeta } from '~/lib/meta';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Card } from '~/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
 import { PageHeader } from '~/components/PageHeader';
 
-export function meta(_: Route.MetaArgs) {
-  return pageMeta({ title: '友情链接', path: '/friends', description: '交换友情链接' });
+export function meta({ matches }: Route.MetaArgs) {
+  return pageMeta(matches[0].loaderData, { title: '友情链接', path: '/friends', description: '交换友情链接' });
 }
 
 export async function loader() {
-  return { friends: await loadFriends(), template: siteConfig.friends.applicationTemplate };
+  return { friends: await loadFriends() };
 }
 
 // 申请友链前必读
@@ -39,9 +40,15 @@ function FriendAvatar({ src, name }: { src: string; name: string }) {
 }
 
 export default function FriendsPage({ loaderData }: Route.ComponentProps) {
-  const { friends, template } = loaderData;
-  // JSON.stringify keeps the template byte-identical to the runtime siteConfig.
-  const templateJson = JSON.stringify(template, null, 2);
+  const { friends } = loaderData;
+  const site = useRouteLoaderData<typeof rootLoader>('root')!;
+  const templateJson = JSON.stringify({
+    name: site.author,
+    url: site.url,
+    logo: `${site.url}/favicon.ico`,
+    description: site.description,
+    rss: `${site.url}/feed.xml`,
+  }, null, 2);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -73,13 +80,19 @@ export default function FriendsPage({ loaderData }: Route.ComponentProps) {
 
           <h2 className="mt-6 mb-3 text-sm font-medium">申请方式</h2>
           <p className="mb-4 text-sm text-black/60">
-            请将你的友链信息按照以下格式发送至{' '}
-            <a
-              href={siteConfig.socialLinks.email.url}
-              className="font-medium text-(--brand) hover:underline"
-            >
-              邮箱
-            </a>
+            {site.email ? (
+              <>
+                请将你的友链信息按照以下格式发送至{' '}
+                <a
+                  href={`mailto:${site.email}`}
+                  className="font-medium text-(--brand) hover:underline"
+                >
+                  邮箱
+                </a>
+              </>
+            ) : (
+              '请将你的友链信息按照以下格式发送给站主。'
+            )}
           </p>
           <div className="code-block-wrapper paper-card overflow-hidden shadow-none">
             <div className="code-header flex select-none items-center justify-between border-b border-border bg-card px-6 py-3 text-xs text-black/60">

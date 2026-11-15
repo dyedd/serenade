@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, RefreshCw, Rss } from 'lucide-react';
-import { Spinner } from '~/components/ui/spinner';
 import { Button } from '~/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Card } from '~/components/ui/card';
@@ -180,7 +179,6 @@ function FailedFeedsPanel({ failedFeeds }: { failedFeeds: SiteResult[] }) {
 export function RSSAggregator({ friends }: { friends: Friend[] }) {
   const [results, setResults] = useState<SiteResult[] | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // load() can be triggered by the refresh button outside any effect, so the
   // unmount flag lives in a ref instead of an effect-local variable.
@@ -233,33 +231,9 @@ export function RSSAggregator({ friends }: { friends: Friend[] }) {
   const hasMore = displayed.length < articles.length;
   const initialLoading = results === null;
 
-  // 「加载更多」的延迟定时器要能被刷新和卸载取消：否则 300ms 内点刷新会被
-  // 这个定时器再追加一页，卸载后也会继续改状态。
-  const loadMoreTimerRef = useRef<number | null>(null);
-  const cancelLoadMore = useCallback(() => {
-    if (loadMoreTimerRef.current !== null) {
-      window.clearTimeout(loadMoreTimerRef.current);
-      loadMoreTimerRef.current = null;
-    }
-    setLoadingMore(false);
-  }, []);
-
-  useEffect(() => cancelLoadMore, [cancelLoadMore]);
-
   const refresh = () => {
-    cancelLoadMore();
     setVisibleCount(PAGE_SIZE);
     load();
-  };
-
-  const loadMore = () => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    loadMoreTimerRef.current = window.setTimeout(() => {
-      loadMoreTimerRef.current = null;
-      setVisibleCount((count) => count + PAGE_SIZE);
-      setLoadingMore(false);
-    }, 300);
   };
 
   return (
@@ -325,12 +299,10 @@ export function RSSAggregator({ friends }: { friends: Friend[] }) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={loadMore}
-                disabled={loadingMore}
+                onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
                 className="gap-2"
               >
-                {loadingMore ? <Spinner data-icon="inline-start" /> : null}
-                {loadingMore ? '加载中…' : '查看更多'}
+                查看更多
               </Button>
             </div>
           ) : null}

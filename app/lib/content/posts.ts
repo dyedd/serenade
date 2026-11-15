@@ -151,10 +151,10 @@ async function buildSummary(file: string): Promise<PostSummary | null> {
 
   return {
     path: slug,
-    title: meta.title ?? slug,
+    title: meta.title,
     date: formatDate(meta.date),
     cover: meta.cover ? parseAsset(slug, meta.cover) : '',
-    abstract: meta.abstract ?? '',
+    abstract: meta.abstract,
     tags: meta.tags,
     readingTime: readingTime.text,
   };
@@ -261,10 +261,10 @@ export async function getPost(slug: string): Promise<PostDetail | null> {
 
   return {
     path: slug,
-    title: meta.title ?? slug,
+    title: meta.title,
     date: formatDate(meta.date),
     cover: meta.cover ? parseAsset(slug, meta.cover) : '',
-    abstract: meta.abstract ?? '',
+    abstract: meta.abstract,
     tags: meta.tags,
     readingTime: readingTime.text,
     html,
@@ -278,7 +278,7 @@ export async function searchPosts(options: {
   page?: number;
   pageSize?: number;
 }): Promise<Paginated<PostSummary>> {
-  const keyword = (options.keyword ?? '').trim().toLowerCase();
+  const keyword = options.keyword.trim().toLowerCase();
   const page = options.page ?? 1;
   const pageSize = clampPageSize(options.pageSize, 10);
 

@@ -29,19 +29,6 @@ export async function getPostsByTag(
 ): Promise<Paginated<PostSummary>> {
   const page = options.page ?? 1;
   const pageSize = clampPageSize(options.pageSize, 10);
-  const decoded = safeDecode(tagName);
-  if (!decoded) return { page, pageSize, totalPages: 0, totalItems: 0, data: [] };
-
-  const matches = (await listPostIndex()).filter((post) => post.tags.includes(decoded));
+  const matches = (await listPostIndex()).filter((post) => post.tags.includes(tagName));
   return paginate(matches, page, pageSize);
-}
-
-// 路由参数可能来自未经转义的地址（例如 /tags/50%），decodeURIComponent 会抛
-// URIError；这里退化为原值，交给标签匹配自然得到空结果。
-export function safeDecode(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
 }

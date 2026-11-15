@@ -5,12 +5,13 @@ import type { Route } from './+types/feed[.]xml';
 import RSS from 'rss';
 import dayjs from 'dayjs';
 import { listPostIndex } from '~/lib/content/posts';
-import { siteConfig } from '~/lib/site-config';
 
 const FEED_SIZE = 10;
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const baseUrl = siteConfig.url.replace(/\/$/, '');
+  const baseUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
+  const author = process.env.SITE_AUTHOR || '匿名作者';
+  const email = process.env.SITE_EMAIL || '';
   const posts = (await listPostIndex()).slice(0, FEED_SIZE);
   if (posts.length === 0) {
     throw new Response('No posts found', { status: 404 });
@@ -34,14 +35,14 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   const feed = new RSS({
-    title: siteConfig.title,
-    description: siteConfig.description,
+    title: process.env.SITE_TITLE || '未命名站点',
+    description: process.env.SITE_DESCRIPTION || '',
     feed_url: `${baseUrl}/feed.xml`,
     site_url: baseUrl,
-    language: siteConfig.lang || 'zh-CN',
-    copyright: `© ${new Date().getFullYear()} ${siteConfig.author}`,
-    managingEditor: siteConfig.email,
-    webMaster: siteConfig.email,
+    language: process.env.SITE_LANG || 'zh-CN',
+    copyright: `© ${new Date().getFullYear()} ${author}`,
+    managingEditor: email,
+    webMaster: email,
     pubDate: latest.date || undefined,
     ttl: 60,
   });
@@ -54,7 +55,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       date: post.date ? dayjs(post.date).toISOString() : new Date(),
       guid: `post-${post.path}`,
       categories: post.tags,
-      author: siteConfig.author,
+      author,
       // 封面为绝对地址时直接使用，站内相对路径才加上站点前缀。
       enclosure: post.cover
         ? { url: /^https?:\/\//.test(post.cover) ? post.cover : `${baseUrl}${post.cover}` }

@@ -10,8 +10,6 @@
 @theme {
   --font-sans: 'Inter Variable', 'Inter', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
-    "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif;
 }
 
 @theme inline {
@@ -296,11 +294,6 @@ main .grid > * {
   transform: translate(-4px, -4px);
 }
 
-/* 设计稿不使用全屏噪点 */
-.grain-overlay {
-  display: none;
-}
-
 /* ---------- 文章正文排版 ---------- */
 .prose-blog {
   min-width: 0;
@@ -509,41 +502,6 @@ main .grid > * {
   color: var(--graphite);
 }
 
-/* 归档年份：相对路径 ./2026 + 发丝标尺，和职业轨迹同一条线。 */
-.year-mark {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  width: 100%;
-  margin-bottom: 1.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--foreground);
-}
-.year-mark-dot {
-  color: var(--brand);
-  letter-spacing: 0;
-  font-weight: 500;
-}
-.year-mark::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-.pkg {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.02em;
-  color: var(--brand);
-  background: var(--brand-soft);
-  border: 1px solid var(--brand-line);
-  border-radius: 0.25rem;
-  padding: 0.2rem 0.55rem;
-}
 .tech-chip {
   display: inline-flex;
   align-items: center;
@@ -563,13 +521,6 @@ main .grid > * {
   height: 14px;
   object-fit: contain;
 }
-.tech-chip-dot {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 999px;
-  background: var(--chip, var(--brand));
-}
-
 .career-track-wrap,
 .career-track {
   user-select: none;

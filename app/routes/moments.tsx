@@ -7,8 +7,8 @@ import { RSSAggregator } from '~/components/friends/RSSAggregator';
 import { pageMeta } from '~/lib/meta';
 import { PageHeader } from '~/components/PageHeader';
 
-export function meta(_: Route.MetaArgs) {
-  return pageMeta({ title: '朋友圈', path: '/moments', description: '朋友们的最新创作' });
+export function meta({ matches }: Route.MetaArgs) {
+  return pageMeta(matches[0].loaderData, { title: '朋友圈', path: '/moments', description: '朋友们的最新创作' });
 }
 
 export async function loader() {

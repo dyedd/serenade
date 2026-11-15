@@ -1,9 +1,9 @@
-import { Link } from 'react-router';
+import { Link, useRouteLoaderData } from 'react-router';
+import type { loader as rootLoader } from '~/root';
 import type { Route } from './+types/projects';
 import { Calendar } from 'lucide-react';
 import { listProjects, listProjectCategories } from '~/lib/content/projects';
 import { readPageParams } from '~/lib/content/posts';
-import { siteConfig } from '~/lib/site-config';
 import { pageMeta } from '~/lib/meta';
 import { Badge } from '~/components/ui/badge';
 import { Card } from '~/components/ui/card';
@@ -11,8 +11,8 @@ import { Pagination } from '~/components/Pagination';
 import { cn } from '~/lib/utils';
 import { PageHeader } from '~/components/PageHeader';
 
-export function meta(_: Route.MetaArgs) {
-  return pageMeta({ title: '项目', path: '/projects', description: '折腾过的项目' });
+export function meta({ matches }: Route.MetaArgs) {
+  return pageMeta(matches[0].loaderData, { title: '项目', path: '/projects', description: '折腾过的项目' });
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -27,6 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
+  const site = useRouteLoaderData<typeof rootLoader>('root')!;
   const { data, categories } = loaderData;
   const projects = data.data.projects;
   const isAllView = data.category === 'all';
@@ -34,16 +35,21 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
   return (
     <section className="py-8">
       <PageHeader title="项目">
-        这里是我的折腾项目。还有些没有整理的项目，可以
-        <a
-          href={siteConfig.socialLinks.github.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-(--brand) hover:underline"
-        >
-          {' '}访问我的 GitHub{' '}
-        </a>
-        查看/关注。
+        这里是我的折腾项目。
+        {site.github ? (
+          <>
+            还有些没有整理的项目，可以
+            <a
+              href={site.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-(--brand) hover:underline"
+            >
+              {' '}访问我的 GitHub{' '}
+            </a>
+            查看/关注。
+          </>
+        ) : null}
       </PageHeader>
 
       <nav className="mb-8 flex flex-wrap gap-2" aria-label="项目分类">
@@ -80,14 +86,12 @@ export default function ProjectsPage({ loaderData }: Route.ComponentProps) {
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {projects.map((p) => {
-            const techStack: string[] = Array.isArray(p.techStack)
-              ? (p.techStack as unknown[]).filter((t): t is string => typeof t === 'string')
-              : [];
+            const techStack = p.techStack ?? [];
             const link: string | undefined = p.link ?? p.url;
             const cover: string | undefined = p.cover;
             const name: string = p.name;
             const description: string = p.description ?? '';
-            const dateText = typeof p.date === 'string' ? p.date.slice(0, 10) : '';
+            const dateText = p.date.slice(0, 10);
             const coverImage = cover ? (
               <img
                 src={cover}

@@ -124,7 +124,7 @@ Linux 和 macOS 使用 `rsync`。Windows 使用 `scp`。同步整个内容目录
 
 ## 配置
 
-将 `.env.example` 复制为 `.env`，再修改配置值。`.env` 只在本地或服务器保存。
+站点身份信息全部由环境变量提供。将 `.env.example` 复制为 `.env`，再修改配置值。`.env` 只在本地或服务器保存。
 
 常用配置分为三组：
 
@@ -147,16 +147,41 @@ SITE_PROFILE_MOTTO=保持简单|持续交付
 SITE_PROFILE_TECH_STACK=TypeScript::https://cdn.simpleicons.org/typescript/3178C6|React::https://cdn.simpleicons.org/react/61DAFB
 ```
 
-完整字段和通用示例见 `.env.example`。程序另外识别：
+完整的站点配置键：
+
+| 变量 | 用途 |
+| --- | --- |
+| `SITE_AUTHOR` | 作者名，同时用于个人资料名、版权署名和友链模板 |
+| `SITE_TITLE` | 站点标题 |
+| `SITE_DESCRIPTION` | 站点简介 |
+| `SITE_KEYWORDS` | SEO 关键词，逗号分隔 |
+| `SITE_URL` | 站点地址，用于 canonical、sitemap 和 RSS |
+| `SITE_EMAIL` | 联系邮箱，同时生成 `mailto:` 链接 |
+| `SITE_LANG` | 页面语言，默认 `zh-CN` |
+| `SITE_START_TIME` | 建站时间，页脚据此计算运行时长 |
+| `SITE_ANALYTICS_SCRIPT` | 统计脚本地址，留空则不注入 |
+| `SITE_ANALYTICS_WEBSITE_ID` | 统计站点 ID，留空则不注入 |
+| `SITE_PROFILE_AVATAR` | 头像路径或地址 |
+| `SITE_PROFILE_INTRO` | 个人介绍，`|` 分隔多行 |
+| `SITE_PROFILE_MOTTO` | 个人格言，`|` 分隔多行 |
+| `SITE_PROFILE_TECH_STACK` | 技术栈，`名称::图标` 并用 `|` 分隔 |
+| `SITE_PROFILE_GITHUB_CHART` | GitHub 贡献图地址，留空则隐藏该区块 |
+| `SITE_GITHUB_URL` | GitHub 主页，留空则隐藏相关入口 |
+| `SITE_QQ_URL` | QQ 联系链接，留空则隐藏该图标 |
+| `SITE_FOOTER_ICP_LABEL` | 备案号文案，留空则隐藏备案链接 |
+
+程序另外识别：
 
 | 变量 | 用途 |
 | --- | --- |
 | `SERENADE_PORT` | Docker Compose 映射到宿主机的端口，默认 `3000` |
 | `SERENADE_PRERENDER` | 由 `pnpm build:static` 设置，不需要手工配置 |
 
-`SITE_*` 在**运行期**读取：服务端每次渲染时从环境变量取值，并把结果注入 HTML 供浏览器使用。
-改配置只需重启进程或容器，不必重新构建镜像。同名的空值（例如 compose 注入的空字符串）按
-「未配置」处理，会回落到内置默认值。
+`SITE_*` 由服务端 loader 直接读取，页面数据由 React Router 传给浏览器。
+修改 `.env` 后，Node.js 服务需要重启；Docker Compose 需要运行 `docker compose up -d --force-recreate` 重新创建容器，不必重新构建镜像。
+空值按未配置处理；未配置的社交链接、贡献图、备案号和运行时长会隐藏。
+
+如果使用 `pnpm build:static`，配置在**构建期**固化为静态 HTML，改 `.env` 后必须重新构建。
 
 ## 部署
 
@@ -168,7 +193,7 @@ SITE_PROFILE_TECH_STACK=TypeScript::https://cdn.simpleicons.org/typescript/3178C
 docker compose up -d
 ```
 
-Compose 会以**只读**方式把本地 `content/` 挂载到容器的 `/app/content`。修改内容后不需要重建镜像。默认地址为 <http://localhost:3000>。
+Compose 会把本地 `content/` 挂载到容器的 `/app/content`。修改内容后不需要重建镜像。默认地址为 <http://localhost:3000>。
 
 上面的命令会直接拉取上游镜像。改了程序代码后要让本地改动生效，需要自己构建：
 
@@ -193,18 +218,7 @@ pnpm build:static
 
 输出目录为 `build/client/`。构建会生成首页、文章、专栏、标签、RSS、sitemap 和 robots 文件。每次内容变更后都必须重新构建。
 
-静态托管需要把未命中的地址回退到站点壳，否则旧的 `<id>.html` 链接（`app/lib/redirects.json`
-里的 301 跳转）无法生效——它们由 `app/routes/$.tsx` 在运行期处理，不会预渲染成静态文件。
-
-### 静态站点
-
-准备 `.env` 和 `content/`。执行以下命令：
-
-```bash
-pnpm build:static
-```
-
-输出目录为 `build/client/`。构建会生成首页、文章、专栏、标签、RSS、sitemap 和 robots 文件。每次内容变更后都必须重新构建。
+旧的 `<id>.html` 地址需在静态托管平台配置重定向；静态文件不能执行服务端的 301 路由。
 
 静态站点不提供 `/api/*`。以下功能需要 Node.js 服务端运行：
 
@@ -239,7 +253,7 @@ pnpm build:static
 | `pnpm build:static` | 构建静态预渲染站点 |
 | `pnpm verify` | 类型检查、测试和静态构建 |
 
-测试使用临时 fixture。测试不会检查真实文章内容。`pnpm test` 会先执行 `pnpm build`（构建读取当前 `content/`），因此运行前必须准备内容目录。测试断言会从 `SITE_*` 环境变量推导站点标题与地址，所以换一份 `.env` 也不会让测试失败。
+测试先构建服务端程序，再用独立的临时内容和固定的 `SITE_*` 启动服务。测试不依赖本地 `.env` 或个人文章。
 
 ## 项目结构
 

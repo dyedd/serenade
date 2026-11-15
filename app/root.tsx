@@ -6,15 +6,33 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteLoaderData,
 } from "react-router";
 import type { Route } from "./+types/root";
 import { pageMeta } from "~/lib/meta";
-import { SITE_CONFIG_GLOBAL, serializeSiteConfig, siteConfig } from "~/lib/site-config";
 import "./app.css";
 import "./hljs-dark.css";
 
-export function meta() {
-  return pageMeta({ path: "/" });
+export function loader() {
+  return {
+    author: process.env.SITE_AUTHOR || '匿名作者',
+    title: process.env.SITE_TITLE || '未命名站点',
+    description: process.env.SITE_DESCRIPTION || '',
+    keywords: process.env.SITE_KEYWORDS || '',
+    url: (process.env.SITE_URL || '').replace(/\/$/, ''),
+    email: process.env.SITE_EMAIL || '',
+    lang: process.env.SITE_LANG || 'zh-CN',
+    avatar: process.env.SITE_PROFILE_AVATAR || '/avatar.jpg',
+    github: process.env.SITE_GITHUB_URL || '',
+    startTime: process.env.SITE_START_TIME || '',
+    icpLabel: process.env.SITE_FOOTER_ICP_LABEL || '',
+    analyticsScript: process.env.SITE_ANALYTICS_SCRIPT || '',
+    analyticsWebsiteId: process.env.SITE_ANALYTICS_WEBSITE_ID || '',
+  };
+}
+
+export function meta({ loaderData }: Route.MetaArgs) {
+  return pageMeta(loaderData, { path: "/" });
 }
 
 // Applied before hydration so the correct theme paints on first frame
@@ -31,13 +49,10 @@ const themeScript = `
 })();
 `;
 
-// 站点配置在服务端按请求解析，这里把结果注入 HTML，浏览器端据此读取。
-// 必须排在模块脚本之前执行，客户端组件才不会拿到占位值。
-const siteConfigScript = `window.${SITE_CONFIG_GLOBAL}=${serializeSiteConfig()};`;
-
 export function Layout({ children }: { children: React.ReactNode }) {
+  const site = useRouteLoaderData<typeof loader>('root');
   return (
-    <html lang={siteConfig.lang} suppressHydrationWarning>
+    <html lang={site?.lang || 'zh-CN'} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -45,7 +60,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <script dangerouslySetInnerHTML={{ __html: siteConfigScript }} />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Meta />
         <Links />
@@ -54,12 +68,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
-        {siteConfig.analytics.websiteId ? (
+        {site?.analyticsScript && site.analyticsWebsiteId ? (
           <script
             async
             defer
-            src={siteConfig.analytics.script}
-            data-website-id={siteConfig.analytics.websiteId}
+            src={site.analyticsScript}
+            data-website-id={site.analyticsWebsiteId}
           />
         ) : null}
       </body>

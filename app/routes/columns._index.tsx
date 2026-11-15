@@ -8,8 +8,8 @@ import { pageMeta } from '~/lib/meta';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/components/ui/empty';
 import { PageHeader } from '~/components/PageHeader';
 
-export function meta(_: Route.MetaArgs) {
-  return pageMeta({ title: '专栏', path: '/columns', description: '系统化的学习笔记' });
+export function meta({ matches }: Route.MetaArgs) {
+  return pageMeta(matches[0].loaderData, { title: '专栏', path: '/columns', description: '系统化的学习笔记' });
 }
 
 export async function loader({ request }: Route.LoaderArgs) {

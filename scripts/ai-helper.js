@@ -1,5 +1,3 @@
-import path from 'path';
-
 const API_KEY = process.env.OPENAI_API_KEY;
 // 默认值与 .env.example / README 保持一致：没显式配置时不该把标题和密钥
 // 悄悄发往第三方中转地址。
@@ -27,54 +25,6 @@ const SLUG_RESPONSE_FORMAT = {
       },
     },
   },
-};
-
-const normalizeCoverKindByTargetPath = (targetPath) => {
-  if (typeof targetPath !== 'string') {
-    return 'post';
-  } else {
-    const trimmedPath = targetPath.trim();
-
-    if (!trimmedPath) {
-      return 'post';
-    } else {
-      const normalizedPath = path.normalize(trimmedPath);
-      const segments = normalizedPath
-        .split(path.sep)
-        .map((segment) => segment.toLowerCase());
-
-      if (segments.includes('columns')) {
-        return 'column';
-      } else if (segments.includes('posts')) {
-        return 'post';
-      } else {
-        return 'post';
-      }
-    }
-  }
-};
-
-const getCoverAspectHint = (coverKind) => {
-  const hints = {
-    column: {
-      kind: 'column',
-      layoutHint: '9:16 竖图（portrait）',
-      size: '1024x1536',
-      promptSuffix: 'aspect ratio 9:16, portrait, vertical composition, clean safe area for title',
-    },
-    post: {
-      kind: 'post',
-      layoutHint: '16:9 横图（landscape）',
-      size: '1536x1024',
-      promptSuffix: 'aspect ratio 16:9, landscape, wide composition, clean safe area for title',
-    },
-  };
-
-  if (coverKind === 'column') {
-    return hints.column;
-  } else {
-    return hints.post;
-  }
 };
 
 const buildHeaders = (apiKey) => ({
@@ -217,18 +167,18 @@ const readSlugResponse = (data) => {
   return slug;
 };
 
-const buildCoverPrompt = (title, coverAspect) => `Create a modern technical blog cover image for the article titled "${title}".
+const buildCoverPrompt = (title) => `Create a modern technical blog cover image for the article titled "${title}".
 Use a clean, professional, minimal composition with visual metaphors related to the title.
 Do not render readable title text, UI mockups, watermarks, logos, or captions.
 Use soft but distinct colors, strong focal structure, and enough negative space for blog layout cropping.
-Output composition: ${coverAspect.layoutHint}; ${coverAspect.promptSuffix}.`;
+Output composition: 16:9 横图（landscape）; aspect ratio 16:9, landscape, wide composition, clean safe area for title.`;
 
-const buildImageRequestBody = (prompt, coverAspect) => {
+const buildImageRequestBody = (prompt) => {
   if (IMAGE_API_MODE === 'images') {
     return {
       model: IMAGE_MODEL,
       prompt,
-      size: coverAspect.size,
+      size: '1536x1024',
     };
   }
 
@@ -457,16 +407,13 @@ const generateImageWithAI = async (title, targetPath) => {
   if (!IMAGE_API_KEY) {
     return null;
   } else {
-    const coverKind = normalizeCoverKindByTargetPath(targetPath);
-    const coverAspect = getCoverAspectHint(coverKind);
-
     try {
-      const finalPrompt = buildCoverPrompt(title, coverAspect);
+      const finalPrompt = buildCoverPrompt(title);
 
       console.log('🎨 开始生成图片...');
       const imageData = await requestJson(
         imageGenerationUrl(),
-        buildImageRequestBody(finalPrompt, coverAspect),
+        buildImageRequestBody(finalPrompt),
         IMAGE_API_KEY,
         '图片生成API请求失败'
       );

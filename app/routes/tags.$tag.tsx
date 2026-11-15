@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import type { Route } from './+types/tags.$tag';
-import { getPostsByTag, safeDecode } from '~/lib/content/tags';
+import { getPostsByTag } from '~/lib/content/tags';
 import { normalizePage, normalizePageSize, openingExcerpts } from '~/lib/content/posts';
 import { Pagination } from '~/components/Pagination';
 import { pageMeta } from '~/lib/meta';
@@ -8,11 +8,10 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '~/
 import { FileText } from 'lucide-react';
 import { PageHeader } from '~/components/PageHeader';
 
-export function meta({ params, loaderData }: Route.MetaArgs) {
-  // 参数可能带畸形百分号编码，解码失败时退回原值而不是抛错。
-  const tag = safeDecode(params.tag);
+export function meta({ params, loaderData, matches }: Route.MetaArgs) {
+  const tag = params.tag;
   const posts = loaderData?.posts;
-  return pageMeta({
+  return pageMeta(matches[0].loaderData, {
     title: `#${tag}`,
     path: `/tags/${encodeURIComponent(tag)}`,
     description: `浏览 ${tag} 标签下的文章${posts ? `，共 ${posts.totalItems} 篇` : ''}`,
@@ -20,7 +19,7 @@ export function meta({ params, loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  const tag = safeDecode(params.tag);
+  const tag = params.tag;
   const url = new URL(request.url);
   const page = normalizePage(url.searchParams.get('page'));
   const pageSize = normalizePageSize(url.searchParams.get('pageSize'), 10);
